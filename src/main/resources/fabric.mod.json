@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "skiescrates",
+  "version": "${version}",
+  "name": "SkiesCrates",
+  "description": "Crates Mod",
+  "authors": [
+    "Stampede"
+  ],
+  "entrypoints": {
+    "main": [
+      "com.pokeskies.skiescrates.SkiesCrates"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": ">=1.21.1"
+  },
+  "mixins": ["skiescrates.mixins.json"],
+  "accessWidener": "skiescrates.accesswidener"
+}

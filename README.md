@@ -1,0 +1,15 @@
+- Update lang file parsing
+- Prevent animation out of bounds infinite loops
+- In-world crate animations
+- Crate animation early cancelling
+- Require keys in hand option
+- Placeholders
+- Crate Holograms
+- Crate Particles
+- Apply unique key IDs
+- Logging
+  - Opening
+  - Unique key duplication
+- More sound options?
+- More reward types?
+- In-game Editor
