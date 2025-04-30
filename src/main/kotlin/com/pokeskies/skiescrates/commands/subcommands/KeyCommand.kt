@@ -7,13 +7,12 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.tree.LiteralCommandNode
 import com.pokeskies.skiescrates.CratesManager
 import com.pokeskies.skiescrates.SkiesCrates
+import com.pokeskies.skiescrates.commands.KeysCommand
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.utils.SubCommand
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.minecraft.ChatFormatting
-import net.minecraft.commands.CommandSource
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
 import net.minecraft.commands.arguments.EntityArgument
@@ -61,7 +60,7 @@ class KeyCommand : SubCommand {
                     )
                 )
             )
-            .executes { ctx -> display(ctx.source, ctx.source.playerOrException)}
+            .executes { ctx -> KeysCommand.execute(ctx, ctx.source.playerOrException)}
             .build()
     }
 
@@ -94,25 +93,6 @@ class KeyCommand : SubCommand {
                     Component.text("Successfully gave ${amount}x $keyId keys to $successful player(s), " +
                             "but failed to give it to ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
                 )
-            }
-
-            return 1
-        }
-
-        fun display(source: CommandSourceStack, target: ServerPlayer): Int {
-            val playerData = SkiesCrates.INSTANCE.storage?.getUser(target.uuid) ?: run {
-                source.sendSystemMessage(net.minecraft.network.chat.Component.literal("Player data is null!").withStyle(ChatFormatting.RED))
-                return 0
-            }
-
-            source.sendSystemMessage(net.minecraft.network.chat.Component.literal("${target.name.string}'s keys:").withStyle(ChatFormatting.GOLD))
-            for ((keyId, amount) in playerData.keys) {
-                val key = ConfigManager.KEYS[keyId]
-                if (key != null) {
-                    source.sendSystemMessage(net.minecraft.network.chat.Component.literal(" - ${key.name} ($keyId): $amount").withStyle(ChatFormatting.GREEN))
-                } else {
-                    source.sendSystemMessage(net.minecraft.network.chat.Component.literal(" - Unknown Key ($keyId): $amount").withStyle(ChatFormatting.RED))
-                }
             }
 
             return 1

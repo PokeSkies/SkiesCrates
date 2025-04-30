@@ -5,10 +5,7 @@
     "name": "<red>Example Crate",
     "lore": [
       "<gray>Example Lore!"
-    ],
-    "nbt": {
-      "minecraft:custom_model_data": 1
-    }
+    ]
   },
   "unique": false,
   "preview": "default",

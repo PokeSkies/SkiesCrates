@@ -4,10 +4,10 @@ import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.actions.Action
+import com.pokeskies.skiescrates.data.actions.ActionType
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
-import com.pokeskies.skiescrates.data.actions.ActionType
 import net.minecraft.server.level.ServerPlayer
 
 class CommandPlayer(

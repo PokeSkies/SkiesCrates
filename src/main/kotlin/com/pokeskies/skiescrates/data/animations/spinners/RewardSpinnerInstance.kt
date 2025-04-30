@@ -1,12 +1,9 @@
 package com.pokeskies.skiescrates.data.animations.spinners
 
-import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.animations.items.SpinningItem
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.gui.CrateInventory
-import com.pokeskies.skiescrates.utils.TextUtils
-import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
 
 class RewardSpinnerInstance(

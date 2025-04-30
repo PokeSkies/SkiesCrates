@@ -1,9 +1,9 @@
 package com.pokeskies.skiescrates.data.actions.types
 
 import com.pokeskies.skiescrates.data.actions.Action
+import com.pokeskies.skiescrates.data.actions.ActionType
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.Utils
-import com.pokeskies.skiescrates.data.actions.ActionType
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent

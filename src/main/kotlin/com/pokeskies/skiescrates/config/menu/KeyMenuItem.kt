@@ -1,8 +1,9 @@
-package com.pokeskies.skiescrates.config
+package com.pokeskies.skiescrates.config.menu
 
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
+import com.pokeskies.skiescrates.data.Key
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.TextUtils
 import net.minecraft.core.component.DataComponentPatch
@@ -18,7 +19,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ItemLore
 
-class GenericGUIItem(
+class KeyMenuItem(
     val item: Item = Items.BARRIER,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     val slots: List<Int> = emptyList(),
@@ -29,7 +30,7 @@ class GenericGUIItem(
     @SerializedName("nbt", alternate = ["components"])
     val nbt: CompoundTag? = null
 ) {
-    fun createItemStack(player: ServerPlayer): ItemStack {
+    fun createItemStack(player: ServerPlayer, key: Key, count: Int): ItemStack {
         val stack = ItemStack(item, amount)
 
         if (nbt != null) {
@@ -63,7 +64,10 @@ class GenericGUIItem(
 
         if (name != null) {
             dataComponents.set(DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
-                .append(TextUtils.toNative(name)))
+                .append(TextUtils.toNative(
+                    name.replace("%key_amount%", count.toString())
+                        .replace("%key_id%", key.id)
+                )))
         }
 
         if (lore.isNotEmpty()) {
@@ -76,7 +80,10 @@ class GenericGUIItem(
                 }
             }
             dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
-                Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(it)) as Component
+                Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(
+                    it.replace("%key_amount%", count.toString())
+                        .replace("%key_id%", key.id)
+                )) as Component
             }.toList()))
         }
 
@@ -86,6 +93,6 @@ class GenericGUIItem(
     }
 
     override fun toString(): String {
-        return "GuiItem(item=$item, slots=$slots, amount=$amount, name=$name, lore=$lore, nbt=$nbt)"
+        return "KeyMenuItem(item=$item, slots=$slots, amount=$amount, name=$name, lore=$lore, nbt=$nbt)"
     }
 }

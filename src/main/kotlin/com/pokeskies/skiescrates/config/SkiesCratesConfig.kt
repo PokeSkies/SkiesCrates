@@ -8,6 +8,7 @@ class SkiesCratesConfig(
     @SerializedName("interaction_limiter")
     var interactionLimiter: Long = 1000,
     var storage: Storage = Storage(),
+    var keys: KeyOptions = KeyOptions(),
 ) {
     class Storage(
         val type: StorageType = StorageType.JSON,
@@ -50,6 +51,6 @@ class SkiesCratesConfig(
     }
 
     override fun toString(): String {
-        return "SkiesCratesConfig(debug=$debug, interactionLimiter=$interactionLimiter, storage=$storage)"
+        return "SkiesCratesConfig(debug=$debug, interactionLimiter=$interactionLimiter, storage=$storage, keys=$keys)"
     }
 }

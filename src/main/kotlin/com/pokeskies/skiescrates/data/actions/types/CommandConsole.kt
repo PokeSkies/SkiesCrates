@@ -3,10 +3,10 @@ package com.pokeskies.skiescrates.data.actions.types
 import com.google.gson.annotations.JsonAdapter
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.actions.Action
+import com.pokeskies.skiescrates.data.actions.ActionType
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
-import com.pokeskies.skiescrates.data.actions.ActionType
 import net.minecraft.server.level.ServerPlayer
 
 class CommandConsole(

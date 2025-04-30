@@ -3,6 +3,7 @@ package com.pokeskies.skiescrates.config
 import com.google.gson.JsonParser
 import com.google.gson.stream.JsonReader
 import com.pokeskies.skiescrates.SkiesCrates
+import com.pokeskies.skiescrates.config.menu.KeysMenu
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.Key
 import com.pokeskies.skiescrates.data.animations.InventoryAnimation
@@ -23,6 +24,7 @@ object ConfigManager {
     lateinit var KEYS: MutableMap<String, Key>
     lateinit var ANIMATIONS_INVENTORY: MutableMap<String, InventoryAnimation>
     lateinit var PREVIEW: MutableMap<String, Preview>
+    lateinit var KEYS_MENU: KeysMenu
 
     fun load() {
         // Load defaulted configs if they do not exist
@@ -34,6 +36,7 @@ object ConfigManager {
         loadKeys()
         loadInventoryAnimations()
         loadPreviews()
+        KEYS_MENU = loadFile("keys.json", KeysMenu(), "menus")
     }
 
     private fun copyDefaults() {
@@ -47,6 +50,7 @@ object ConfigManager {
         attemptDefaultDirectoryCopy(classLoader, "animations/inventory")
         attemptDefaultDirectoryCopy(classLoader, "animations/physical")
         attemptDefaultDirectoryCopy(classLoader, "previews")
+        attemptDefaultFileCopy(classLoader, "menus/keys.json")
     }
 
     private fun loadCrates() {
@@ -203,8 +207,12 @@ object ConfigManager {
         }
     }
 
-    fun <T : Any> loadFile(filename: String, default: T, create: Boolean = false): T {
-        val file = File(SkiesCrates.INSTANCE.configDir, filename)
+    fun <T : Any> loadFile(filename: String, default: T, path: String = "", create: Boolean = false): T {
+        var dir = SkiesCrates.INSTANCE.configDir
+        if (path.isNotEmpty()) {
+            dir = dir.resolve(path)
+        }
+        val file = File(dir, filename)
         var value: T = default
         try {
             Files.createDirectories(SkiesCrates.INSTANCE.configDir.toPath())
@@ -244,6 +252,7 @@ object ConfigManager {
     private fun attemptDefaultFileCopy(classLoader: ClassLoader, fileName: String) {
         val file = SkiesCrates.INSTANCE.configDir.resolve(fileName)
         if (!file.exists()) {
+            file.mkdirs()
             try {
                 val stream = classLoader.getResourceAsStream("${assetPackage}/$fileName")
                     ?: throw NullPointerException("File not found $fileName")

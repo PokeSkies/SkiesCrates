@@ -1,11 +1,11 @@
 package com.pokeskies.skiescrates.economy
 
 import com.google.gson.*
-import com.pokeskies.skiescrates.utils.Utils
 import com.pokeskies.skiescrates.economy.services.BlanketEconomyService
 import com.pokeskies.skiescrates.economy.services.CobbleDollarsEconomyService
 import com.pokeskies.skiescrates.economy.services.ImpactorEconomyService
 import com.pokeskies.skiescrates.economy.services.PebblesEconomyService
+import com.pokeskies.skiescrates.utils.Utils
 import net.fabricmc.loader.api.FabricLoader
 import java.lang.reflect.Type
 

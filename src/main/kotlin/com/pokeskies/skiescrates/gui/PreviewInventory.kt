@@ -7,9 +7,7 @@ import com.pokeskies.skiescrates.utils.TextUtils
 import eu.pb4.sgui.api.elements.GuiElementBuilder
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.world.inventory.MenuType
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.alchemy.PotionContents.createItemStack
 
 class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Preview): SimpleGui(
     preview.settings.menuType.type, player, false
@@ -24,41 +22,55 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
         this.title = TextUtils.toNative(crate.parsePlaceholder(preview.settings.title))
 
         preview.items.forEach { (id, item) ->
-            item.slots.forEach { slot ->
-                this.setSlot(slot, item.createItemStack(player))
+            item.createItemStack(player).let {
+                item.slots.forEach { slot ->
+                    this.setSlot(slot, it)
+                }
             }
         }
 
         crate.rewards.forEach { (id, reward) ->
-            rewards[id] = reward to preview.buttons.reward.createItemStack(player, id, reward)
+            rewards[id] = reward to preview.buttons.reward.createItemStack(player, id, reward, crate)
         }
 
         maxPages = (rewards.size / (preview.buttons.reward.slots.size + 1)) + 1
 
-        preview.buttons.close?.let { it.slots.forEach { slot ->
-            this.setSlot(slot, GuiElementBuilder.from(it.createItemStack(player))
+        preview.buttons.close?.let { item ->
+            GuiElementBuilder.from(item.createItemStack(player))
                 .setCallback { i, clickType, vanillaClickType ->
                     this.close()
-                })
-        } }
-        preview.buttons.pageNext?.let { it.slots.forEach { slot ->
-            this.setSlot(slot, GuiElementBuilder.from(it.createItemStack(player))
-                .setCallback { i, clickType, vanillaClickType ->
-                    if (page < maxPages - 1) {
-                        page++
-                        renderRewards()
+                }.let {
+                    item.slots.forEach { slot ->
+                        this.setSlot(slot, it)
                     }
-                })
-        } }
-        preview.buttons.pagePrevious?.let { it.slots.forEach { slot ->
-            this.setSlot(slot, GuiElementBuilder.from(it.createItemStack(player))
-                .setCallback { i, clickType, vanillaClickType ->
-                    if (page > 0) {
-                        page--
-                        renderRewards()
+                }
+            }
+        preview.buttons.pageNext?.let { item ->
+            item.slots.forEach { slot ->
+                GuiElementBuilder.from(item.createItemStack(player))
+                    .setCallback { i, clickType, vanillaClickType ->
+                        if (page < maxPages - 1) {
+                            page++
+                            renderRewards()
+                        }
+                    }.let {
+                        this.setSlot(slot, it)
                     }
-                })
-        } }
+            }
+        }
+        preview.buttons.pagePrevious?.let { item ->
+            item.slots.forEach { slot ->
+                GuiElementBuilder.from(item.createItemStack(player))
+                    .setCallback { i, clickType, vanillaClickType ->
+                        if (page > 0) {
+                            page--
+                            renderRewards()
+                        }
+                    }.let {
+                        this.setSlot(slot, it)
+                    }
+            }
+        }
 
         renderRewards()
     }
@@ -67,10 +79,9 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
         var index = 0
         for ((id, pair) in rewards.toList().subList(preview.buttons.reward.slots.size * page, rewards.size)) {
             if (index < preview.buttons.reward.slots.size) {
-                this.setSlot(
-                    preview.buttons.reward.slots[index++],
-                    GuiElementBuilder.from(pair.second)
-                )
+                GuiElementBuilder.from(pair.second).let {
+                    this.setSlot(preview.buttons.reward.slots[index++], it)
+                }
             }
         }
     }

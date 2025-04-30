@@ -4,9 +4,9 @@ import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.GenericGUIItem
+import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.gui.InventoryType
-import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.TextUtils
 import net.minecraft.core.component.DataComponentPatch
@@ -18,6 +18,7 @@ import net.minecraft.network.chat.Style
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.ItemLore
+import java.util.*
 
 class Preview(
     val settings: Settings,
@@ -47,7 +48,7 @@ class Preview(
         @JsonAdapter(FlexibleListAdaptorFactory::class)
         val lore: List<String> = emptyList()
     ) {
-        fun createItemStack(player: ServerPlayer, rewardId: String, reward: Reward): ItemStack {
+        fun createItemStack(player: ServerPlayer, rewardId: String, reward: Reward, crate: Crate): ItemStack {
             val stack = ItemStack(reward.display.item, reward.display.amount)
 
             if (reward.display.nbt != null) {
@@ -84,7 +85,9 @@ class Preview(
                     DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
                     .append(TextUtils.toNative(name.replace("%reward_name%", reward.display.name ?: "")
                         .replace("%reward_id%", rewardId)
-                        .replace("%reward_weight%", reward.weight.toString()))))
+                        .replace("%reward_weight%", reward.weight.toString())
+                        .replace("%reward_percent%", String.format(Locale.US, "%.2f", calculatePercent(reward, crate)))
+                    )))
             }
 
             if (lore.isNotEmpty()) {
@@ -100,13 +103,19 @@ class Preview(
                     Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(
                         it.replace("%reward_name%", reward.display.name ?: "")
                             .replace("%reward_id%", rewardId)
-                            .replace("%reward_weight%", reward.weight.toString()))) as Component
+                            .replace("%reward_weight%", reward.weight.toString())
+                            .replace("%reward_percent%", String.format(Locale.US, "%.2f", calculatePercent(reward, crate)))
+                    )) as Component
                 }.toList()))
             }
 
             stack.applyComponents(dataComponents.build())
 
             return stack
+        }
+
+        private fun calculatePercent(reward: Reward, crate: Crate): Double {
+            return (reward.weight.toDouble() / crate.rewards.values.sumOf { it.weight }) * 100
         }
     }
 }

@@ -9,7 +9,6 @@ import com.pokeskies.skiescrates.CratesManager
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.utils.SubCommand
-import com.sun.jdi.connect.Connector.BooleanArgument
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor

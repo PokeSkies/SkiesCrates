@@ -6,7 +6,7 @@ import com.pokeskies.skiescrates.storage.IStorage
 import java.util.*
 
 class FileStorage : IStorage {
-    private var fileData: FileData = ConfigManager.loadFile(STORAGE_FILENAME, FileData(), true)
+    private var fileData: FileData = ConfigManager.loadFile(STORAGE_FILENAME, FileData(), "", true)
 
     companion object {
         private const val STORAGE_FILENAME = "storage.json"

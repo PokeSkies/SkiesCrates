@@ -1,10 +1,10 @@
 package com.pokeskies.skiescrates.data
 
 import com.google.gson.annotations.SerializedName
-import com.pokeskies.skiescrates.config.block.BlockOptions
 import com.pokeskies.skiescrates.config.CostOptions
-import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.config.FailureOptions
+import com.pokeskies.skiescrates.config.GenericGUIItem
+import com.pokeskies.skiescrates.config.block.BlockOptions
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.utils.RandomCollection
 import net.minecraft.server.level.ServerPlayer

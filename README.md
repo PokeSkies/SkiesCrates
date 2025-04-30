@@ -13,3 +13,5 @@
 - More sound options?
 - More reward types?
 - In-game Editor
+
+- Crate placement via commands/blocks

@@ -2,9 +2,9 @@ package com.pokeskies.skiescrates
 
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.lang.Lang
-import com.pokeskies.skiescrates.data.DimensionalBlockPos
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.CrateOpenData
+import com.pokeskies.skiescrates.data.DimensionalBlockPos
 import com.pokeskies.skiescrates.data.Key
 import com.pokeskies.skiescrates.gui.CrateInventory
 import com.pokeskies.skiescrates.gui.PreviewInventory
@@ -82,7 +82,7 @@ object CratesManager {
 
         if (!silent) {
             Lang.CRATE_GIVE.forEach {
-                player.sendMessage(TextUtils.toComponent(it))
+                player.sendMessage(TextUtils.toComponent(it.replace("%crate_name%", crate.name)))
             }
         }
 
@@ -102,7 +102,7 @@ object CratesManager {
 
             if (result && !silent) {
                 Lang.KEY_GIVE.forEach {
-                    player.sendMessage(TextUtils.toComponent(it))
+                    player.sendMessage(TextUtils.toComponent(it.replace("%key_name%", key.name)))
                 }
             }
 
@@ -123,8 +123,8 @@ object CratesManager {
         player.inventory.placeItemBackInInventory(item)
 
         if (!silent) {
-            Lang.CRATE_GIVE.forEach {
-                player.sendMessage(TextUtils.toComponent(it))
+            Lang.KEY_GIVE.forEach {
+                player.sendMessage(TextUtils.toComponent(it.replace("%key_name%", key.name)))
             }
         }
 
@@ -412,7 +412,7 @@ object CratesManager {
 
     private fun handleCrateFail(player: ServerPlayer, crate: Crate, openData: CrateOpenData) {
         crate.failure?.sound?.playSound(player)
-        val force = crate.failure?.force ?: return
+        val force = crate.failure?.pushback ?: return
         if (openData.location != null) {
             val blockPos = openData.location.getBlockPos()
             val sourcePos = blockPos.center

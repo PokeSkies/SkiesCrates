@@ -2,8 +2,8 @@ package com.pokeskies.skiescrates.gui
 
 import com.pokeskies.skiescrates.CratesManager.openingPlayers
 import com.pokeskies.skiescrates.data.Crate
-import com.pokeskies.skiescrates.data.animations.spinners.AnimatedSpinnerInstance
 import com.pokeskies.skiescrates.data.animations.InventoryAnimation
+import com.pokeskies.skiescrates.data.animations.spinners.AnimatedSpinnerInstance
 import com.pokeskies.skiescrates.data.animations.spinners.RewardSpinnerInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.utils.RandomCollection

@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.pokeskies.skiescrates.CratesManager.tick
 import com.pokeskies.skiescrates.commands.BaseCommand
+import com.pokeskies.skiescrates.commands.KeysCommand
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.SoundOption
 import com.pokeskies.skiescrates.config.lang.Lang
@@ -19,15 +20,15 @@ import com.pokeskies.skiescrates.gui.InventoryType
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
 import com.pokeskies.skiescrates.utils.Utils
+import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.fabricmc.loader.api.FabricLoader
-import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
+import net.fabricmc.loader.api.FabricLoader
 import net.kyori.adventure.platform.fabric.FabricServerAudiences
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.minecraft.core.registries.BuiltInRegistries
@@ -43,6 +44,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.item.Item
+import net.minecraft.world.phys.BlockHitResult
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import xyz.nucleoid.stimuli.Stimuli
@@ -116,9 +118,8 @@ class SkiesCrates : ModInitializer {
             CratesManager.init()
         })
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
-            BaseCommand().register(
-                dispatcher
-            )
+            BaseCommand().register(dispatcher)
+            KeysCommand().register(dispatcher)
         }
 
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
@@ -196,9 +197,15 @@ class SkiesCrates : ModInitializer {
 
             return@UseItemCallback InteractionResultHolder.fail(item)
         })
-        // Called when swinging with your hand (left click)
+        // Called when swinging with your hand. This can happen in both a left-click and a right-click on a block
         Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
             if (hand != InteractionHand.MAIN_HAND) return@PlayerSwingHandEvent
+
+            // This is a hacky fix to prevent right-clicking on blocks from opening preview menus
+            val blockResult = player.pick(5.0, 0.0F, false)
+            if (blockResult != null &&
+                blockResult is BlockHitResult &&
+                !player.serverLevel().getBlockState(blockResult.blockPos).isAir) return@PlayerSwingHandEvent
 
             val item = player.getItemInHand(hand)
             if (item.isEmpty) return@PlayerSwingHandEvent

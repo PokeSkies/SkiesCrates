@@ -14,7 +14,8 @@
       "name": "%reward_name%",
       "lore": [
         "<gray>Example Lore!",
-        "<gray>Weight: <white>%reward_weight%"
+        "<gray>Weight: <white>%reward_weight%",
+        "<gray>Chance: <white>%reward_percent%"
       ]
     },
     "page_next": {
