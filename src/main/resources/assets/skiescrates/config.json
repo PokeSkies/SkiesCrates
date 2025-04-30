@@ -1,6 +1,12 @@
 {
   "debug": true,
   "interaction_limiter": 1000,
+  "keys": {
+    "aliases": [
+      "keys"
+    ],
+    "use_menu": true
+  },
   "storage": {
     "type": "json",
     "host": "localhost",
