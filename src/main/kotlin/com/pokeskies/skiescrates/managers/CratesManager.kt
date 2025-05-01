@@ -1,5 +1,6 @@
-package com.pokeskies.skiescrates
+package com.pokeskies.skiescrates.managers
 
+import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.data.Crate
@@ -26,9 +27,9 @@ object CratesManager {
     const val CRATE_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:crate"
     const val KEY_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:crate"
 
-    private val locations: MutableMap<DimensionalBlockPos, Crate> = mutableMapOf()
-    private val interactionLimiter = mutableMapOf<UUID, Long>()
+    val locations: MutableMap<DimensionalBlockPos, Crate> = mutableMapOf()
     val openingPlayers: MutableList<UUID> = mutableListOf()
+    private val interactionLimiter = mutableMapOf<UUID, Long>()
 
     fun init() {
         // load the crate locations

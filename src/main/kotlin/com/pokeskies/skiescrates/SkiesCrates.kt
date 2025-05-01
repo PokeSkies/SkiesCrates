@@ -2,7 +2,7 @@ package com.pokeskies.skiescrates
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.pokeskies.skiescrates.CratesManager.tick
+import com.pokeskies.skiescrates.managers.CratesManager.tick
 import com.pokeskies.skiescrates.commands.BaseCommand
 import com.pokeskies.skiescrates.commands.KeysCommand
 import com.pokeskies.skiescrates.config.ConfigManager
@@ -17,6 +17,8 @@ import com.pokeskies.skiescrates.data.rewards.RewardType
 import com.pokeskies.skiescrates.economy.EconomyType
 import com.pokeskies.skiescrates.economy.IEconomyService
 import com.pokeskies.skiescrates.gui.InventoryType
+import com.pokeskies.skiescrates.managers.CratesManager
+import com.pokeskies.skiescrates.managers.HologramsManager
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
 import com.pokeskies.skiescrates.utils.Utils
@@ -116,11 +118,16 @@ class SkiesCrates : ModInitializer {
         })
         ServerLifecycleEvents.SERVER_STARTED.register(ServerLifecycleEvents.ServerStarted { server: MinecraftServer ->
             CratesManager.init()
+            if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.load()
         })
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             BaseCommand().register(dispatcher)
             KeysCommand().register(dispatcher)
         }
+        ServerLifecycleEvents.SERVER_STOPPED.register(ServerLifecycleEvents.ServerStopped { server: MinecraftServer ->
+            if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.unload()
+            this.storage?.close()
+        })
 
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
             tick()
@@ -216,6 +223,7 @@ class SkiesCrates : ModInitializer {
     }
 
     fun reload() {
+        if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.unload()
         this.storage?.close()
 
         ConfigManager.load()
@@ -230,6 +238,7 @@ class SkiesCrates : ModInitializer {
         this.economyServices = IEconomyService.getLoadedEconomyServices()
 
         CratesManager.init()
+        if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.load()
     }
 
     fun getLoadedEconomyServices(): Map<EconomyType, IEconomyService> {
