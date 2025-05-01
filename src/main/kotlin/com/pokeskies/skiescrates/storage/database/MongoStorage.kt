@@ -30,7 +30,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         try {
             val credential = MongoCredential.createCredential(
                 config.username,
-                config.database,
+                "admin",
                 config.password.toCharArray()
             )
             var settings = MongoClientSettings.builder()

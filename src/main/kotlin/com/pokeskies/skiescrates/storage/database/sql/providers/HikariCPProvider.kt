@@ -34,10 +34,10 @@ abstract class HikariCPProvider(private val storageConfig: SkiesCratesConfig.Sto
             createConnection().use {
                 val statement = it.createStatement()
                     statement.executeUpdate(
-                    "CREATE TABLE IF NOT EXISTS userdata (" +
+                    "CREATE TABLE IF NOT EXISTS ${storageConfig.tablePrefix}userdata (" +
                             "uuid VARCHAR(36) NOT NULL, " +
                             "crates TEXT NOT NULL, " +
-                            "keys TEXT NOT NULL, " +
+                            "`keys` TEXT NOT NULL, " +
                             "PRIMARY KEY (uuid)" +
                         ")"
                 )

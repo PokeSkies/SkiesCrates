@@ -14,6 +14,7 @@
     "database": "skiescrates",
     "username": "root",
     "password": "",
+    "table_prefix": "skiescrates_",
     "properties": {
       "useUnicode": "true",
       "characterEncoding": "utf8"

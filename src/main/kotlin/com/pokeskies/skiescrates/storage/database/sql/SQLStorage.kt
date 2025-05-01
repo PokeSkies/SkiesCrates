@@ -12,7 +12,7 @@ import java.lang.reflect.Type
 import java.sql.SQLException
 import java.util.*
 
-class SQLStorage(config: SkiesCratesConfig.Storage) : IStorage {
+class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
     private val connectionProvider: ConnectionProvider = when (config.type) {
         StorageType.MYSQL -> MySQLProvider(config)
         StorageType.SQLITE -> SQLiteProvider(config)
@@ -29,7 +29,7 @@ class SQLStorage(config: SkiesCratesConfig.Storage) : IStorage {
         try {
             connectionProvider.createConnection().use {
                 val statement = it.createStatement()
-                val result = statement.executeQuery(String.format("SELECT * FROM userdata WHERE uuid='%s'", uuid.toString()))
+                val result = statement.executeQuery(String.format("SELECT * FROM ${config.tablePrefix}userdata WHERE uuid='%s'", uuid.toString()))
                 if (result != null && result.next()) {
                     userData.crates = SkiesCrates.INSTANCE.gson.fromJson(result.getString("crates"), type)
                     userData.keys = SkiesCrates.INSTANCE.gson.fromJson(result.getString("keys"), type)
@@ -45,7 +45,7 @@ class SQLStorage(config: SkiesCratesConfig.Storage) : IStorage {
         return try {
             connectionProvider.createConnection().use {
                 val statement = it.createStatement()
-                statement.execute(String.format("REPLACE INTO userdata (uuid, crates, keys) VALUES ('%s', '%s', '%s')",
+                statement.execute(String.format("REPLACE INTO ${config.tablePrefix}userdata (uuid, crates, keys) VALUES ('%s', '%s', '%s')",
                     uuid.toString(),
                     SkiesCrates.INSTANCE.gson.toJson(userData.crates),
                     SkiesCrates.INSTANCE.gson.toJson(userData.keys)
