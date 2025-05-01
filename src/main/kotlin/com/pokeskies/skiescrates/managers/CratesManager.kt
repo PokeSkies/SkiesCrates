@@ -83,7 +83,7 @@ object CratesManager {
 
         if (!silent) {
             Lang.CRATE_GIVE.forEach {
-                player.sendMessage(TextUtils.toComponent(it.replace("%crate_name%", crate.name)))
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(it)))
             }
         }
 
@@ -103,7 +103,7 @@ object CratesManager {
 
             if (result && !silent) {
                 Lang.KEY_GIVE.forEach {
-                    player.sendMessage(TextUtils.toComponent(it.replace("%key_name%", key.name)))
+                    player.sendMessage(TextUtils.parseAll(player, it.replace("%key_name%", key.name)))
                 }
             }
 
@@ -125,7 +125,7 @@ object CratesManager {
 
         if (!silent) {
             Lang.KEY_GIVE.forEach {
-                player.sendMessage(TextUtils.toComponent(it.replace("%key_name%", key.name)))
+                player.sendMessage(TextUtils.parseAll(player, it.replace("%key_name%", key.name)))
             }
         }
 
@@ -146,7 +146,9 @@ object CratesManager {
         if (openingPlayers.contains(player.uuid)) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_ALREADY_OPENING.forEach {
-                player.sendMessage(TextUtils.toComponent(it))
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    it
+                )))
             }
             return false
         }
@@ -155,7 +157,9 @@ object CratesManager {
         if (!isForced && crate.permission.isNotEmpty() && !Permissions.check(player, crate.permission)) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_NO_PERMISSION.forEach {
-                player.sendMessage(TextUtils.toComponent(it))
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    it
+                )))
             }
             return false
         }
@@ -164,7 +168,9 @@ object CratesManager {
         if (!isForced && crate.inventorySpace > 0 && player.inventory.items.count { it.isEmpty } >= crate.inventorySpace) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_INVENTORY_SPACE.forEach {
-                player.sendMessage(TextUtils.toComponent(it.replace("%crate_inventory_space%", crate.inventorySpace.toString())))
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    it
+                )))
             }
             return false
         }
@@ -175,14 +181,18 @@ object CratesManager {
                 handleCrateFail(player, crate, openData)
                 Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${SkiesCrates.INSTANCE.getLoadedEconomyServices().keys.joinToString(", ")}")
                 Lang.ERROR_ECONOMY_PROVIDER.forEach {
-                    player.sendMessage(TextUtils.toComponent(it))
+                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                        it
+                    )))
                 }
                 return false
             }
             if (service.balance(player, crate.cost.currency) < crate.cost.amount) {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_COST.forEach {
-                    player.sendMessage(TextUtils.toComponent(it))
+                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                        it
+                    )))
                 }
                 return false
             }
@@ -191,7 +201,9 @@ object CratesManager {
         val playerData = SkiesCrates.INSTANCE.storage?.getUser(player.uuid) ?: run {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_STORAGE.forEach {
-                player.sendMessage(TextUtils.toComponent(it))
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    it
+                )))
             }
             return false
         }
@@ -204,7 +216,9 @@ object CratesManager {
                 if (System.currentTimeMillis() < cooldownTime) {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_COOLDOWN.forEach {
-                        player.sendMessage(TextUtils.toComponent(it.replace("%cooldown%", Utils.getFormattedTime((cooldownTime - System.currentTimeMillis()) / 1000))))
+                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                            it.replace("%cooldown%", Utils.getFormattedTime((cooldownTime - System.currentTimeMillis()) / 1000))
+                        )))
                     }
                     return false
                 }
@@ -215,7 +229,7 @@ object CratesManager {
         if (crate.rewards.isEmpty()) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_NO_REWARDS.forEach {
-                player.sendMessage(TextUtils.toComponent(it))
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(it)))
             }
             return false
         }
@@ -226,10 +240,9 @@ object CratesManager {
                 val key = ConfigManager.KEYS[keyId] ?: run {
                     Utils.printError("Key $keyId does not exist while opening crate ${crate.id} for ${player.name.string}!")
                     Lang.ERROR_KEY_NOT_FOUND.forEach {
-                        player.sendMessage(TextUtils.toComponent(it
-                            .replace("%crate_name%", crate.name)
-                            .replace("%key_id%", keyId)
-                        ))
+                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                            it.replace("%key_id%", keyId)
+                        )))
                     }
                     return@all false
                 }
@@ -242,13 +255,10 @@ object CratesManager {
                 }
             }) {
                 handleCrateFail(player, crate, openData)
-                Lang.ERROR_MISSING_KEYS.forEach { it ->
-                    player.sendMessage(TextUtils.toComponent(it
-                        .replace("%crate_name%", crate.name)
-                        .replace("%crate_keys%", crate.keys.entries.joinToString(", ") { (keyId, amount) ->
-                            "${ConfigManager.KEYS[keyId]?.name ?: keyId} x$amount"
-                        })
-                    ))
+                Lang.ERROR_MISSING_KEYS.forEach {
+                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                        it
+                    )))
                 }
                 return false
             }
@@ -259,7 +269,9 @@ object CratesManager {
             if (!player.inventory.contains { getCrateOrNull(it)?.id == crate.id }) {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_NO_CRATE.forEach {
-                    player.sendMessage(TextUtils.toComponent(it))
+                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                        it
+                    )))
                 }
                 return false
             }
@@ -273,14 +285,18 @@ object CratesManager {
                     handleCrateFail(player, crate, openData)
                     Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${SkiesCrates.INSTANCE.getLoadedEconomyServices().keys.joinToString(", ")}")
                     Lang.ERROR_ECONOMY_PROVIDER.forEach {
-                        player.sendMessage(TextUtils.toComponent(it))
+                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                            it
+                        )))
                     }
                     return false
                 }
                 if (!service.withdraw(player, crate.cost.amount, crate.cost.currency)) {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_BALANCE_CHANGED.forEach {
-                        player.sendMessage(TextUtils.toComponent(it))
+                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                            it
+                        )))
                     }
                     return false
                 }
@@ -298,7 +314,9 @@ object CratesManager {
                     var removed = 0
                     val key = ConfigManager.KEYS[keyId] ?: run {
                         Lang.ERROR_NO_REWARDS.forEach {
-                            player.sendMessage(TextUtils.toComponent(it))
+                            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                                it
+                            )))
                         }
                         return false
                     }
@@ -307,13 +325,9 @@ object CratesManager {
                         if (!playerData.removeKeys(keyId, amount)) {
                             Utils.printError("Failed to remove $amount keys from ${player.name.string} for crate ${crate.id}, but they were present in the check!")
                             Lang.ERROR_KEYS_CHANGED.forEach {
-                                player.sendMessage(TextUtils.toComponent(it
-                                    .replace("%crate_name%", crate.name)
-                                    .replace("%key_id%", keyId)
-                                    .replace("%crate_keys%", crate.keys.entries.joinToString(", ") { (keyId, amount) ->
-                                        "${ConfigManager.KEYS[keyId]?.name ?: keyId} x$amount"
-                                    })
-                                ))
+                                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                                    it.replace("%key_id%", keyId)
+                                )))
                             }
                             return false
                         }
@@ -340,13 +354,9 @@ object CratesManager {
                         // This should never happen, but just in case
                         Utils.printError("Somehow the ${player.name.string} had $amount keys on check, but we removed $removed instead!")
                         Lang.ERROR_KEYS_CHANGED.forEach {
-                            player.sendMessage(TextUtils.toComponent(it
-                                .replace("%crate_name%", crate.name)
-                                .replace("%key_id%", keyId)
-                                .replace("%crate_keys%", crate.keys.entries.joinToString(", ") { (keyId, amount) ->
-                                    "${ConfigManager.KEYS[keyId]?.name ?: keyId} x$amount"
-                                })
-                            ))
+                            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                                it.replace("%key_id%", keyId)
+                            )))
                         }
                         return false
                     }
@@ -360,9 +370,9 @@ object CratesManager {
         }
 
         Lang.CRATE_OPENING.forEach {
-            player.sendMessage(TextUtils.toComponent(it
-                .replace("%crate_name%", crate.name)
-            ))
+            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                it
+            )))
         }
 
         playerData.addCrateUse(crate.id)
@@ -378,9 +388,9 @@ object CratesManager {
         val animation = ConfigManager.ANIMATIONS_INVENTORY[crate.animation] ?: run {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_INVALID_ANIMATION.forEach {
-                player.sendMessage(TextUtils.toComponent(it
-                    .replace("%crate_name%", crate.name)
-                ))
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    it
+                )))
             }
             return false
         }
@@ -401,9 +411,9 @@ object CratesManager {
 
         val preview = ConfigManager.PREVIEW[crate.preview] ?: run {
             Lang.ERROR_INVALID_PREVIEW.forEach {
-                player.sendMessage(TextUtils.toComponent(it
-                    .replace("%crate_name%", crate.name)
-                ))
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    it
+                )))
             }
             return
         }

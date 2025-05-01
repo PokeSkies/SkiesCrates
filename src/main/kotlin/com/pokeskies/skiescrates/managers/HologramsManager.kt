@@ -5,7 +5,6 @@ import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.utils.Utils
 import dev.furq.holodisplays.api.HoloDisplaysAPI
 import dev.furq.holodisplays.api.HoloDisplaysAPI.HologramBuilder
-import net.minecraft.core.BlockPos
 
 object HologramsManager {
     private var hologramsAPI: HoloDisplaysAPI = HoloDisplaysAPI.get()
@@ -20,8 +19,7 @@ object HologramsManager {
                 id
             ) { builder ->
                 builder.text(*hologramConfig.text.map {
-                    it.replace("%crate_name%", crate.name)
-                        .replace("%crate_id%", crate.id)
+                    crate.parsePlaceholders(it)
                 }.toTypedArray())
                 builder.scale(hologramConfig.scale.x, hologramConfig.scale.y, hologramConfig.scale.z)
                 builder.rotation(hologramConfig.rotation.x, hologramConfig.rotation.y, hologramConfig.rotation.z)

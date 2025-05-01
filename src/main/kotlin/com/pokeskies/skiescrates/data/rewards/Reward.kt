@@ -18,22 +18,20 @@ abstract class Reward(
         Utils.printDebug("Attempting to execute a ${type.identifier} reward: $this")
 
         Lang.CRATE_REWARD.forEach {
-            player.sendMessage(
-                TextUtils.toComponent(it
-                    .replace("%player", player.name.string)
-                    .replace("%crate_name%", crate.name)
+            player.sendMessage(TextUtils.parseAll(
+                player,
+                crate.parsePlaceholders(it)
                     .replace("%reward_name%", name)
-                ))
+            ))
         }
 
         if (broadcast) {
             Lang.CRATE_REWARD_BROADCAST.forEach {
-                player.sendMessage(
-                    TextUtils.toComponent(it
-                        .replace("%player", player.name.string)
-                        .replace("%crate_name%", crate.name)
+                player.sendMessage(TextUtils.parseAll(
+                    player,
+                    crate.parsePlaceholders(it)
                         .replace("%reward_name%", name)
-                    ))
+                ))
             }
         }
     }

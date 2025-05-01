@@ -6,6 +6,7 @@ import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardType
+import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
@@ -31,7 +32,7 @@ class CommandPlayer(
         for (command in commands) {
             SkiesCrates.INSTANCE.server.commands?.performPrefixedCommand(
                 player.createCommandSourceStack(),
-                command
+                PlaceholderManager.parse(player, command)
             )
         }
     }

@@ -37,17 +37,35 @@
       }
     ],
     "hologram": {
-      "lines": [
+      "text": [
         "<red>Example Crate",
-        "<gray>Example Lore!"
+        "<gray>Example Lore!",
+        "Your Keys: %skiescrates:keys example_key%"
       ],
       "offset": {
-        "x": 0,
-        "y": 0,
-        "z": 0
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
       },
-      "gap": 0.5,
-      "scale": 1.0
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "billboard": "VERTICAL",
+      "background": {
+        "color": "000000",
+        "opacity": 50
+      },
+      "shadow": true,
+      "opacity": 1.0,
+      "update_rate": 100,
+      "view_distance": 50.0
     },
     "particles": {
 

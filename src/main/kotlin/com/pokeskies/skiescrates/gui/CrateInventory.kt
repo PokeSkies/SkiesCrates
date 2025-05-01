@@ -1,11 +1,11 @@
 package com.pokeskies.skiescrates.gui
 
-import com.pokeskies.skiescrates.managers.CratesManager.openingPlayers
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.animations.InventoryAnimation
 import com.pokeskies.skiescrates.data.animations.spinners.AnimatedSpinnerInstance
 import com.pokeskies.skiescrates.data.animations.spinners.RewardSpinnerInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
+import com.pokeskies.skiescrates.managers.CratesManager.openingPlayers
 import com.pokeskies.skiescrates.utils.RandomCollection
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
@@ -27,7 +27,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
     private var rewardSpinners: MutableMap<String, RewardSpinnerInstance> = mutableMapOf()
 
     init {
-        this.title = TextUtils.toNative("Crate %crate_name%".replace("%crate_name%", crate.name))
+        this.title = TextUtils.parseAll(player, crate.parsePlaceholders(animation.settings.title))
 
         animation.items.static.forEach { (id, item) ->
             item.slots.forEach { slot ->

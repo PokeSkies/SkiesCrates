@@ -19,7 +19,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
     private var maxPages = 1
 
     init {
-        this.title = TextUtils.toNative(crate.parsePlaceholder(preview.settings.title))
+        this.title = TextUtils.parseAll(player, crate.parsePlaceholders(preview.settings.title))
 
         preview.items.forEach { (id, item) ->
             item.createItemStack(player).let {
@@ -84,10 +84,5 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
                 }
             }
         }
-    }
-
-    fun parsePlaceholders(string: String): String {
-        return string.replace("%player%", player.name.string)
-            .replace("%crate_name%", crate.name)
     }
 }

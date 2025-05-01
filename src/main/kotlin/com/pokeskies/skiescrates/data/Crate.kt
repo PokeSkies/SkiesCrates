@@ -1,6 +1,7 @@
 package com.pokeskies.skiescrates.data
 
 import com.google.gson.annotations.SerializedName
+import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.CostOptions
 import com.pokeskies.skiescrates.config.FailureOptions
 import com.pokeskies.skiescrates.config.GenericGUIItem
@@ -41,8 +42,13 @@ class Crate(
         return randomBag!!.next()
     }
 
-    fun parsePlaceholder(string: String): String {
+    fun parsePlaceholders(string: String): String {
         return string.replace("%crate_name%", name)
+            .replace("%crate_id%", id)
+            .replace("%crate_keys%", keys.entries.joinToString(", ") { (keyId, amount) ->
+                "${ConfigManager.KEYS[keyId]?.name ?: keyId} x$amount"
+            })
+            .replace("%crate_inventory_space%", inventorySpace.toString())
     }
 
     override fun toString(): String {
