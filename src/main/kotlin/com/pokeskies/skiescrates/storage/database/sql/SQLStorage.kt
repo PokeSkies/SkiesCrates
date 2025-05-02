@@ -3,6 +3,7 @@ package com.pokeskies.skiescrates.storage.database.sql
 import com.google.gson.reflect.TypeToken
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.SkiesCratesConfig
+import com.pokeskies.skiescrates.data.userdata.CrateData
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
@@ -18,7 +19,8 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         StorageType.SQLITE -> SQLiteProvider(config)
         else -> throw IllegalStateException("Invalid storage type!")
     }
-    private val type: Type = object : TypeToken<MutableMap<String, UserData>>() {}.type
+    private val cratesType: Type = object : TypeToken<HashMap<String, CrateData>>() {}.type
+    private val keysType: Type = object : TypeToken<HashMap<String, Int>>() {}.type
 
     init {
         connectionProvider.init()
@@ -31,8 +33,8 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
                 val statement = it.createStatement()
                 val result = statement.executeQuery(String.format("SELECT * FROM ${config.tablePrefix}userdata WHERE uuid='%s'", uuid.toString()))
                 if (result != null && result.next()) {
-                    userData.crates = SkiesCrates.INSTANCE.gson.fromJson(result.getString("crates"), type)
-                    userData.keys = SkiesCrates.INSTANCE.gson.fromJson(result.getString("keys"), type)
+                    userData.crates = SkiesCrates.INSTANCE.gson.fromJson(result.getString("crates"), cratesType)
+                    userData.keys = SkiesCrates.INSTANCE.gson.fromJson(result.getString("keys"), keysType)
                 }
             }
         } catch (e: SQLException) {
