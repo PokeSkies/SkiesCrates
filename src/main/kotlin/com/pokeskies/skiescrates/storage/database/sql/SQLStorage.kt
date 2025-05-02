@@ -45,7 +45,7 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         return try {
             connectionProvider.createConnection().use {
                 val statement = it.createStatement()
-                statement.execute(String.format("REPLACE INTO ${config.tablePrefix}userdata (uuid, crates, keys) VALUES ('%s', '%s', '%s')",
+                statement.execute(String.format("REPLACE INTO ${config.tablePrefix}userdata (uuid, crates, `keys`) VALUES ('%s', '%s', '%s')",
                     uuid.toString(),
                     SkiesCrates.INSTANCE.gson.toJson(userData.crates),
                     SkiesCrates.INSTANCE.gson.toJson(userData.keys)
