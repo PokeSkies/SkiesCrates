@@ -5,13 +5,16 @@ import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.TextUtils
+import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.ListTag
 import net.minecraft.nbt.StringTag
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -20,7 +23,7 @@ import net.minecraft.world.item.component.ItemLore
 
 class AnimatedItem(
     val weight: Int = 1,
-    val item: Item = Items.BARRIER,
+    val item: String = "",
     val amount: Int = 1,
     val name: String? = null,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
@@ -29,7 +32,16 @@ class AnimatedItem(
     val nbt: CompoundTag? = null
 ) {
     fun createItemStack(player: ServerPlayer): ItemStack {
-        val stack = ItemStack(item, amount)
+        if (item.isEmpty()) return ItemStack(Items.BARRIER, amount)
+
+        val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(item))
+
+        if (parsedItem.isEmpty) {
+            Utils.printError("Error while getting Item, defaulting to Barrier: $parsedItem")
+            return ItemStack(Items.BARRIER, amount)
+        }
+
+        val stack = ItemStack(parsedItem.get(), amount)
 
         if (nbt != null) {
             // Parses the nbt and attempts to replace any placeholders
