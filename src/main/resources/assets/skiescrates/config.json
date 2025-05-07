@@ -28,5 +28,8 @@
       "max_lifetime": 1800000
     },
     "url_override": ""
+  },
+  "migration": {
+    "keys": []
   }
 }
