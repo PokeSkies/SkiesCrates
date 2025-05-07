@@ -74,7 +74,7 @@ class GiveCommand : SubCommand {
             }
 
             val results = targets.map { player ->
-                CratesManager.giveCrate(crate, player, amount, silent)
+                CratesManager.giveCrates(crate, player, amount, silent)
             }
 
             val successful = results.filter { it }.size

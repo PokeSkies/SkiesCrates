@@ -60,6 +60,88 @@ class KeyCommand : SubCommand {
                     )
                 )
             )
+            .then(Commands.literal("take")
+                .then(Commands.argument("targets", EntityArgument.players())
+                    .then(Commands.argument("key", StringArgumentType.string())
+                        .suggests { context, builder ->
+                            ConfigManager.KEYS.forEach { builder.suggest(it.key) }
+                            builder.buildFuture()
+                        }
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                            .then(Commands.argument("silent", BoolArgumentType.bool())
+                                .executes { ctx: CommandContext<CommandSourceStack> ->
+                                    take(
+                                        ctx,
+                                        EntityArgument.getPlayers(ctx, "targets").toList(),
+                                        StringArgumentType.getString(ctx, "key"),
+                                        IntegerArgumentType.getInteger(ctx, "amount"),
+                                        BoolArgumentType.getBool(ctx, "silent")
+                                    )
+                                }
+                            )
+                            .executes { ctx: CommandContext<CommandSourceStack> ->
+                                take(
+                                    ctx,
+                                    EntityArgument.getPlayers(ctx, "targets").toList(),
+                                    StringArgumentType.getString(ctx, "key"),
+                                    IntegerArgumentType.getInteger(ctx, "amount")
+                                )
+                            }
+                        )
+                        .executes { ctx: CommandContext<CommandSourceStack> ->
+                            take(
+                                ctx,
+                                EntityArgument.getPlayers(ctx, "targets").toList(),
+                                StringArgumentType.getString(ctx, "key")
+                            )
+                        }
+                    )
+                )
+            )
+            .then(Commands.literal("set")
+                .then(Commands.argument("targets", EntityArgument.players())
+                    .then(Commands.argument("key", StringArgumentType.string())
+                        .suggests { context, builder ->
+                            ConfigManager.KEYS.forEach { builder.suggest(it.key) }
+                            builder.buildFuture()
+                        }
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                            .then(Commands.argument("silent", BoolArgumentType.bool())
+                                .executes { ctx: CommandContext<CommandSourceStack> ->
+                                    take(
+                                        ctx,
+                                        EntityArgument.getPlayers(ctx, "targets").toList(),
+                                        StringArgumentType.getString(ctx, "key"),
+                                        IntegerArgumentType.getInteger(ctx, "amount"),
+                                        BoolArgumentType.getBool(ctx, "silent")
+                                    )
+                                }
+                            )
+                            .executes { ctx: CommandContext<CommandSourceStack> ->
+                                take(
+                                    ctx,
+                                    EntityArgument.getPlayers(ctx, "targets").toList(),
+                                    StringArgumentType.getString(ctx, "key"),
+                                    IntegerArgumentType.getInteger(ctx, "amount")
+                                )
+                            }
+                        )
+                        .executes { ctx: CommandContext<CommandSourceStack> ->
+                            take(
+                                ctx,
+                                EntityArgument.getPlayers(ctx, "targets").toList(),
+                                StringArgumentType.getString(ctx, "key")
+                            )
+                        }
+                    )
+                )
+            )
+            .then(Commands.literal("view")
+                .then(Commands.argument("target", EntityArgument.player())
+                    .executes { ctx -> KeysCommand.execute(ctx, EntityArgument.getPlayer(ctx, "target"))}
+                )
+                .executes { ctx -> KeysCommand.execute(ctx, ctx.source.playerOrException)}
+            )
             .executes { ctx -> KeysCommand.execute(ctx, ctx.source.playerOrException)}
             .build()
     }
@@ -78,7 +160,7 @@ class KeyCommand : SubCommand {
             }
 
             val results = targets.map { player ->
-                CratesManager.giveKey(key, player, amount, silent)
+                CratesManager.giveKeys(key, player, amount, silent)
             }
 
             val successful = results.filter { it }.size
@@ -92,6 +174,89 @@ class KeyCommand : SubCommand {
                 else -> ctx.source.sendMessage(
                     Component.text("Successfully gave ${amount}x $keyId keys to $successful player(s), " +
                             "but failed to give it to ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
+                )
+            }
+
+            return 1
+        }
+
+        fun take(
+            ctx: CommandContext<CommandSourceStack>,
+            targets: List<ServerPlayer>,
+            keyId: String,
+            amount: Int = 1,
+            silent: Boolean = false
+        ): Int {
+            val key = ConfigManager.KEYS[keyId] ?: run {
+                ctx.source.sendMessage(Component.text("Key $keyId could not be found!").color(NamedTextColor.RED))
+                return 0
+            }
+
+            // TODO: Make this support non virtual keys
+            if (!key.virtual) {
+                ctx.source.sendMessage(Component.text("Key $keyId is not a virtual key!").color(NamedTextColor.RED))
+                return 0
+            }
+
+            val results = targets.map { player ->
+                CratesManager.takeKeys(key, player, amount, silent)
+            }
+
+            val successful = results.filter { it }.size
+            when (successful) {
+                0 -> ctx.source.sendMessage(
+                    Component.text("Failed to take ${amount}x $keyId keys from players!").color(NamedTextColor.RED)
+                )
+                targets.size -> ctx.source.sendMessage(
+                    Component.text("Successfully took ${amount}x $keyId keys from $successful players!").color(NamedTextColor.GREEN),
+                )
+                else -> ctx.source.sendMessage(
+                    Component.text("Successfully took ${amount}x $keyId keys from $successful player(s), " +
+                            "but failed to take from ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
+                )
+            }
+
+            return 1
+        }
+
+        fun set(
+            ctx: CommandContext<CommandSourceStack>,
+            targets: List<ServerPlayer>,
+            keyId: String,
+            amount: Int = 1,
+            silent: Boolean = false
+        ): Int {
+            val key = ConfigManager.KEYS[keyId] ?: run {
+                ctx.source.sendMessage(Component.text("Key $keyId could not be found!").color(NamedTextColor.RED))
+                return 0
+            }
+
+            // TODO: Make this support non virtual keys
+            if (!key.virtual) {
+                ctx.source.sendMessage(Component.text("Key $keyId is not a virtual key!").color(NamedTextColor.RED))
+                return 0
+            }
+
+            if (amount <= 0) {
+                ctx.source.sendMessage(Component.text("Amount must be greater than 0!").color(NamedTextColor.RED))
+                return 0
+            }
+
+            val results = targets.map { player ->
+                CratesManager.setKeys(key, player, amount, silent)
+            }
+
+            val successful = results.filter { it }.size
+            when (successful) {
+                0 -> ctx.source.sendMessage(
+                    Component.text("Failed to take ${amount}x $keyId keys from players!").color(NamedTextColor.RED)
+                )
+                targets.size -> ctx.source.sendMessage(
+                    Component.text("Successfully took ${amount}x $keyId keys from $successful players!").color(NamedTextColor.GREEN),
+                )
+                else -> ctx.source.sendMessage(
+                    Component.text("Successfully took ${amount}x $keyId keys from $successful player(s), " +
+                            "but failed to take from ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
                 )
             }
 

@@ -11,7 +11,9 @@ import kotlin.reflect.javaType
 
 object Lang {
     // Key Messages
-    var KEY_GIVE = listOf("<green>You have received a %key_name% crate key!")
+    var KEY_GIVE = listOf("<green>You have received x%amount% %key_name% crate key(s)!")
+    var KEY_TAKE = listOf("<green>You had x%amount% %key_name% crate key(s) taken from you!")
+    var KEY_SET = listOf("<green>Your %key_name% crate keys were set to x%amount%!")
 
     // Crate Messages
     var CRATE_GIVE = listOf("<green>You have received a %crate_name% crate!")

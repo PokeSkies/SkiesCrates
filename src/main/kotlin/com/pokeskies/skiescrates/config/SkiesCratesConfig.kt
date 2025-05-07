@@ -9,6 +9,7 @@ class SkiesCratesConfig(
     var interactionLimiter: Long = 1000,
     var storage: Storage = Storage(),
     var keys: KeyOptions = KeyOptions(),
+    var migration: MigrationOptions = MigrationOptions()
 ) {
     class Storage(
         val type: StorageType = StorageType.JSON,

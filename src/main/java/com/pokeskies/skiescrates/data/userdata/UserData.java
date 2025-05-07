@@ -37,7 +37,7 @@ public class UserData {
         crates.computeIfAbsent(id, k -> new CrateData(0L, 0)).openCount++;
     }
 
-    public void addKey(String id, int amount) {
+    public void addKeys(String id, int amount) {
         keys.merge(id, amount, Integer::sum);
     }
 
@@ -45,6 +45,10 @@ public class UserData {
         if (!keys.containsKey(id) || keys.get(id) < amount) return false;
         keys.compute(id, (k, v) -> v > amount ? v - amount : null);
         return true;
+    }
+
+    public void setKeys(String id, int amount) {
+        keys.put(id, amount);
     }
 
     @Override

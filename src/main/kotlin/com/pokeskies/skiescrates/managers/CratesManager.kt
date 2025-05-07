@@ -17,6 +17,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.StringTag
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
@@ -61,10 +62,10 @@ object CratesManager {
 
     fun tick() {
         // TODO: Particle ticking
-        // TODO: spamLimiter cleanup every X often
+        // TODO: interaction limiter cleanup
     }
 
-    fun giveCrate(crate: Crate, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {
+    fun giveCrates(crate: Crate, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {
         val item = crate.display.createItemStack(player)
 
         // TODO: Update amount to checking unique
@@ -90,14 +91,14 @@ object CratesManager {
         return true
     }
 
-    fun giveKey(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {
+    fun giveKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {
         if (key.virtual) {
             val playerData = SkiesCrates.INSTANCE.storage?.getUser(player.uuid) ?: run {
                 player.sendMessage(Component.text("There was an error with the storage system! Please contact an admin.").color(NamedTextColor.RED))
                 return false
             }
 
-            playerData.addKey(key.id, amount)
+            playerData.addKeys(key.id, amount)
 
             val result = SkiesCrates.INSTANCE.storage?.saveUser(player.uuid, playerData) ?: false
 
@@ -125,11 +126,71 @@ object CratesManager {
 
         if (!silent) {
             Lang.KEY_GIVE.forEach {
-                player.sendMessage(TextUtils.parseAll(player, it.replace("%key_name%", key.name)))
+                player.sendMessage(TextUtils.parseAll(
+                    player,
+                    it.replace("%key_name%", key.name)
+                        .replace("%amount%", amount.toString())
+                ))
             }
         }
 
         return true
+    }
+
+    // TODO: Allow taking non virtual keys, merge into one function with crate removals
+    fun takeKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {
+        if (key.virtual) {
+            val playerData = SkiesCrates.INSTANCE.storage?.getUser(player.uuid) ?: run {
+                return false
+            }
+
+            if (!playerData.removeKeys(key.id, amount)) {
+                return false
+            }
+
+            val result = SkiesCrates.INSTANCE.storage?.saveUser(player.uuid, playerData) ?: false
+
+            if (result && !silent) {
+                Lang.KEY_TAKE.forEach {
+                    player.sendMessage(TextUtils.parseAll(
+                        player,
+                        it.replace("%key_name%", key.name)
+                            .replace("%amount%", amount.toString())
+                    ))
+                }
+            }
+
+            return result
+        }
+
+        return false
+    }
+
+    // TODO: Allow taking non virtual keys, merge into one function with crate removals
+    fun setKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {
+        if (key.virtual) {
+            val playerData = SkiesCrates.INSTANCE.storage?.getUser(player.uuid) ?: run {
+                return false
+            }
+
+            playerData.setKeys(key.id, amount)
+
+            val result = SkiesCrates.INSTANCE.storage?.saveUser(player.uuid, playerData) ?: false
+
+            if (result && !silent) {
+                Lang.KEY_SET.forEach {
+                    player.sendMessage(TextUtils.parseAll(
+                        player,
+                        it.replace("%key_name%", key.name)
+                            .replace("%amount%", amount.toString())
+                    ))
+                }
+            }
+
+            return result
+        }
+
+        return false
     }
 
     // This method is massive, but it handles a lot of things!
@@ -451,10 +512,27 @@ object CratesManager {
 
     fun getKeyOrNull(itemStack: ItemStack): Key? {
         val tag = itemStack.get(DataComponents.CUSTOM_DATA) ?: return null
+
         if (tag.contains(KEY_IDENTIFIER)) {
             return ConfigManager.KEYS[tag.copyTag().getString(KEY_IDENTIFIER)]
         }
-        return null
+
+        // Migration from other crate mods
+        return ConfigManager.CONFIG.migration.keys?.firstNotNullOfOrNull { instance ->
+            println("Instance - $instance")
+            val key = ConfigManager.KEYS[instance.key] ?: run {
+                Utils.printError("Migration Key ${instance.key} did not exist while attempting to find valid keys from player!")
+                return@firstNotNullOfOrNull null
+            }
+
+            if (tag.contains(instance.nbt.key)) {
+                val value = tag.copyTag().getString(instance.nbt.key)
+                if (value != null && value.equals(instance.nbt.value)) {
+                    return key
+                }
+            }
+            null
+        }
     }
 
     fun getCrateBlock(pos: DimensionalBlockPos): Crate? {
