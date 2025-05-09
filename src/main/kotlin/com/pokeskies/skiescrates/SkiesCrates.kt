@@ -1,5 +1,7 @@
 package com.pokeskies.skiescrates
 
+import com.github.benmanes.caffeine.cache.AsyncLoadingCache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.pokeskies.skiescrates.commands.BaseCommand
@@ -9,6 +11,7 @@ import com.pokeskies.skiescrates.config.SoundOption
 import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.data.CrateOpenData
 import com.pokeskies.skiescrates.data.DimensionalBlockPos
+import com.pokeskies.skiescrates.data.KeyCacheKey
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
 import com.pokeskies.skiescrates.data.rewards.Reward
@@ -23,6 +26,10 @@ import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
 import com.pokeskies.skiescrates.utils.Utils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -54,6 +61,10 @@ import xyz.nucleoid.stimuli.Stimuli
 import xyz.nucleoid.stimuli.event.player.PlayerSwingHandEvent
 import java.io.File
 import java.io.IOException
+import java.util.*
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class SkiesCrates : ModInitializer {
     companion object {
@@ -64,6 +75,8 @@ class SkiesCrates : ModInitializer {
 
         val LOGGER: Logger = LogManager.getLogger(MOD_ID)
         val MINI_MESSAGE: MiniMessage = MiniMessage.miniMessage()
+
+        val asyncScope = CoroutineScope(Dispatchers.IO)
 
         @JvmStatic
         fun asResource(path: String): ResourceLocation {
@@ -79,6 +92,28 @@ class SkiesCrates : ModInitializer {
     lateinit var nbtOpts: RegistryOps<Tag>
 
     private var economyServices: Map<EconomyType, IEconomyService> = emptyMap()
+
+    private val cacheExecutor: Executor = Executors.newFixedThreadPool(2) { r ->
+        val thread = Thread(r, "SkiesCrates-Keys-Cache")
+        thread.isDaemon = true
+        thread
+    }
+
+    private val playerKeyCache: AsyncLoadingCache<KeyCacheKey, Int> = Caffeine.newBuilder()
+        .expireAfterWrite(5, TimeUnit.SECONDS)
+        .refreshAfterWrite(2, TimeUnit.SECONDS)
+        .executor(cacheExecutor)
+        .buildAsync { key ->
+            val storage = storage ?: return@buildAsync 0
+            try {
+                val playerData = runBlocking {
+                    storage.getUser(key.playerUuid)
+                }
+                playerData.keys[key.keyId] ?: 0
+            } catch (e: Exception) {
+                0
+            }
+        }
 
     var gson: Gson = GsonBuilder().disableHtmlEscaping()
         .registerTypeAdapter(Reward::class.java, RewardType.RewardTypeAdaptor())
@@ -174,7 +209,9 @@ class SkiesCrates : ModInitializer {
             if (!item.isEmpty) {
                 val crate = CratesManager.getCrateOrNull(item)
                 if (crate != null) {
-                    CratesManager.openCrate(player, crate, CrateOpenData(null, item), false)
+                    asyncScope.launch {
+                        CratesManager.openCrate(player, crate, CrateOpenData(null, item), false)
+                    }
                     return@UseBlockCallback InteractionResult.FAIL
                 }
             }
@@ -187,7 +224,9 @@ class SkiesCrates : ModInitializer {
                 blockHitResult.blockPos.z
             )
             CratesManager.getCrateBlock(blockPos)?.let { crate ->
-                CratesManager.openCrate(player, crate, CrateOpenData(blockPos, null), false)
+                asyncScope.launch {
+                    CratesManager.openCrate(player, crate, CrateOpenData(blockPos, null), false)
+                }
                 return@UseBlockCallback InteractionResult.FAIL
             }
 
@@ -202,7 +241,9 @@ class SkiesCrates : ModInitializer {
             if (hand != InteractionHand.MAIN_HAND) return@UseItemCallback InteractionResultHolder.pass(item)
 
             val crate = CratesManager.getCrateOrNull(item) ?: return@UseItemCallback InteractionResultHolder.pass(item)
-            CratesManager.openCrate(player, crate, CrateOpenData(null, item), false)
+            asyncScope.launch {
+                CratesManager.openCrate(player, crate, CrateOpenData(null, item), false)
+            }
 
             return@UseItemCallback InteractionResultHolder.fail(item)
         })
@@ -253,5 +294,9 @@ class SkiesCrates : ModInitializer {
 
     fun getEconomyServiceOrDefault(economyType: EconomyType?): IEconomyService? {
         return economyType?.let { this.economyServices[it] } ?: this.economyServices.values.firstOrNull()
+    }
+
+    fun getCachedKeys(uuid: UUID, keyId: String): Int {
+        return playerKeyCache.get(KeyCacheKey(uuid, keyId)).get()
     }
 }

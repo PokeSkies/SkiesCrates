@@ -15,13 +15,7 @@ class PlayerKeys : PlayerPlaceholder {
             ))
         }
 
-        val playerData = SkiesCrates.INSTANCE.storage?.getUser(player.uuid) ?: run {
-            return GenericResult.invalid(Component.text(
-                "Storage Error!"
-            ))
-        }
-
-        return GenericResult.valid(Component.text(playerData.keys[key] ?: 0))
+        return GenericResult.valid(Component.text(SkiesCrates.INSTANCE.getCachedKeys(player.uuid, key)))
     }
 
     override fun id(): String = "keys"

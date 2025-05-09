@@ -1,7 +1,5 @@
 package com.pokeskies.skiescrates.config
 
-import net.minecraft.nbt.CompoundTag
-
 class MigrationOptions(
     val keys: List<KeyInstance>? = null
 ) {

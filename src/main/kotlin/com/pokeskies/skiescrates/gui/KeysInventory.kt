@@ -6,7 +6,9 @@ import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import eu.pb4.sgui.api.gui.SimpleGui
+import kotlinx.coroutines.runBlocking
 import net.minecraft.server.level.ServerPlayer
+import java.util.concurrent.CompletableFuture
 
 class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): SimpleGui(
     ConfigManager.KEYS_MENU.menuType.type, viewer, false
@@ -19,10 +21,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
     }
 
     private fun refresh() {
-        val playerData = SkiesCrates.INSTANCE.storage?.getUser(target.uuid)
-
-        if (playerData == null) {
-            Utils.printError("Player data for ${target.name} could not be found while opening keys menu!")
+        val storage = SkiesCrates.INSTANCE.storage ?: run {
             Lang.ERROR_STORAGE.forEach {
                 player.sendMessage(TextUtils.toNative(it))
             }
@@ -30,7 +29,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
             return
         }
 
-        keysMenu.items.forEach { (id, item) ->
+        keysMenu.items.forEach { (_, item) ->
             item.createItemStack(player).let {
                 item.slots.forEach { slot ->
                     this.setSlot(slot, it)
@@ -38,16 +37,29 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
             }
         }
 
-        keysMenu.keys.forEach { (id, item) ->
-            val key = ConfigManager.KEYS[id] ?: run {
-                Utils.printError("Key $id could not be found while opening keys menu!")
-                return@forEach
+        CompletableFuture.supplyAsync {
+            runBlocking {
+                storage.getUser(target.uuid)
             }
-            item.createItemStack(player, key, playerData.keys[id] ?: 0).let {
-                item.slots.forEach { slot ->
-                    this.setSlot(slot, it)
+        }.thenAccept { playerData ->
+            keysMenu.keys.forEach { (id, item) ->
+                val key = ConfigManager.KEYS[id] ?: run {
+                    Utils.printError("Key $id could not be found while opening keys menu!")
+                    return@forEach
+                }
+                item.createItemStack(player, key, playerData.keys[id] ?: 0).let {
+                    item.slots.forEach { slot ->
+                        this.setSlot(slot, it)
+                    }
                 }
             }
+        }.exceptionally {
+            Utils.printError("Player data for ${target.name} could not be found while opening keys menu!")
+            Lang.ERROR_STORAGE.forEach {
+                player.sendMessage(TextUtils.toNative(it))
+            }
+            close()
+            return@exceptionally null
         }
     }
 }
