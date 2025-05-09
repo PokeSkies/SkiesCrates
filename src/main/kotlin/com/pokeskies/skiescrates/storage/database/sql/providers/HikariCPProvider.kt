@@ -33,13 +33,23 @@ abstract class HikariCPProvider(private val storageConfig: SkiesCratesConfig.Sto
         try {
             createConnection().use {
                 val statement = it.createStatement()
-                    statement.executeUpdate(
-                    "CREATE TABLE IF NOT EXISTS ${storageConfig.tablePrefix}userdata (" +
+                statement.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS ${storageConfig.tablePrefix}userdata (" +
+                        "uuid VARCHAR(36) NOT NULL, " +
+                        "crates TEXT NOT NULL, " +
+                        "`keys` TEXT NOT NULL, " +
+                        "PRIMARY KEY (uuid)" +
+                    ")"
+                )
+                statement.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS ${storageConfig.tablePrefix}reward_logs (" +
+                            "id INT NOT NULL AUTO_INCREMENT, " +
                             "uuid VARCHAR(36) NOT NULL, " +
-                            "crates TEXT NOT NULL, " +
-                            "`keys` TEXT NOT NULL, " +
-                            "PRIMARY KEY (uuid)" +
-                        ")"
+                            "crateId TEXT NOT NULL, " +
+                            "rewardId TEXT NOT NULL, " +
+                            "`timestamp` BIGINT NOT NULL, " +
+                            "PRIMARY KEY (id)" +
+                            ")"
                 )
             }
         } catch (e: SQLException) {

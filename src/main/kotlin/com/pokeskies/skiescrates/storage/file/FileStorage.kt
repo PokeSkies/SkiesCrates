@@ -1,6 +1,7 @@
 package com.pokeskies.skiescrates.storage.file
 
 import com.pokeskies.skiescrates.config.ConfigManager
+import com.pokeskies.skiescrates.data.logging.RewardLog
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
 import java.util.*
@@ -19,6 +20,11 @@ class FileStorage : IStorage {
 
     override fun saveUser(uuid: UUID, userData: UserData): Boolean {
         fileData.userdata[uuid] = userData
+        return ConfigManager.saveFile(STORAGE_FILENAME, fileData)
+    }
+
+    override fun writeCrateLog(log: RewardLog): Boolean {
+        fileData.rewardLogs.add(log)
         return ConfigManager.saveFile(STORAGE_FILENAME, fileData)
     }
 }

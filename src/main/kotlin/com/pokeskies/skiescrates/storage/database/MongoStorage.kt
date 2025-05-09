@@ -11,7 +11,10 @@ import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOptions
 import com.mongodb.connection.ClusterSettings
+import com.pokeskies.skiescrates.config.ConfigManager
+import com.pokeskies.skiescrates.config.LoggingOptions
 import com.pokeskies.skiescrates.config.SkiesCratesConfig
+import com.pokeskies.skiescrates.data.logging.RewardLog
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.utils.Utils
@@ -25,6 +28,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
     private var mongoClient: MongoClient? = null
     private var mongoDatabase: MongoDatabase? = null
     private var userdataCollection: MongoCollection<UserData>? = null
+    private var rewardLogsCollection: MongoCollection<RewardLog>? = null
 
     init {
         try {
@@ -57,6 +61,9 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
             this.mongoDatabase = mongoClient!!.getDatabase(config.database)
                 .withCodecRegistry(codecRegistry)
             this.userdataCollection = this.mongoDatabase!!.getCollection("userdata", UserData::class.java)
+            if (ConfigManager.CONFIG.logging.enabled && ConfigManager.CONFIG.logging.modes.contains(LoggingOptions.LogMode.STORAGE)) {
+                this.rewardLogsCollection = this.mongoDatabase!!.getCollection("reward_logs", RewardLog::class.java)
+            }
         } catch (e: Exception) {
             throw IOException("Error while attempting to setup Mongo Database: $e")
         }
@@ -79,6 +86,14 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         val result = this.userdataCollection?.replaceOne(query, userData, ReplaceOptions().upsert(true))
 
         return result?.wasAcknowledged() ?: false
+    }
+
+    override fun writeCrateLog(log: RewardLog): Boolean {
+        if (mongoDatabase == null || rewardLogsCollection == null) {
+            Utils.printError("There was an error while attempting to write log to the Mongo database!")
+            return false
+        }
+        return this.rewardLogsCollection?.insertOne(log)?.wasAcknowledged() ?: false
     }
 
     override fun close() {

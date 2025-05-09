@@ -3,6 +3,7 @@ package com.pokeskies.skiescrates.storage.database.sql
 import com.google.gson.reflect.TypeToken
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.SkiesCratesConfig
+import com.pokeskies.skiescrates.data.logging.RewardLog
 import com.pokeskies.skiescrates.data.userdata.CrateData
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
@@ -51,6 +52,25 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
                     uuid.toString(),
                     SkiesCrates.INSTANCE.gson.toJson(userData.crates),
                     SkiesCrates.INSTANCE.gson.toJson(userData.keys)
+                ))
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    override fun writeCrateLog(log: RewardLog): Boolean {
+        return try {
+            connectionProvider.createConnection().use {
+                val statement = it.createStatement()
+                statement.execute(String.format(
+                    "INSERT INTO ${config.tablePrefix}reward_logs (uuid, crateId, rewardId, `timestamp`) VALUES ('%s', '%s', '%s', '%d')",
+                    log.uuid.toString(),
+                    log.crateId,
+                    log.rewardId,
+                    log.timestamp
                 ))
             }
             true
