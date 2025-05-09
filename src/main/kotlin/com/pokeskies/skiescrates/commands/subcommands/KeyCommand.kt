@@ -17,6 +17,7 @@ import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
 import net.minecraft.commands.arguments.EntityArgument
 import net.minecraft.server.level.ServerPlayer
+import java.util.concurrent.CompletableFuture
 
 class KeyCommand : SubCommand {
     override fun build(): LiteralCommandNode<CommandSourceStack> {
@@ -163,18 +164,26 @@ class KeyCommand : SubCommand {
                 CratesManager.giveKeys(key, player, amount, silent)
             }
 
-            val successful = results.filter { it }.size
-            when (successful) {
-                0 -> ctx.source.sendMessage(
-                    Component.text("Failed to give ${amount}x $keyId keys to any players!").color(NamedTextColor.RED)
-                )
-                targets.size -> ctx.source.sendMessage(
-                    Component.text("Successfully gave ${amount}x $keyId keys to $successful players!").color(NamedTextColor.GREEN),
-                )
-                else -> ctx.source.sendMessage(
-                    Component.text("Successfully gave ${amount}x $keyId keys to $successful player(s), " +
-                            "but failed to give it to ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
-                )
+            CompletableFuture.allOf(*results.toTypedArray()).thenAccept {
+                val successful = results.count { it.join() }
+                when (successful) {
+                    0 -> ctx.source.sendMessage(
+                        Component.text("Failed to give ${amount}x $keyId keys to any players!")
+                            .color(NamedTextColor.RED)
+                    )
+
+                    targets.size -> ctx.source.sendMessage(
+                        Component.text("Successfully gave ${amount}x $keyId keys to $successful players!")
+                            .color(NamedTextColor.GREEN),
+                    )
+
+                    else -> ctx.source.sendMessage(
+                        Component.text(
+                            "Successfully gave ${amount}x $keyId keys to $successful player(s), " +
+                                    "but failed to give it to ${targets.size - successful} player(s)!"
+                        ).color(NamedTextColor.YELLOW),
+                    )
+                }
             }
 
             return 1
@@ -202,18 +211,25 @@ class KeyCommand : SubCommand {
                 CratesManager.takeKeys(key, player, amount, silent)
             }
 
-            val successful = results.filter { it }.size
-            when (successful) {
-                0 -> ctx.source.sendMessage(
-                    Component.text("Failed to take ${amount}x $keyId keys from players!").color(NamedTextColor.RED)
-                )
-                targets.size -> ctx.source.sendMessage(
-                    Component.text("Successfully took ${amount}x $keyId keys from $successful players!").color(NamedTextColor.GREEN),
-                )
-                else -> ctx.source.sendMessage(
-                    Component.text("Successfully took ${amount}x $keyId keys from $successful player(s), " +
-                            "but failed to take from ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
-                )
+            CompletableFuture.allOf(*results.toTypedArray()).thenAccept {
+                val successful = results.count { it.join() }
+                when (successful) {
+                    0 -> ctx.source.sendMessage(
+                        Component.text("Failed to take ${amount}x $keyId keys from players!").color(NamedTextColor.RED)
+                    )
+
+                    targets.size -> ctx.source.sendMessage(
+                        Component.text("Successfully took ${amount}x $keyId keys from $successful players!")
+                            .color(NamedTextColor.GREEN),
+                    )
+
+                    else -> ctx.source.sendMessage(
+                        Component.text(
+                            "Successfully took ${amount}x $keyId keys from $successful player(s), " +
+                                    "but failed to take from ${targets.size - successful} player(s)!"
+                        ).color(NamedTextColor.YELLOW),
+                    )
+                }
             }
 
             return 1
@@ -246,18 +262,20 @@ class KeyCommand : SubCommand {
                 CratesManager.setKeys(key, player, amount, silent)
             }
 
-            val successful = results.filter { it }.size
-            when (successful) {
-                0 -> ctx.source.sendMessage(
-                    Component.text("Failed to take ${amount}x $keyId keys from players!").color(NamedTextColor.RED)
-                )
-                targets.size -> ctx.source.sendMessage(
-                    Component.text("Successfully took ${amount}x $keyId keys from $successful players!").color(NamedTextColor.GREEN),
-                )
-                else -> ctx.source.sendMessage(
-                    Component.text("Successfully took ${amount}x $keyId keys from $successful player(s), " +
-                            "but failed to take from ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
-                )
+            CompletableFuture.allOf(*results.toTypedArray()).thenAccept {
+                val successful = results.count { it.join() }
+                when (successful) {
+                    0 -> ctx.source.sendMessage(
+                        Component.text("Failed to take ${amount}x $keyId keys from players!").color(NamedTextColor.RED)
+                    )
+                    targets.size -> ctx.source.sendMessage(
+                        Component.text("Successfully took ${amount}x $keyId keys from $successful players!").color(NamedTextColor.GREEN),
+                    )
+                    else -> ctx.source.sendMessage(
+                        Component.text("Successfully took ${amount}x $keyId keys from $successful player(s), " +
+                                "but failed to take from ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
+                    )
+                }
             }
 
             return 1

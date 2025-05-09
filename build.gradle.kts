@@ -72,6 +72,12 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${project.properties["fabric_version"].toString()}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${project.properties["fabric_kotlin_version"].toString()}")
 
+    // Coroutines
+    implementation(include("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")!!)
+    implementation(include("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")!!)
+
+    implementation(include("com.github.ben-manes.caffeine:caffeine:3.2.0")!!)
+
     // Adventure Text!
     modImplementation(include("net.kyori:adventure-platform-fabric:5.14.2") {
         exclude("com.google.code.gson")

@@ -69,7 +69,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         }
     }
 
-    override fun getUser(uuid: UUID): UserData {
+    override suspend fun getUser(uuid: UUID): UserData {
         if (mongoDatabase == null) {
             Utils.printError("There was an error while attempting to fetch data from the Mongo database!")
             return UserData(uuid)
@@ -77,7 +77,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         return userdataCollection?.find(Filters.eq("_id", uuid))?.firstOrNull() ?: UserData(uuid)
     }
 
-    override fun saveUser(uuid: UUID, userData: UserData): Boolean {
+    override suspend fun saveUser(uuid: UUID, userData: UserData): Boolean {
         if (mongoDatabase == null) {
             Utils.printError("There was an error while attempting to save data to the Mongo database!")
             return false

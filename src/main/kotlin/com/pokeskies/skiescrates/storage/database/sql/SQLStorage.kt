@@ -27,7 +27,7 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         connectionProvider.init()
     }
 
-    override fun getUser(uuid: UUID): UserData {
+    override suspend fun getUser(uuid: UUID): UserData {
         val userData = UserData(uuid)
         try {
             connectionProvider.createConnection().use {
@@ -44,7 +44,7 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         return userData
     }
 
-    override fun saveUser(uuid: UUID, userData: UserData): Boolean {
+    override suspend fun saveUser(uuid: UUID, userData: UserData): Boolean {
         return try {
             connectionProvider.createConnection().use {
                 val statement = it.createStatement()

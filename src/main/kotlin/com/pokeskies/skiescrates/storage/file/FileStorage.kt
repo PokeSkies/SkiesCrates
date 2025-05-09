@@ -13,12 +13,12 @@ class FileStorage : IStorage {
         private const val STORAGE_FILENAME = "storage.json"
     }
 
-    override fun getUser(uuid: UUID): UserData {
+    override suspend fun getUser(uuid: UUID): UserData {
         val userData = fileData.userdata[uuid]
         return userData ?: UserData(uuid)
     }
 
-    override fun saveUser(uuid: UUID, userData: UserData): Boolean {
+    override suspend fun saveUser(uuid: UUID, userData: UserData): Boolean {
         fileData.userdata[uuid] = userData
         return ConfigManager.saveFile(STORAGE_FILENAME, fileData)
     }

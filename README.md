@@ -2,7 +2,8 @@
 - In-world crate animations
 - Crate animation early cancelling
 - Require keys in hand option
-- Placeholders
+- Logout and server shutdown handling
+- More Placeholders
 - Crate Particles
 - Apply unique key IDs
 - Logging
@@ -11,5 +12,5 @@
 - More sound options?
 - More reward types?
 - In-game Editor
-
+- Storage migration settings (json -> sql, etc.)
 - Crate placement via commands/blocks
