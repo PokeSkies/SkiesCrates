@@ -101,7 +101,7 @@ object CratesManager {
                 return CompletableFuture.completedFuture(false)
             }
 
-            return CompletableFuture.supplyAsync {
+            return CompletableFuture.supplyAsync({
                 try {
                     runBlocking {
                         val playerData = storage.getUser(player.uuid)
@@ -111,7 +111,7 @@ object CratesManager {
                 } catch (e: Exception) {
                     false
                 }
-            }.thenApplyAsync { result ->
+            }, SkiesCrates.INSTANCE.asyncExecutor).thenApplyAsync { result ->
                 if (result && !silent) {
                     player.server.execute {
                         Lang.KEY_GIVE.forEach {
@@ -167,7 +167,7 @@ object CratesManager {
                 return CompletableFuture.completedFuture(false)
             }
 
-            return CompletableFuture.supplyAsync {
+            return CompletableFuture.supplyAsync({
                 try {
                     runBlocking {
                         val playerData = storage.getUser(player.uuid)
@@ -180,7 +180,7 @@ object CratesManager {
                 } catch (e: Exception) {
                     false
                 }
-            }.thenApplyAsync { result ->
+            }, SkiesCrates.INSTANCE.asyncExecutor).thenApplyAsync { result ->
                 if (result && !silent) {
                     player.server.execute {
                         Lang.KEY_TAKE.forEach {
@@ -214,7 +214,7 @@ object CratesManager {
                 return CompletableFuture.completedFuture(false)
             }
 
-            return CompletableFuture.supplyAsync {
+            return CompletableFuture.supplyAsync({
                 try {
                     runBlocking {
                         val playerData = storage.getUser(player.uuid)
@@ -224,7 +224,7 @@ object CratesManager {
                 } catch (e: Exception) {
                     false
                 }
-            }.thenApplyAsync { result ->
+            }, SkiesCrates.INSTANCE.asyncExecutor).thenApplyAsync { result ->
                 if (result && !silent) {
                     player.server.execute {
                         Lang.KEY_SET.forEach {

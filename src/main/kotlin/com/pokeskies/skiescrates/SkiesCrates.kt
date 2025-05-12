@@ -93,8 +93,8 @@ class SkiesCrates : ModInitializer {
 
     private var economyServices: Map<EconomyType, IEconomyService> = emptyMap()
 
-    private val cacheExecutor: Executor = Executors.newFixedThreadPool(2) { r ->
-        val thread = Thread(r, "SkiesCrates-Keys-Cache")
+    val asyncExecutor: Executor = Executors.newFixedThreadPool(2) { r ->
+        val thread = Thread(r, "SkiesCrates-Async")
         thread.isDaemon = true
         thread
     }
@@ -102,7 +102,7 @@ class SkiesCrates : ModInitializer {
     private val playerKeyCache: AsyncLoadingCache<KeyCacheKey, Int> = Caffeine.newBuilder()
         .expireAfterWrite(5, TimeUnit.SECONDS)
         .refreshAfterWrite(2, TimeUnit.SECONDS)
-        .executor(cacheExecutor)
+        .executor(asyncExecutor)
         .buildAsync { key ->
             val storage = storage ?: return@buildAsync 0
             try {

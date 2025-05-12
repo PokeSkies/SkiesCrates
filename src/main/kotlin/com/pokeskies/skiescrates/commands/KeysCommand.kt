@@ -45,11 +45,11 @@ class KeysCommand {
                     return 0
                 }
 
-                CompletableFuture.supplyAsync {
+                CompletableFuture.supplyAsync({
                     runBlocking {
                         storage.getUser(target.uuid)
                     }
-                }.thenAccept { playerData ->
+                }, SkiesCrates.INSTANCE.asyncExecutor).thenAccept { playerData ->
                     target.server.execute {
                         if (playerData.keys.isEmpty()) {
                             ctx.source.sendSystemMessage(
