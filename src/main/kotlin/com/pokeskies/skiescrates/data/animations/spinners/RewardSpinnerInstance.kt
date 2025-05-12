@@ -37,11 +37,9 @@ class RewardSpinnerInstance(
         gui.updateRewardSlot(slot, value)
     }
 
-    fun giveRewards(player: ServerPlayer, slots: List<Int>, crate: Crate) {
-        slots.forEach { slot ->
-            rewards[slot]?.let { (id, reward) ->
-                reward.giveReward(player, crate)
-            }
+    fun getRewards(player: ServerPlayer, slots: List<Int>, crate: Crate): List<Pair<String, Reward>> {
+        return slots.mapNotNull { slot ->
+            rewards[slot]
         }
     }
 }

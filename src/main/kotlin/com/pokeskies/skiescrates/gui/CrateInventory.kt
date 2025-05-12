@@ -6,6 +6,7 @@ import com.pokeskies.skiescrates.data.animations.spinners.AnimatedSpinnerInstanc
 import com.pokeskies.skiescrates.data.animations.spinners.RewardSpinnerInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.managers.CratesManager.openingPlayers
+import com.pokeskies.skiescrates.managers.LoggingManager
 import com.pokeskies.skiescrates.utils.RandomCollection
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
@@ -81,9 +82,23 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
 
             if (allCompleted) {
                 isFinished = true
-                rewardSpinners.forEach { (id, data) ->
-                    data.giveRewards(player, animation.settings.winSlots, crate)
+
+                // TODO: This could probably get cleaned up
+                val rewards = rewardSpinners.map { (id, data) ->
+                    data.getRewards(player, animation.settings.winSlots, crate)
                 }
+
+                for (rewardList in rewards)  {
+                    for (reward in rewardList) {
+                        reward.second.giveReward(player, crate)
+                    }
+                }
+
+                LoggingManager.logCrateRewards(
+                    player.uuid,
+                    crate.id,
+                    rewards.flatten().joinToString(",") { (id, reward) -> id }
+                )
             }
         }
 

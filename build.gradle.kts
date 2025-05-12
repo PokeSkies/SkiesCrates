@@ -106,6 +106,8 @@ dependencies {
     modImplementation("net.impactdev.impactor.api:economy:5.3.0-SNAPSHOT")
     modImplementation("net.impactdev.impactor.api:text:5.3.0-SNAPSHOT")
 
+    modImplementation("com.cobblemon:fabric:1.6.1+1.21.1-SNAPSHOT")
+
     // Database Storage
     implementation(include("org.mongodb:mongodb-driver-sync:4.11.0")!!)
     implementation(include("org.mongodb:mongodb-driver-core:4.11.0")!!)

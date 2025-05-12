@@ -14,7 +14,7 @@ import com.mongodb.connection.ClusterSettings
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.LoggingOptions
 import com.pokeskies.skiescrates.config.SkiesCratesConfig
-import com.pokeskies.skiescrates.data.logging.RewardLog
+import com.pokeskies.skiescrates.data.logging.CrateLogEntry
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.utils.Utils
@@ -28,7 +28,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
     private var mongoClient: MongoClient? = null
     private var mongoDatabase: MongoDatabase? = null
     private var userdataCollection: MongoCollection<UserData>? = null
-    private var rewardLogsCollection: MongoCollection<RewardLog>? = null
+    private var rewardLogsCollection: MongoCollection<CrateLogEntry>? = null
 
     init {
         try {
@@ -62,7 +62,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
                 .withCodecRegistry(codecRegistry)
             this.userdataCollection = this.mongoDatabase!!.getCollection("userdata", UserData::class.java)
             if (ConfigManager.CONFIG.logging.enabled && ConfigManager.CONFIG.logging.modes.contains(LoggingOptions.LogMode.STORAGE)) {
-                this.rewardLogsCollection = this.mongoDatabase!!.getCollection("reward_logs", RewardLog::class.java)
+                this.rewardLogsCollection = this.mongoDatabase!!.getCollection("reward_logs", CrateLogEntry::class.java)
             }
         } catch (e: Exception) {
             throw IOException("Error while attempting to setup Mongo Database: $e")
@@ -88,7 +88,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         return result?.wasAcknowledged() ?: false
     }
 
-    override fun writeCrateLog(log: RewardLog): Boolean {
+    override suspend fun writeCrateLog(log: CrateLogEntry): Boolean {
         if (mongoDatabase == null || rewardLogsCollection == null) {
             Utils.printError("There was an error while attempting to write log to the Mongo database!")
             return false

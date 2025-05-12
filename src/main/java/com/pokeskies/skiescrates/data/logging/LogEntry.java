@@ -3,7 +3,7 @@ package com.pokeskies.skiescrates.data.logging;
 import com.pokeskies.skiescrates.config.ConfigManager;
 import com.pokeskies.skiescrates.config.LoggingOptions;
 
-abstract class ILog {
+abstract class LogEntry {
     public void write() {
         for (LoggingOptions.LogMode mode : ConfigManager.CONFIG.getLogging().getModes()) {
             switch (mode) {

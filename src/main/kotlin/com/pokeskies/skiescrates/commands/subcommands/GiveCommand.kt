@@ -77,6 +77,7 @@ class GiveCommand : SubCommand {
                 CratesManager.giveCrates(crate, player, amount, silent)
             }
 
+            // TODO: This could be updated to be more elegant
             val successful = results.filter { it }.size
             when (successful) {
                 0 -> ctx.source.sendMessage(

@@ -58,6 +58,7 @@ class KeysCommand {
                             return@execute
                         }
 
+                        // TODO: Update this to be customizable via LANG
                         ctx.source.sendSystemMessage(
                             Component.literal("${target.name.string}'s keys:").withStyle(ChatFormatting.GOLD)
                         )

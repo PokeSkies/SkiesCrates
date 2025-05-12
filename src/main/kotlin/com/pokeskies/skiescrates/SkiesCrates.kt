@@ -101,7 +101,6 @@ class SkiesCrates : ModInitializer {
 
     private val playerKeyCache: AsyncLoadingCache<KeyCacheKey, Int> = Caffeine.newBuilder()
         .expireAfterWrite(5, TimeUnit.SECONDS)
-        .refreshAfterWrite(2, TimeUnit.SECONDS)
         .executor(cacheExecutor)
         .buildAsync { key ->
             val storage = storage ?: return@buildAsync 0

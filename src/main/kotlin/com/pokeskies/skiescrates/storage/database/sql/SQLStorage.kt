@@ -3,7 +3,7 @@ package com.pokeskies.skiescrates.storage.database.sql
 import com.google.gson.reflect.TypeToken
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.SkiesCratesConfig
-import com.pokeskies.skiescrates.data.logging.RewardLog
+import com.pokeskies.skiescrates.data.logging.CrateLogEntry
 import com.pokeskies.skiescrates.data.userdata.CrateData
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
@@ -61,7 +61,7 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         }
     }
 
-    override fun writeCrateLog(log: RewardLog): Boolean {
+    override suspend fun writeCrateLog(log: CrateLogEntry): Boolean {
         return try {
             connectionProvider.createConnection().use {
                 val statement = it.createStatement()

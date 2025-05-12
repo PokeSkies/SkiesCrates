@@ -164,6 +164,7 @@ class KeyCommand : SubCommand {
                 CratesManager.giveKeys(key, player, amount, silent)
             }
 
+            // TODO: This could be updated to be more elegant
             CompletableFuture.allOf(*results.toTypedArray()).thenAccept {
                 val successful = results.count { it.join() }
                 when (successful) {
@@ -211,6 +212,7 @@ class KeyCommand : SubCommand {
                 CratesManager.takeKeys(key, player, amount, silent)
             }
 
+            // TODO: This could be updated to be more elegant
             CompletableFuture.allOf(*results.toTypedArray()).thenAccept {
                 val successful = results.count { it.join() }
                 when (successful) {

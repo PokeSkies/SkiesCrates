@@ -52,6 +52,7 @@ object Lang {
         }
 
         val langFile = File(SkiesCrates.INSTANCE.configDir, "lang.json")
+        // If the lang file does not exist, create the file, otherwise check to ensure all keys are present
         if (!langFile.exists()) {
             langFile.parentFile.mkdirs()
             langFile.writeText(SkiesCrates.INSTANCE.gsonPretty.toJson(defaultMessages))

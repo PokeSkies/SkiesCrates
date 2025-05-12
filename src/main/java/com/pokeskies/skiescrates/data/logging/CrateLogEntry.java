@@ -6,21 +6,22 @@ import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
-public class RewardLog extends ILog {
+public class CrateLogEntry extends LogEntry {
     @BsonProperty
     public UUID uuid;
     @BsonProperty
     public Long timestamp;
     @BsonProperty
     public String crateId;
+    //  This is a list of rewardIds separated by commas
     @BsonProperty
-    public String rewardId;
+    public String rewardsList;
 
-    public RewardLog(UUID uuid, Long timestamp, String crateId, String rewardId) {
+    public CrateLogEntry(UUID uuid, Long timestamp, String crateId, String rewardsList) {
         this.uuid = uuid;
         this.timestamp = timestamp;
         this.crateId = crateId;
-        this.rewardId = rewardId;
+        this.rewardsList = rewardsList;
     }
 
     @Override
@@ -30,7 +31,7 @@ public class RewardLog extends ILog {
                         "[Logging] %s opened %s and got %s at %s",
                         uuid.toString(),
                         crateId,
-                        rewardId,
+                        rewardsList,
                         timestamp.toString()
                 )
         );
@@ -45,7 +46,7 @@ public class RewardLog extends ILog {
     void logToStorage() {
         var storage = SkiesCrates.INSTANCE.getStorage();
         if (storage != null) {
-            storage.writeCrateLog(this);
+            storage.writeCrateLogAsync(this);
         }
     }
 
@@ -55,7 +56,7 @@ public class RewardLog extends ILog {
                 "uuid=" + uuid +
                 ", timestamp=" + timestamp +
                 ", crateId='" + crateId + '\'' +
-                ", rewardId='" + rewardId + '\'' +
+                ", rewardsList='" + rewardsList + '\'' +
                 '}';
     }
 }
