@@ -58,7 +58,7 @@ class Preview(
             val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(reward.display.item))
 
             if (parsedItem.isEmpty) {
-                Utils.printError("Error while getting Item, defaulting to Barrier: $parsedItem")
+                Utils.printError("Error while getting Item, defaulting to Barrier: ${reward.display.item}")
                 return ItemStack(Items.BARRIER, reward.display.amount)
             }
 

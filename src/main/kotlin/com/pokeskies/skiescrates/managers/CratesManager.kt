@@ -101,35 +101,30 @@ object CratesManager {
                 return CompletableFuture.completedFuture(false)
             }
 
-            return CompletableFuture.supplyAsync({
-                try {
-                    runBlocking {
-                        val playerData = storage.getUser(player.uuid)
-                        playerData.addKeys(key.id, amount)
-                        storage.saveUser(player.uuid, playerData)
-                    }
-                } catch (e: Exception) {
-                    false
+            return storage.getUserAsync(player.uuid)
+                .thenCompose { playerData ->
+                    playerData.addKeys(key.id, amount)
+                    storage.saveUserAsync(player.uuid, playerData)
                 }
-            }, SkiesCrates.INSTANCE.asyncExecutor).thenApplyAsync { result ->
-                if (result && !silent) {
-                    player.server.execute {
-                        Lang.KEY_GIVE.forEach {
-                            player.sendMessage(TextUtils.parseAll(
-                                player,
-                                it.replace("%key_name%", key.name)
-                                    .replace("%amount%", amount.toString())
-                            ))
+                .thenApplyAsync { result ->
+                    if (result && !silent) {
+                        player.server.execute {
+                            Lang.KEY_GIVE.forEach {
+                                player.sendMessage(TextUtils.parseAll(
+                                    player,
+                                    it.replace("%key_name%", key.name)
+                                        .replace("%amount%", amount.toString())
+                                ))
+                            }
                         }
                     }
+                    result
+                }.exceptionally { e ->
+                    Lang.ERROR_STORAGE.forEach {
+                        player.sendMessage(TextUtils.toNative(it))
+                    }
+                    false
                 }
-                result
-            }.exceptionally { e ->
-                Lang.ERROR_STORAGE.forEach {
-                    player.sendMessage(TextUtils.toNative(it))
-                }
-                false
-            }
         }
 
         // For non-virtual keys, process synchronously since no database access is needed
@@ -167,38 +162,35 @@ object CratesManager {
                 return CompletableFuture.completedFuture(false)
             }
 
-            return CompletableFuture.supplyAsync({
-                try {
-                    runBlocking {
-                        val playerData = storage.getUser(player.uuid)
-                        if (!playerData.removeKeys(key.id, amount)) {
-                            false
-                        } else {
-                            storage.saveUser(player.uuid, playerData)
+            return storage.getUserAsync(player.uuid)
+                .thenCompose { playerData ->
+                    if (!playerData.removeKeys(key.id, amount)) {
+                        CompletableFuture.completedFuture(false)
+                    } else {
+                        storage.saveUserAsync(player.uuid, playerData)
+                    }
+                }
+                .thenApplyAsync { result ->
+                    if (result && !silent) {
+                        player.server.execute {
+                            Lang.KEY_TAKE.forEach {
+                                player.sendMessage(
+                                    TextUtils.parseAll(
+                                        player,
+                                        it.replace("%key_name%", key.name)
+                                            .replace("%amount%", amount.toString())
+                                    )
+                                )
+                            }
                         }
                     }
-                } catch (e: Exception) {
+                    result
+                }.exceptionally { e ->
+                    Lang.ERROR_STORAGE.forEach {
+                        player.sendMessage(TextUtils.toNative(it))
+                    }
                     false
                 }
-            }, SkiesCrates.INSTANCE.asyncExecutor).thenApplyAsync { result ->
-                if (result && !silent) {
-                    player.server.execute {
-                        Lang.KEY_TAKE.forEach {
-                            player.sendMessage(TextUtils.parseAll(
-                                player,
-                                it.replace("%key_name%", key.name)
-                                    .replace("%amount%", amount.toString())
-                            ))
-                        }
-                    }
-                }
-                result
-            }.exceptionally { e ->
-                Lang.ERROR_STORAGE.forEach {
-                    player.sendMessage(TextUtils.toNative(it))
-                }
-                false
-            }
         }
 
         return CompletableFuture.completedFuture(false)
@@ -214,17 +206,12 @@ object CratesManager {
                 return CompletableFuture.completedFuture(false)
             }
 
-            return CompletableFuture.supplyAsync({
-                try {
-                    runBlocking {
-                        val playerData = storage.getUser(player.uuid)
-                        playerData.setKeys(key.id, amount)
-                        storage.saveUser(player.uuid, playerData)
-                    }
-                } catch (e: Exception) {
-                    false
+            return storage.getUserAsync(player.uuid)
+                .thenCompose { playerData ->
+                    playerData.setKeys(key.id, amount)
+                    storage.saveUserAsync(player.uuid, playerData)
                 }
-            }, SkiesCrates.INSTANCE.asyncExecutor).thenApplyAsync { result ->
+                .thenApplyAsync { result ->
                 if (result && !silent) {
                     player.server.execute {
                         Lang.KEY_SET.forEach {
@@ -510,7 +497,7 @@ object CratesManager {
         }
 
         playerData.addCrateUse(crate.id)
-        storage.saveUser(player.uuid, playerData)
+        storage.saveUserAsync(player.uuid, playerData)
 
         Lang.CRATE_OPENING.forEach {
             player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
@@ -544,8 +531,9 @@ object CratesManager {
 
     fun previewCrate(player: ServerPlayer, crate: Crate) {
         interactionLimiter[player.uuid]?.let {
-            if ((it + ConfigManager.CONFIG.interactionLimiter) > System.currentTimeMillis())
+            if ((it + ConfigManager.CONFIG.interactionLimiter) > System.currentTimeMillis()) {
                 return
+            }
         }
 
         interactionLimiter[player.uuid] = System.currentTimeMillis()
@@ -558,6 +546,7 @@ object CratesManager {
             }
             return
         }
+        Utils.printInfo("DEBUGGING @ CratesManager#previewCrate - Preview found, opening")
 
         PreviewInventory(player, crate, preview).open()
     }

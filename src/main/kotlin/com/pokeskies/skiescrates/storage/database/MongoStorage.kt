@@ -11,6 +11,7 @@ import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOptions
 import com.mongodb.connection.ClusterSettings
+import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.SkiesCratesConfig
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
@@ -20,6 +21,7 @@ import org.bson.codecs.configuration.CodecRegistries
 import org.bson.codecs.pojo.PojoCodecProvider
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
     private var mongoClient: MongoClient? = null
@@ -62,7 +64,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         }
     }
 
-    override suspend fun getUser(uuid: UUID): UserData {
+    override fun getUser(uuid: UUID): UserData {
         if (mongoDatabase == null) {
             Utils.printError("There was an error while attempting to fetch data from the Mongo database!")
             return UserData(uuid)
@@ -70,7 +72,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         return userdataCollection?.find(Filters.eq("_id", uuid))?.firstOrNull() ?: UserData(uuid)
     }
 
-    override suspend fun saveUser(uuid: UUID, userData: UserData): Boolean {
+    override fun saveUser(uuid: UUID, userData: UserData): Boolean {
         if (mongoDatabase == null) {
             Utils.printError("There was an error while attempting to save data to the Mongo database!")
             return false
@@ -79,6 +81,18 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         val result = this.userdataCollection?.replaceOne(query, userData, ReplaceOptions().upsert(true))
 
         return result?.wasAcknowledged() ?: false
+    }
+
+    override fun getUserAsync(uuid: UUID): CompletableFuture<UserData> {
+        return CompletableFuture.supplyAsync({
+            getUser(uuid)
+        }, SkiesCrates.INSTANCE.asyncExecutor)
+    }
+
+    override fun saveUserAsync(uuid: UUID, userData: UserData): CompletableFuture<Boolean> {
+        return CompletableFuture.supplyAsync({
+            saveUser(uuid, userData)
+        }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 
     override fun close() {

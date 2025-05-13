@@ -9,9 +9,11 @@ import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
 import com.pokeskies.skiescrates.storage.database.sql.providers.MySQLProvider
 import com.pokeskies.skiescrates.storage.database.sql.providers.SQLiteProvider
+import com.pokeskies.skiescrates.utils.Utils
 import java.lang.reflect.Type
 import java.sql.SQLException
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
     private val connectionProvider: ConnectionProvider = when (config.type) {
@@ -26,7 +28,7 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         connectionProvider.init()
     }
 
-    override suspend fun getUser(uuid: UUID): UserData {
+    override fun getUser(uuid: UUID): UserData {
         val userData = UserData(uuid)
         try {
             connectionProvider.createConnection().use {
@@ -43,7 +45,7 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         return userData
     }
 
-    override suspend fun saveUser(uuid: UUID, userData: UserData): Boolean {
+    override fun saveUser(uuid: UUID, userData: UserData): Boolean {
         return try {
             connectionProvider.createConnection().use {
                 val statement = it.createStatement()
@@ -58,6 +60,23 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
             e.printStackTrace()
             false
         }
+    }
+
+    override fun getUserAsync(uuid: UUID): CompletableFuture<UserData> {
+        return CompletableFuture.supplyAsync({
+            try {
+                val result = getUser(uuid)
+                result
+            } catch (e: Exception) {
+                UserData(uuid)  // Return default data rather than throwing
+            }
+        }, SkiesCrates.INSTANCE.asyncExecutor)
+    }
+
+    override fun saveUserAsync(uuid: UUID, userData: UserData): CompletableFuture<Boolean> {
+        return CompletableFuture.supplyAsync({
+            saveUser(uuid, userData)
+        }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 
     override fun close() {

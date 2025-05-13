@@ -14,3 +14,6 @@
 - In-game Editor
 - Storage migration settings (json -> sql, etc.)
 - Crate placement via commands/blocks
+- Broadcast message definition in-line with the rewards
+  - "broadcast": true
+  - "broadcast": [ "message" ]

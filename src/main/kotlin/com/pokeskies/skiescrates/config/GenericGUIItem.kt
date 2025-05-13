@@ -37,7 +37,7 @@ class GenericGUIItem(
         val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(item))
 
         if (parsedItem.isEmpty) {
-            Utils.printError("Error while getting Item, defaulting to Barrier: $parsedItem")
+            Utils.printError("Error while getting Item, defaulting to Barrier: $item")
             return ItemStack(Items.BARRIER, amount)
         }
 

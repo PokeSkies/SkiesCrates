@@ -37,11 +37,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
             }
         }
 
-        CompletableFuture.supplyAsync({
-            runBlocking {
-                storage.getUser(target.uuid)
-            }
-        }, SkiesCrates.INSTANCE.asyncExecutor).thenAccept { playerData ->
+        storage.getUserAsync(target.uuid).thenAccept { playerData ->
             keysMenu.keys.forEach { (id, item) ->
                 val key = ConfigManager.KEYS[id] ?: run {
                     Utils.printError("Key $id could not be found while opening keys menu!")

@@ -73,9 +73,13 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
         }
 
         renderRewards()
+        Utils.printInfo("DEBUGGING @ PreviewInventory#init - Completed Rendering")
     }
 
     private fun renderRewards() {
+        preview.buttons.reward.slots.forEach { slot ->
+            this.clearSlot(slot)
+        }
         var index = 0
         for ((id, pair) in rewards.toList().subList(preview.buttons.reward.slots.size * page, rewards.size)) {
             if (index < preview.buttons.reward.slots.size) {

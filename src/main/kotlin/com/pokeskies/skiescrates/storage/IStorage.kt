@@ -6,6 +6,7 @@ import com.pokeskies.skiescrates.storage.database.MongoStorage
 import com.pokeskies.skiescrates.storage.database.sql.SQLStorage
 import com.pokeskies.skiescrates.storage.file.FileStorage
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 interface IStorage {
     companion object {
@@ -18,8 +19,11 @@ interface IStorage {
         }
     }
 
-    suspend fun getUser(uuid: UUID): UserData
-    suspend fun saveUser(uuid: UUID, userData: UserData): Boolean
+    fun getUser(uuid: UUID): UserData
+    fun saveUser(uuid: UUID, userData: UserData): Boolean
+
+    fun getUserAsync(uuid: UUID): CompletableFuture<UserData>
+    fun saveUserAsync(uuid: UUID, userData: UserData): CompletableFuture<Boolean>
 
     fun close() {}
 }

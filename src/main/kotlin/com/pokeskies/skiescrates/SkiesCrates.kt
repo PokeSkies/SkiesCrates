@@ -2,6 +2,7 @@ package com.pokeskies.skiescrates
 
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.pokeskies.skiescrates.commands.BaseCommand
@@ -62,7 +63,9 @@ import xyz.nucleoid.stimuli.event.player.PlayerSwingHandEvent
 import java.io.File
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -93,25 +96,31 @@ class SkiesCrates : ModInitializer {
 
     private var economyServices: Map<EconomyType, IEconomyService> = emptyMap()
 
-    val asyncExecutor: Executor = Executors.newFixedThreadPool(2) { r ->
-        val thread = Thread(r, "SkiesCrates-Async")
-        thread.isDaemon = true
-        thread
-    }
+    val asyncExecutor: ExecutorService = Executors.newFixedThreadPool(8, ThreadFactoryBuilder()
+        .setNameFormat("SkiesCrates-Async-%d")
+        .setDaemon(true)
+        .build())
 
-    private val playerKeyCache: AsyncLoadingCache<KeyCacheKey, Int> = Caffeine.newBuilder()
-        .expireAfterWrite(5, TimeUnit.SECONDS)
-        .refreshAfterWrite(2, TimeUnit.SECONDS)
+    val playerKeyCache: AsyncLoadingCache<KeyCacheKey, Int> = Caffeine.newBuilder()
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .refreshAfterWrite(5, TimeUnit.SECONDS)
         .executor(asyncExecutor)
-        .buildAsync { key ->
-            val storage = storage ?: return@buildAsync 0
+        .buildAsync { key, executor ->
+            val storage = storage ?: return@buildAsync CompletableFuture.completedFuture(0)
+
             try {
-                val playerData = runBlocking {
-                    storage.getUser(key.playerUuid)
-                }
-                playerData.keys[key.keyId] ?: 0
+                CompletableFuture.supplyAsync({
+                    try {
+                        val userData = storage.getUser(key.playerUuid)
+                        userData.keys[key.keyId] ?: 0
+                    } catch (e: Exception) {
+                        LOGGER.error("Error fetching key cache for ${key.playerUuid}: ${e.message}")
+                        0
+                    }
+                }, asyncExecutor)
             } catch (e: Exception) {
-                0
+                LOGGER.error("Failed to start async user data fetch: ${e.message}")
+                CompletableFuture.completedFuture(0)
             }
         }
 
@@ -252,7 +261,7 @@ class SkiesCrates : ModInitializer {
             if (hand != InteractionHand.MAIN_HAND) return@PlayerSwingHandEvent
 
             // This is a hacky fix to prevent right-clicking on blocks from opening preview menus
-            val blockResult = player.pick(5.0, 0.0F, false)
+            val blockResult = player.pick(5.0, 1.0F, false)
             if (blockResult != null &&
                 blockResult is BlockHitResult &&
                 !player.serverLevel().getBlockState(blockResult.blockPos).isAir) return@PlayerSwingHandEvent
@@ -297,6 +306,6 @@ class SkiesCrates : ModInitializer {
     }
 
     fun getCachedKeys(uuid: UUID, keyId: String): Int {
-        return playerKeyCache.get(KeyCacheKey(uuid, keyId)).get()
+        return playerKeyCache.getIfPresent(KeyCacheKey(uuid, keyId))?.getNow(0) ?: 0
     }
 }
