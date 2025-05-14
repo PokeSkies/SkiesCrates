@@ -73,7 +73,6 @@ class KeysCommand {
                         }
                     }
                 }.exceptionally { e ->
-                    // Handle any exceptions
                     target.server.execute {
                         ctx.source.sendSystemMessage(
                             Component.literal("Error retrieving player data: ${e.message}")

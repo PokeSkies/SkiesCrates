@@ -104,8 +104,12 @@ class SkiesCrates : ModInitializer {
     val playerKeyCache: AsyncLoadingCache<KeyCacheKey, Int> = Caffeine.newBuilder()
         .expireAfterWrite(30, TimeUnit.SECONDS)
         .refreshAfterWrite(5, TimeUnit.SECONDS)
+        .refreshAfterWrite(10, TimeUnit.SECONDS)
         .executor(asyncExecutor)
         .buildAsync { key, executor ->
+            if (server.playerList.getPlayer(key.playerUuid) == null) {
+                return@buildAsync CompletableFuture.completedFuture(0)
+            }
             val storage = storage ?: return@buildAsync CompletableFuture.completedFuture(0)
 
             try {
@@ -177,6 +181,10 @@ class SkiesCrates : ModInitializer {
 
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
             tick()
+
+            if (server.tickCount % 6000 == 0) {
+                cleanCache()
+            }
         })
 
         // Preventing block breaking
@@ -257,21 +265,25 @@ class SkiesCrates : ModInitializer {
             return@UseItemCallback InteractionResultHolder.fail(item)
         })
         // Called when swinging with your hand. This can happen in both a left-click and a right-click on a block
-        Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
-            if (hand != InteractionHand.MAIN_HAND) return@PlayerSwingHandEvent
-
-            // This is a hacky fix to prevent right-clicking on blocks from opening preview menus
-            val blockResult = player.pick(5.0, 1.0F, false)
-            if (blockResult != null &&
-                blockResult is BlockHitResult &&
-                !player.serverLevel().getBlockState(blockResult.blockPos).isAir) return@PlayerSwingHandEvent
-
-            val item = player.getItemInHand(hand)
-            if (item.isEmpty) return@PlayerSwingHandEvent
-
-            val crate = CratesManager.getCrateOrNull(item) ?: return@PlayerSwingHandEvent
-            CratesManager.previewCrate(player, crate)
-        })
+//        Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
+//            if (hand != InteractionHand.MAIN_HAND) return@PlayerSwingHandEvent
+//            Utils.printInfo("DEBUGGING @ SkiesCrates#PlayerSwingHandEvent - ${player.name.string}")
+//
+//            // This is a hacky fix to prevent right-clicking on blocks from opening preview menus
+//            val blockResult = player.pick(5.0, 1.0F, false)
+//            if (blockResult != null &&
+//                blockResult is BlockHitResult &&
+//                !player.serverLevel().getBlockState(blockResult.blockPos).isAir) return@PlayerSwingHandEvent
+//            Utils.printInfo("DEBUGGING @ SkiesCrates#PlayerSwingHandEvent - Block Result Passed")
+//
+//            val item = player.getItemInHand(hand)
+//            if (item.isEmpty) return@PlayerSwingHandEvent
+//
+//            Utils.printInfo("DEBUGGING @ SkiesCrates#PlayerSwingHandEvent - Checking for Crate")
+//            val crate = CratesManager.getCrateOrNull(item) ?: return@PlayerSwingHandEvent
+//            Utils.printInfo("DEBUGGING @ SkiesCrates#PlayerSwingHandEvent - Crate found, previewing: ${crate.id}")
+//            CratesManager.previewCrate(player, crate)
+//        })
     }
 
     fun reload() {
@@ -293,6 +305,15 @@ class SkiesCrates : ModInitializer {
         if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.load()
     }
 
+    private fun cleanCache() {
+        playerKeyCache.synchronous().asMap().keys.forEach { key ->
+            if (server.playerList.getPlayer(key.playerUuid) == null) {
+                playerKeyCache.synchronous().invalidate(key)
+                Utils.printInfo("DEBUGGING @ SkiesCrates#cleanCache - Removed offline player ${key.playerUuid} from key cache")
+            }
+        }
+    }
+
     fun getLoadedEconomyServices(): Map<EconomyType, IEconomyService> {
         return this.economyServices
     }
@@ -306,6 +327,6 @@ class SkiesCrates : ModInitializer {
     }
 
     fun getCachedKeys(uuid: UUID, keyId: String): Int {
-        return playerKeyCache.getIfPresent(KeyCacheKey(uuid, keyId))?.getNow(0) ?: 0
+        return playerKeyCache.get(KeyCacheKey(uuid, keyId)).getNow(0) ?: 0
     }
 }
