@@ -73,7 +73,6 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
         }
 
         renderRewards()
-        Utils.printInfo("DEBUGGING @ PreviewInventory#init - Completed Rendering")
     }
 
     private fun renderRewards() {
