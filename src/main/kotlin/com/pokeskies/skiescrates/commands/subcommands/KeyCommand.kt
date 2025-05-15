@@ -17,7 +17,9 @@ import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
 import net.minecraft.commands.arguments.EntityArgument
 import net.minecraft.server.level.ServerPlayer
+import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 
 class KeyCommand : SubCommand {
     override fun build(): LiteralCommandNode<CommandSourceStack> {
@@ -109,7 +111,7 @@ class KeyCommand : SubCommand {
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                             .then(Commands.argument("silent", BoolArgumentType.bool())
                                 .executes { ctx: CommandContext<CommandSourceStack> ->
-                                    take(
+                                    set(
                                         ctx,
                                         EntityArgument.getPlayers(ctx, "targets").toList(),
                                         StringArgumentType.getString(ctx, "key"),
@@ -119,7 +121,7 @@ class KeyCommand : SubCommand {
                                 }
                             )
                             .executes { ctx: CommandContext<CommandSourceStack> ->
-                                take(
+                                set(
                                     ctx,
                                     EntityArgument.getPlayers(ctx, "targets").toList(),
                                     StringArgumentType.getString(ctx, "key"),
@@ -128,7 +130,7 @@ class KeyCommand : SubCommand {
                             }
                         )
                         .executes { ctx: CommandContext<CommandSourceStack> ->
-                            take(
+                            set(
                                 ctx,
                                 EntityArgument.getPlayers(ctx, "targets").toList(),
                                 StringArgumentType.getString(ctx, "key")
@@ -148,6 +150,10 @@ class KeyCommand : SubCommand {
     }
 
     companion object {
+        // This is key to ensuring that we don't have multiple threads trying to give keys at the same time
+        // A ConcurrentHashMap is used because it provides thread safety and ANY is the lock object itself
+        private val dataLocks = ConcurrentHashMap<UUID, Any>()
+
         fun give(
             ctx: CommandContext<CommandSourceStack>,
             targets: List<ServerPlayer>,
@@ -161,7 +167,12 @@ class KeyCommand : SubCommand {
             }
 
             val results = targets.map { player ->
-                CratesManager.giveKeys(key, player, amount, silent)
+                val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
+                CompletableFuture.supplyAsync {
+                    synchronized(lock) {
+                        CratesManager.giveKeys(key, player, amount, silent).join()
+                    }
+                }
             }
 
             CompletableFuture.allOf(*results.toTypedArray()).thenAccept {
@@ -208,7 +219,12 @@ class KeyCommand : SubCommand {
             }
 
             val results = targets.map { player ->
-                CratesManager.takeKeys(key, player, amount, silent)
+                val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
+                CompletableFuture.supplyAsync {
+                    synchronized(lock) {
+                        CratesManager.takeKeys(key, player, amount, silent).join()
+                    }
+                }
             }
 
             CompletableFuture.allOf(*results.toTypedArray()).thenAccept {
@@ -259,21 +275,26 @@ class KeyCommand : SubCommand {
             }
 
             val results = targets.map { player ->
-                CratesManager.setKeys(key, player, amount, silent)
+                val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
+                CompletableFuture.supplyAsync {
+                    synchronized(lock) {
+                        CratesManager.setKeys(key, player, amount, silent).join()
+                    }
+                }
             }
 
             CompletableFuture.allOf(*results.toTypedArray()).thenAccept {
                 val successful = results.count { it.join() }
                 when (successful) {
                     0 -> ctx.source.sendMessage(
-                        Component.text("Failed to take ${amount}x $keyId keys from players!").color(NamedTextColor.RED)
+                        Component.text("Failed to set ${amount}x $keyId keys for players!").color(NamedTextColor.RED)
                     )
                     targets.size -> ctx.source.sendMessage(
-                        Component.text("Successfully took ${amount}x $keyId keys from $successful players!").color(NamedTextColor.GREEN),
+                        Component.text("Successfully set ${amount}x $keyId keys for $successful players!").color(NamedTextColor.GREEN),
                     )
                     else -> ctx.source.sendMessage(
-                        Component.text("Successfully took ${amount}x $keyId keys from $successful player(s), " +
-                                "but failed to take from ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
+                        Component.text("Successfully set ${amount}x $keyId keys for $successful player(s), " +
+                                "but failed to set for ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW),
                     )
                 }
             }
