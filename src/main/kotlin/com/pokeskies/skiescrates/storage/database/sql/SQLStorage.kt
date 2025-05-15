@@ -9,7 +9,6 @@ import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
 import com.pokeskies.skiescrates.storage.database.sql.providers.MySQLProvider
 import com.pokeskies.skiescrates.storage.database.sql.providers.SQLiteProvider
-import com.pokeskies.skiescrates.utils.Utils
 import java.lang.reflect.Type
 import java.sql.SQLException
 import java.util.*

@@ -3,7 +3,9 @@ package com.pokeskies.skiescrates.data.userdata;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.UUID;
 
 public class UserData {
     @BsonProperty("_id")

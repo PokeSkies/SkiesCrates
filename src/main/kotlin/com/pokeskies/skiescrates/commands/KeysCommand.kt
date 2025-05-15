@@ -8,14 +8,12 @@ import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.gui.KeysInventory
 import com.pokeskies.skiescrates.utils.TextUtils
-import kotlinx.coroutines.runBlocking
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.ChatFormatting
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerPlayer
-import java.util.concurrent.CompletableFuture
 
 class KeysCommand {
     private val aliases = ConfigManager.CONFIG.keys.aliases

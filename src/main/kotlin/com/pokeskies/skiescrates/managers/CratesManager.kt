@@ -12,7 +12,6 @@ import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.MinecraftDispatcher
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.core.component.DataComponentPatch

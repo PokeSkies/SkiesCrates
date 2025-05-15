@@ -1,10 +1,8 @@
 package com.pokeskies.skiescrates.placeholders.type.player
 
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.data.KeyCacheKey
 import com.pokeskies.skiescrates.placeholders.GenericResult
 import com.pokeskies.skiescrates.placeholders.PlayerPlaceholder
-import com.pokeskies.skiescrates.utils.Utils
 import net.kyori.adventure.text.Component
 import net.minecraft.server.level.ServerPlayer
 

@@ -6,9 +6,7 @@ import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import eu.pb4.sgui.api.gui.SimpleGui
-import kotlinx.coroutines.runBlocking
 import net.minecraft.server.level.ServerPlayer
-import java.util.concurrent.CompletableFuture
 
 class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): SimpleGui(
     ConfigManager.KEYS_MENU.menuType.type, viewer, false
