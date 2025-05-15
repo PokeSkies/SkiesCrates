@@ -264,25 +264,25 @@ class SkiesCrates : ModInitializer {
             return@UseItemCallback InteractionResultHolder.fail(item)
         })
         // Called when swinging with your hand. This can happen in both a left-click and a right-click on a block
-//        Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
-//            if (hand != InteractionHand.MAIN_HAND) return@PlayerSwingHandEvent
-//            Utils.printInfo("DEBUGGING @ SkiesCrates#PlayerSwingHandEvent - ${player.name.string}")
-//
-//            // This is a hacky fix to prevent right-clicking on blocks from opening preview menus
-//            val blockResult = player.pick(5.0, 1.0F, false)
-//            if (blockResult != null &&
-//                blockResult is BlockHitResult &&
-//                !player.serverLevel().getBlockState(blockResult.blockPos).isAir) return@PlayerSwingHandEvent
-//            Utils.printInfo("DEBUGGING @ SkiesCrates#PlayerSwingHandEvent - Block Result Passed")
-//
-//            val item = player.getItemInHand(hand)
-//            if (item.isEmpty) return@PlayerSwingHandEvent
-//
-//            Utils.printInfo("DEBUGGING @ SkiesCrates#PlayerSwingHandEvent - Checking for Crate")
-//            val crate = CratesManager.getCrateOrNull(item) ?: return@PlayerSwingHandEvent
-//            Utils.printInfo("DEBUGGING @ SkiesCrates#PlayerSwingHandEvent - Crate found, previewing: ${crate.id}")
-//            CratesManager.previewCrate(player, crate)
-//        })
+        Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
+            if (hand != InteractionHand.MAIN_HAND) return@PlayerSwingHandEvent
+
+            // Seemingly the thread is somehow on a network thread and not the main server thread
+            server.executeIfPossible {
+                // This is a hacky fix to prevent right-clicking on blocks from opening preview menus
+                // TODO: Find a way around having to do this
+                val blockResult = player.pick(5.0, 1.0F, false)
+                if (blockResult != null &&
+                    blockResult is BlockHitResult &&
+                    !player.serverLevel().getBlockState(blockResult.blockPos).isAir) return@executeIfPossible
+
+                val item = player.getItemInHand(hand)
+                if (item.isEmpty) return@executeIfPossible
+
+                val crate = CratesManager.getCrateOrNull(item) ?: return@executeIfPossible
+                CratesManager.previewCrate(player, crate)
+            }
+        })
     }
 
     fun reload() {
