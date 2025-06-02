@@ -587,7 +587,6 @@ object CratesManager {
 
         // Migration from other crate mods
         return ConfigManager.CONFIG.migration.keys?.firstNotNullOfOrNull { instance ->
-            println("Instance - $instance")
             val key = ConfigManager.KEYS[instance.key] ?: run {
                 Utils.printError("Migration Key ${instance.key} did not exist while attempting to find valid keys from player!")
                 return@firstNotNullOfOrNull null
