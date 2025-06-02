@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture
 
 object CratesManager {
     const val CRATE_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:crate"
-    const val KEY_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:crate"
+    const val KEY_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:key"
 
     val locations: MutableMap<DimensionalBlockPos, Crate> = mutableMapOf()
     val openingPlayers: MutableList<UUID> = mutableListOf()
