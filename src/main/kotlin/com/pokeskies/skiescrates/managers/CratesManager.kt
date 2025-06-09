@@ -377,8 +377,10 @@ object CratesManager {
 
         // Check for crate item
         if (!isForced && openData.itemStack != null) {
+            var contains = true
             withContext(MinecraftDispatcher(player.server)) {
                 if (!player.inventory.contains { getCrateOrNull(it)?.id == crate.id }) {
+                    contains = false
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_NO_CRATE.forEach {
                         player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
@@ -387,7 +389,7 @@ object CratesManager {
                     }
                 }
             }
-            return false
+            if (!contains) return false
         }
 
         // Take cost of opening the crate
