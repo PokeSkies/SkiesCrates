@@ -2,7 +2,7 @@
   "title": "Keys",
   "menu_type": "GENERIC_9X3",
   "keys": {
-    "example_crate": {
+    "example_key": {
       "item": "minecraft:tripwire_hook",
       "slots": [ 13 ],
       "name": "<green><b>Example Crate Key",
