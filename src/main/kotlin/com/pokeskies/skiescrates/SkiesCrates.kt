@@ -38,6 +38,7 @@ import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.kyori.adventure.platform.fabric.FabricServerAudiences
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -178,6 +179,9 @@ class SkiesCrates : ModInitializer {
             if (server.tickCount % 6000 == 0) {
                 cleanCache()
             }
+        })
+        ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, sender, server ->
+            CratesManager.openingPlayers.remove(handler.player.uuid)
         })
 
         // Preventing block breaking
