@@ -13,6 +13,8 @@ public class CrateData {
         this.openCount = openCount;
     }
 
+    public CrateData() {}
+
     @Override
     public String toString() {
         return "CrateData{" +

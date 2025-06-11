@@ -27,6 +27,8 @@ public class UserData {
         this.keys = keys;
     }
 
+    public UserData() {}
+
     public @Nullable Long getCrateCooldown(String id) {
         return Optional.ofNullable(crates.get(id)).map(data -> data.lastOpen).orElse(null);
     }

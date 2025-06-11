@@ -20,6 +20,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
 
     private fun refresh() {
         val storage = SkiesCrates.INSTANCE.storage ?: run {
+            Utils.printError("Storage was null while attempting to open the keys menu! Check elsewhere for errors.")
             Lang.ERROR_STORAGE.forEach {
                 player.sendMessage(TextUtils.toNative(it))
             }
@@ -48,7 +49,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
                 }
             }
         }.exceptionally {
-            Utils.printError("Player data for ${target.name} could not be found while opening keys menu!")
+            Utils.printError("Player data for ${target.name} could not be found while opening keys menu! Is the storage properly initialized?")
             Lang.ERROR_STORAGE.forEach {
                 player.sendMessage(TextUtils.toNative(it))
             }

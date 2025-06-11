@@ -94,6 +94,7 @@ object CratesManager {
     fun giveKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): CompletableFuture<Boolean> {
         if (key.virtual) {
             val storage = SkiesCrates.INSTANCE.storage ?: run {
+                Utils.printError("Storage was null while attempting give ${player.name.string} ${amount}x ${key.name} keys! Check elsewhere for errors.")
                 Lang.ERROR_STORAGE.forEach {
                     player.sendMessage(TextUtils.toNative(it))
                 }
@@ -119,6 +120,7 @@ object CratesManager {
                     }
                     result
                 }.exceptionally { e ->
+                    Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while giving them keys! Check elsewhere for errors.")
                     Lang.ERROR_STORAGE.forEach {
                         player.sendMessage(TextUtils.toNative(it))
                     }
@@ -155,6 +157,7 @@ object CratesManager {
     fun takeKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): CompletableFuture<Boolean> {
         if (key.virtual) {
             val storage = SkiesCrates.INSTANCE.storage ?: run {
+                Utils.printError("Storage was null while attempting take ${amount}x ${key.name} keys from ${player.name.string}! Check elsewhere for errors.")
                 Lang.ERROR_STORAGE.forEach {
                     player.sendMessage(TextUtils.toNative(it))
                 }
@@ -185,6 +188,7 @@ object CratesManager {
                     }
                     result
                 }.exceptionally { e ->
+                    Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while taking keys from them! Check elsewhere for errors.")
                     Lang.ERROR_STORAGE.forEach {
                         player.sendMessage(TextUtils.toNative(it))
                     }
@@ -199,6 +203,7 @@ object CratesManager {
     fun setKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): CompletableFuture<Boolean> {
         if (key.virtual) {
             val storage = SkiesCrates.INSTANCE.storage ?: run {
+                Utils.printError("Storage was null while attempting set ${amount}x ${key.name} keys for ${player.name.string}! Check elsewhere for errors.")
                 Lang.ERROR_STORAGE.forEach {
                     player.sendMessage(TextUtils.toNative(it))
                 }
@@ -224,6 +229,7 @@ object CratesManager {
                 }
                 result
             }.exceptionally { e ->
+                Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while setting their keys! Check elsewhere for errors.")
                 Lang.ERROR_STORAGE.forEach {
                     player.sendMessage(TextUtils.toNative(it))
                 }
@@ -302,6 +308,7 @@ object CratesManager {
 
         val storage = SkiesCrates.INSTANCE.storage ?: run {
             handleCrateFail(player, crate, openData)
+            Utils.printError("Storage was null while attempting to open a ${crate.name} crate for ${player.name.string}! Check elsewhere for errors.")
             Lang.ERROR_STORAGE.forEach {
                 player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
                     it

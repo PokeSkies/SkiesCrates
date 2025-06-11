@@ -30,22 +30,19 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
 
     init {
         try {
-            val credential = MongoCredential.createCredential(
-                config.username,
-                "admin",
-                config.password.toCharArray()
-            )
             var settings = MongoClientSettings.builder()
                 .uuidRepresentation(UuidRepresentation.STANDARD)
 
             settings = if (config.urlOverride.isNotEmpty()) {
                 settings.applyConnectionString(ConnectionString(config.urlOverride))
             } else {
-                settings
-                    .credential(credential)
-                    .applyToClusterSettings { builder: ClusterSettings.Builder ->
-                        builder.hosts(listOf(ServerAddress(config.host, config.port)))
-                    }
+                settings.credential(MongoCredential.createCredential(
+                    config.username,
+                    "admin",
+                    config.password.toCharArray()
+                )).applyToClusterSettings { builder: ClusterSettings.Builder ->
+                    builder.hosts(listOf(ServerAddress(config.host, config.port)))
+                }
             }
 
             this.mongoClient = MongoClients.create(settings.build())
@@ -77,7 +74,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
             Utils.printError("There was an error while attempting to save data to the Mongo database!")
             return false
         }
-        val query = Filters.eq("_id", uuid.toString())
+        val query = Filters.eq("_id", uuid)
         val result = this.userdataCollection?.replaceOne(query, userData, ReplaceOptions().upsert(true))
 
         return result?.wasAcknowledged() ?: false

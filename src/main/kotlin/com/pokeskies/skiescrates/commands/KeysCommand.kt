@@ -8,6 +8,7 @@ import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.gui.KeysInventory
 import com.pokeskies.skiescrates.utils.TextUtils
+import com.pokeskies.skiescrates.utils.Utils
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.ChatFormatting
 import net.minecraft.commands.CommandSourceStack
@@ -37,6 +38,7 @@ class KeysCommand {
                 KeysInventory(ctx.source.playerOrException, target).open()
             } else {
                 val storage = SkiesCrates.INSTANCE.storage ?: run {
+                    Utils.printError("Storage was null while attempting to execute the key give command! Check elsewhere for errors.")
                     Lang.ERROR_STORAGE.forEach {
                         ctx.source.sendMessage(TextUtils.toNative(it))
                     }
