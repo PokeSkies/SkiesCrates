@@ -100,6 +100,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
     override fun onClose() {
         if (!isFinished) {
             this.open()
+            return
         }
 
         openingPlayers.remove(player.uuid)
