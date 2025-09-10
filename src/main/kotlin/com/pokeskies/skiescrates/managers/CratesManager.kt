@@ -120,7 +120,7 @@ object CratesManager {
                     }
                     result
                 }.exceptionally { e ->
-                    Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while giving them keys! Check elsewhere for errors.")
+                    Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while giving them keys! Check elsewhere for errors. Local Error: ${e.message}")
                     Lang.ERROR_STORAGE.forEach {
                         player.sendMessage(TextUtils.toNative(it))
                     }
