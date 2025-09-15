@@ -6,6 +6,7 @@ import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import kotlin.text.set
 
 class FileStorage : IStorage {
     private var fileData: FileData = ConfigManager.loadFile(STORAGE_FILENAME, FileData(), "", true)
@@ -21,7 +22,9 @@ class FileStorage : IStorage {
 
     override fun saveUser(uuid: UUID, userData: UserData): Boolean {
         fileData.userdata[uuid] = userData
-        return ConfigManager.saveFile(STORAGE_FILENAME, fileData)
+        val snapshot = HashMap(fileData.userdata)
+        val fileDataCopy = FileData().apply { userdata = snapshot }
+        return ConfigManager.saveFile(STORAGE_FILENAME, fileDataCopy)
     }
 
     override fun getUserAsync(uuid: UUID): CompletableFuture<UserData> {
