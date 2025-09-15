@@ -1,6 +1,7 @@
 package com.pokeskies.skiescrates.data.animations.spinners
 
 import com.pokeskies.skiescrates.data.Crate
+import com.pokeskies.skiescrates.data.animations.items.SpinMode
 import com.pokeskies.skiescrates.data.animations.items.SpinningItem
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.gui.CrateInventory
@@ -38,9 +39,22 @@ class RewardSpinnerInstance(
     }
 
     fun giveRewards(player: ServerPlayer, slots: List<Int>, crate: Crate) {
-        slots.forEach { slot ->
-            rewards[slot]?.let { (id, reward) ->
-                reward.giveReward(player, crate)
+        when (getSpinningItem().mode) {
+            SpinMode.RANDOM, SpinMode.SEQUENTIAL, SpinMode.INDEPENDENT -> {
+                val winIndexes = slots.map { getSpinningItem().slots.indexOf(it) }.filter { it >= 0 }
+
+                val generatedRewards = getPregeneratedSlots()
+                val winRewards = winIndexes.map { index -> generatedRewards[(generatedRewards.size - 1) - index] }
+
+                winRewards.forEach { (id, reward) ->
+                    reward.giveReward(player, crate)
+                }
+            }
+            SpinMode.SYNCED -> {
+                val reward = getPregeneratedSlots().lastOrNull() ?: return
+                for (i in slots) {
+                    reward.second.giveReward(player, crate)
+                }
             }
         }
     }

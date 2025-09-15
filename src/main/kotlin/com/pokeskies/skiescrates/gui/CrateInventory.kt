@@ -51,7 +51,8 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
                 return@forEach
             }
 
-            animatedSpinners[id] = AnimatedSpinnerInstance(spinningItem, bag)
+            animatedSpinners[id] = AnimatedSpinnerInstance(spinningItem, bag).also { it.init(player, this) }
+
         }
 
         // Setup rewards spinners
@@ -59,7 +60,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
             cachedRewardStacks[id] = reward.display.createItemStack(player)
         }
         animation.items.rewards.forEach { (id, item) ->
-            rewardSpinners[id] = RewardSpinnerInstance(item)
+            rewardSpinners[id] = RewardSpinnerInstance(item).also { it.init(player, this) }
         }
     }
 

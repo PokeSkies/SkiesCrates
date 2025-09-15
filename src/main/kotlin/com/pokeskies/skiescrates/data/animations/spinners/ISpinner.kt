@@ -4,6 +4,7 @@ import com.pokeskies.skiescrates.data.animations.items.SpinMode
 import com.pokeskies.skiescrates.data.animations.items.SpinningItem
 import com.pokeskies.skiescrates.gui.CrateInventory
 import net.minecraft.server.level.ServerPlayer
+import kotlin.random.Random
 
 abstract class ISpinner<T>(
     private val spinningItem: SpinningItem,
@@ -15,6 +16,9 @@ abstract class ISpinner<T>(
     private var ticksUntilChange: Int, // The number of spins until the ticksPerSpin is changed
     private var slots: MutableMap<Int, T> // Map of the currently displayed things in the slots
 ) {
+    private lateinit var pregeneratedSlots: List<T> // The pregenerated items to be used when spinning to allow for canceling
+    private var currentIndex = 0
+
     // Ticks the current spinner and returns if the spinner is completed
     fun tick(player: ServerPlayer, gui: CrateInventory) {
         if (isStarted) {
@@ -49,53 +53,76 @@ abstract class ISpinner<T>(
         }
     }
 
+    fun init(player: ServerPlayer, gui: CrateInventory) {
+        pregeneratedSlots = when (spinningItem.mode) {
+            // Since each slot ticks independently, we add all the spins for all slots
+            SpinMode.INDEPENDENT -> List(spinningItem.slots.size * spinningItem.spinCount) {
+                generateItem(player, gui)
+            }
+            // Each slot has its own sequence of items but all of them are related, so we only generate spinCount items
+            SpinMode.SEQUENTIAL, SpinMode.SYNCED -> List(spinningItem.spinCount) {
+                generateItem(player, gui)
+            }
+            // Every slot ticks independently, but each spin changes one random slot, so we need to generate a lot of items
+            SpinMode.RANDOM -> {
+                val list: MutableList<T> = mutableListOf()
+
+                val tempList = MutableList(spinningItem.slots.size) { generateItem(player, gui) }
+                // For every spin, modify one value of $tempList randomly and add all values to the final list
+                for (i in 0..spinningItem.spinCount) {
+                    val slot = Random.nextInt(spinningItem.slots.size)
+                    println("Slot chosen for random spin: $slot")
+                    tempList[slot] = generateItem(player, gui)
+                    list.addAll(tempList)
+                }
+
+                list
+            }
+        }
+    }
+
     // This method swaps the items in the slots depending on the mode
     private fun spin(player: ServerPlayer, gui: CrateInventory) {
         when (spinningItem.mode) {
-            SpinMode.INDEPENDENT -> {
+            SpinMode.INDEPENDENT, SpinMode.RANDOM -> {
+                // These spin the same as the pregenerated slot list is already completely filled out for each slot
                 spinningItem.slots.forEach { slot ->
-                    val value = generateItem(player, gui)
+                    val value = pregeneratedSlots[currentIndex++]
                     slots[slot] = value
                     updateSlot(gui, slot, value)
                 }
             }
             SpinMode.SEQUENTIAL -> {
-                // Shift the entire list left one and add a new to the end
+                // Individual item sequence is pregenerated, so each time we just need to shift left by one and add a new to the end
                 for (i in spinningItem.slots.size - 1 downTo 1) {
                     val slot = spinningItem.slots[i]
                     val tempReward = slots[spinningItem.slots[i - 1]] ?: continue
                     slots[slot] = tempReward
                     updateSlot(gui, slot, tempReward)
                 }
-                val value = generateItem(player, gui)
+                val value = pregeneratedSlots[currentIndex++]
                 val slot = spinningItem.slots.first()
                 slots[slot] = value
                 updateSlot(gui, slot, value)
             }
             SpinMode.SYNCED -> {
-                val value = generateItem(player, gui)
+                // All items spin the same, so just get the next pregenerated item and set all slots to it
+                val value = pregeneratedSlots[currentIndex++]
                 spinningItem.slots.forEach { slot ->
-                    slots[slot] = value
-                    updateSlot(gui, slot, value)
-                }
-            }
-            SpinMode.RANDOM -> {
-                if (!isStarted) {
-                    spinningItem.slots.forEach { slot ->
-                        val value = generateItem(player, gui)
-                        slots[slot] = value
-                        updateSlot(gui, slot, value)
-                    }
-                    return
-                }
-                spinningItem.slots.randomOrNull()?.let { slot ->
-                    val value = generateItem(player, gui)
                     slots[slot] = value
                     updateSlot(gui, slot, value)
                 }
             }
         }
         spinningItem.sound?.playSound(player)
+    }
+
+    fun getPregeneratedSlots(): List<T> {
+        return pregeneratedSlots
+    }
+
+    fun getSpinningItem(): SpinningItem {
+        return spinningItem
     }
 
     fun isCompleted(): Boolean {

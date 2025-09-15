@@ -6,7 +6,6 @@ import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import kotlin.text.set
 
 class FileStorage : IStorage {
     private var fileData: FileData = ConfigManager.loadFile(STORAGE_FILENAME, FileData(), "", true)
