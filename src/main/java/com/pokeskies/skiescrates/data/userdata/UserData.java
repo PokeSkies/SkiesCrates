@@ -34,11 +34,26 @@ public class UserData {
     }
 
     public void addCrateCooldown(String id, Long lastOpen) {
-        crates.computeIfAbsent(id, k -> new CrateData(0L, 0)).lastOpen = lastOpen;
+        crates.computeIfAbsent(id, k -> new CrateData(0L, 0, new HashMap<>())).lastOpen = lastOpen;
     }
 
     public void addCrateUse(String id) {
-        crates.computeIfAbsent(id, k -> new CrateData(0L, 0)).openCount++;
+        crates.computeIfAbsent(id, k -> new CrateData(0L, 0, new HashMap<>())).openCount++;
+    }
+
+    public int getRewardLimits(String crateId, String rewardId) {
+        CrateData crateData = crates.get(crateId);
+        if (crateData == null) return 0;
+        return crateData.rewards.getOrDefault(rewardId, new RewardLimitData()).claimed;
+    }
+
+    public void addRewardUse(String crateId, String rewardId) {
+        CrateData crateData = crates.computeIfAbsent(crateId, id -> new CrateData(0L, 0, new HashMap<>()));
+        crateData.rewards.merge(rewardId, new RewardLimitData(1, System.currentTimeMillis()), (oldVal, newVal) -> {
+            oldVal.claimed++;
+            oldVal.time = System.currentTimeMillis();
+            return oldVal;
+        });
     }
 
     public void addKeys(String id, int amount) {

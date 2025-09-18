@@ -145,7 +145,7 @@ object ConfigManager {
                 .map { it.toFile() }
                 .collect(Collectors.toList())
             if (files != null) {
-                SkiesCrates.LOGGER.info("Found ${files.size} key files: ${files.map { it.name }}")
+                SkiesCrates.LOGGER.info("Found ${files.size} animation files: ${files.map { it.name }}")
                 val enabledFiles = mutableListOf<String>()
                 for (file in files) {
                     val fileName = file.name

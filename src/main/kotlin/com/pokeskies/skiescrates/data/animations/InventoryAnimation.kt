@@ -21,6 +21,7 @@ class InventoryAnimation(
         val closeDelay: Int,
         @SerializedName("win_slots")
         val winSlots: List<Int>,
+        val skippable: Boolean = false
     )
 
     // These are the items that are used in the inventory animation

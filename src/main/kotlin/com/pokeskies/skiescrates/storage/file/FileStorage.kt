@@ -19,8 +19,8 @@ class FileStorage : IStorage {
         return userData ?: UserData(uuid)
     }
 
-    override fun saveUser(uuid: UUID, userData: UserData): Boolean {
-        fileData.userdata[uuid] = userData
+    override fun saveUser(userData: UserData): Boolean {
+        fileData.userdata[userData.uuid] = userData
         val snapshot = HashMap(fileData.userdata)
         val fileDataCopy = FileData().apply { userdata = snapshot }
         return ConfigManager.saveFile(STORAGE_FILENAME, fileDataCopy)
@@ -32,9 +32,9 @@ class FileStorage : IStorage {
         }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 
-    override fun saveUserAsync(uuid: UUID, userData: UserData): CompletableFuture<Boolean> {
+    override fun saveUserAsync(userData: UserData): CompletableFuture<Boolean> {
         return CompletableFuture.supplyAsync({
-            saveUser(uuid, userData)
+            saveUser(userData)
         }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 }

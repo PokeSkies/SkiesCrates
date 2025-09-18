@@ -69,12 +69,12 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         return userdataCollection?.find(Filters.eq("_id", uuid))?.firstOrNull() ?: UserData(uuid)
     }
 
-    override fun saveUser(uuid: UUID, userData: UserData): Boolean {
+    override fun saveUser(userData: UserData): Boolean {
         if (mongoDatabase == null) {
             Utils.printError("There was an error while attempting to save data to the Mongo database!")
             return false
         }
-        val query = Filters.eq("_id", uuid)
+        val query = Filters.eq("_id", userData.uuid)
         val result = this.userdataCollection?.replaceOne(query, userData, ReplaceOptions().upsert(true))
 
         return result?.wasAcknowledged() ?: false
@@ -86,9 +86,9 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 
-    override fun saveUserAsync(uuid: UUID, userData: UserData): CompletableFuture<Boolean> {
+    override fun saveUserAsync(userData: UserData): CompletableFuture<Boolean> {
         return CompletableFuture.supplyAsync({
-            saveUser(uuid, userData)
+            saveUser(userData)
         }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 

@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerPlayer
 import kotlin.random.Random
 
 abstract class ISpinner<T>(
-    private val spinningItem: SpinningItem,
+    protected val spinningItem: SpinningItem,
     private var isCompleted: Boolean, // Indicates if this Spinner is finished
     private var isStarted: Boolean, // Indicates if this Spinner has started. If not, ticks is the time until start
     private var spinsRemaining: Int, // The number of spins remaining before finishing
@@ -16,7 +16,7 @@ abstract class ISpinner<T>(
     private var ticksUntilChange: Int, // The number of spins until the ticksPerSpin is changed
     private var slots: MutableMap<Int, T> // Map of the currently displayed things in the slots
 ) {
-    private lateinit var pregeneratedSlots: List<T> // The pregenerated items to be used when spinning to allow for canceling
+    protected lateinit var pregeneratedSlots: MutableList<T> // The pregenerated items to be used when spinning to allow for canceling
     private var currentIndex = 0
 
     // Ticks the current spinner and returns if the spinner is completed
@@ -53,27 +53,27 @@ abstract class ISpinner<T>(
         }
     }
 
-    fun init(player: ServerPlayer, gui: CrateInventory) {
+    // This method pregenerates all the items that will be used in the spin depending on the mode
+    fun pregenerate() {
         pregeneratedSlots = when (spinningItem.mode) {
             // Since each slot ticks independently, we add all the spins for all slots
-            SpinMode.INDEPENDENT -> List(spinningItem.slots.size * spinningItem.spinCount) {
-                generateItem(player, gui)
-            }
+            SpinMode.INDEPENDENT -> List(spinningItem.slots.size * spinningItem.spinCount) { generateItem() }.filterNotNull().toMutableList()
             // Each slot has its own sequence of items but all of them are related, so we only generate spinCount items
-            SpinMode.SEQUENTIAL, SpinMode.SYNCED -> List(spinningItem.spinCount) {
-                generateItem(player, gui)
-            }
+            SpinMode.SEQUENTIAL, SpinMode.SYNCED -> List(spinningItem.spinCount) { generateItem() }.filterNotNull().toMutableList()
             // Every slot ticks independently, but each spin changes one random slot, so we need to generate a lot of items
             SpinMode.RANDOM -> {
                 val list: MutableList<T> = mutableListOf()
 
-                val tempList = MutableList(spinningItem.slots.size) { generateItem(player, gui) }
+                val tempList: MutableList<T> =  List(spinningItem.slots.size) { generateItem() }
+                    .filterNotNull()
+                    .toMutableList()
                 // For every spin, modify one value of $tempList randomly and add all values to the final list
-                for (i in 0..spinningItem.spinCount) {
-                    val slot = Random.nextInt(spinningItem.slots.size)
-                    println("Slot chosen for random spin: $slot")
-                    tempList[slot] = generateItem(player, gui)
-                    list.addAll(tempList)
+                for (i in 0..<spinningItem.spinCount) {
+                    generateItem()?.let {
+                        val slot = Random.nextInt(spinningItem.slots.size)
+                        tempList[slot] = it
+                        list.addAll(tempList)
+                    }
                 }
 
                 list
@@ -117,14 +117,6 @@ abstract class ISpinner<T>(
         spinningItem.sound?.playSound(player)
     }
 
-    fun getPregeneratedSlots(): List<T> {
-        return pregeneratedSlots
-    }
-
-    fun getSpinningItem(): SpinningItem {
-        return spinningItem
-    }
-
     fun isCompleted(): Boolean {
         return isCompleted
     }
@@ -134,5 +126,5 @@ abstract class ISpinner<T>(
     abstract fun updateSlot(gui: CrateInventory, slot: Int, value: T)
 
     // Calling this will generate the data necessary to spin a item slot depending on the type of spinner
-    abstract fun generateItem(player: ServerPlayer, gui: CrateInventory): T
+    abstract fun generateItem(): T?
 }

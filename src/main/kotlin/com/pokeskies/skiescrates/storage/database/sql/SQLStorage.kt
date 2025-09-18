@@ -44,12 +44,12 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         return userData
     }
 
-    override fun saveUser(uuid: UUID, userData: UserData): Boolean {
+    override fun saveUser(userData: UserData): Boolean {
         return try {
             connectionProvider.createConnection().use {
                 val statement = it.createStatement()
                 statement.execute(String.format("REPLACE INTO ${config.tablePrefix}userdata (uuid, crates, `keys`) VALUES ('%s', '%s', '%s')",
-                    uuid.toString(),
+                    userData.uuid.toString(),
                     SkiesCrates.INSTANCE.gson.toJson(userData.crates),
                     SkiesCrates.INSTANCE.gson.toJson(userData.keys)
                 ))
@@ -72,9 +72,9 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 
-    override fun saveUserAsync(uuid: UUID, userData: UserData): CompletableFuture<Boolean> {
+    override fun saveUserAsync(userData: UserData): CompletableFuture<Boolean> {
         return CompletableFuture.supplyAsync({
-            saveUser(uuid, userData)
+            saveUser(userData)
         }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 

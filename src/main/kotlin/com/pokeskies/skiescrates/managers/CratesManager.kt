@@ -104,7 +104,7 @@ object CratesManager {
             return storage.getUserAsync(player.uuid)
                 .thenCompose { playerData ->
                     playerData.addKeys(key.id, amount)
-                    storage.saveUserAsync(player.uuid, playerData)
+                    storage.saveUserAsync(playerData)
                 }
                 .thenApplyAsync { result ->
                     if (result && !silent) {
@@ -169,7 +169,7 @@ object CratesManager {
                     if (!playerData.removeKeys(key.id, amount)) {
                         CompletableFuture.completedFuture(false)
                     } else {
-                        storage.saveUserAsync(player.uuid, playerData)
+                        storage.saveUserAsync(playerData)
                     }
                 }
                 .thenApplyAsync { result ->
@@ -213,7 +213,7 @@ object CratesManager {
             return storage.getUserAsync(player.uuid)
                 .thenCompose { playerData ->
                     playerData.setKeys(key.id, amount)
-                    storage.saveUserAsync(player.uuid, playerData)
+                    storage.saveUserAsync(playerData)
                 }
                 .thenApplyAsync { result ->
                 if (result && !silent) {
@@ -505,7 +505,7 @@ object CratesManager {
         }
 
         playerData.addCrateUse(crate.id)
-        storage.saveUserAsync(player.uuid, playerData)
+        storage.saveUserAsync(playerData)
 
         Lang.CRATE_OPENING.forEach {
             player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
@@ -515,9 +515,24 @@ object CratesManager {
 
         return withContext(MinecraftDispatcher(player.server)) {
             if (crate.animation.isEmpty()) {
-                // TODO: Update this probably
-                val reward = crate.generateReward(player)
+                // TODO: Update this probably. No option for selecting how many
+                val bag = crate.generateRewardBag(playerData)
+                val reward = bag.next() ?: run {
+                    handleCrateFail(player, crate, openData)
+                    Lang.ERROR_NO_REWARDS.forEach {
+                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                            it
+                        )))
+                    }
+                    return@withContext false
+                }
                 reward.second.giveReward(player, crate)
+
+                if (reward.second.getPlayerLimit() > 0) {
+                    playerData.addRewardUse(crate.id, reward.first)
+                    storage.saveUserAsync(playerData)
+                }
+
                 return@withContext true
             }
 
@@ -554,7 +569,7 @@ object CratesManager {
             }
             return
         }
-        Utils.printInfo("DEBUGGING @ CratesManager#previewCrate - Preview found, opening")
+        Utils.printDebug("previewCrate - Preview found, opening")
 
         PreviewInventory(player, crate, preview).open()
     }

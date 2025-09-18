@@ -1,30 +1,56 @@
 package com.pokeskies.skiescrates.utils
 
-import java.util.*
 import kotlin.random.Random
 
-class RandomCollection<E> @JvmOverloads constructor(random: Random = Random) {
-    private val map: NavigableMap<Double, E> = TreeMap()
-    private val random: Random
-    private var total = 0.0
+class RandomCollection<E> @JvmOverloads constructor(private val random: Random = Random) {
+    private val map = mutableMapOf<E, Double>()
+    private var totalWeight = 0.0
 
-    init {
-        this.random = random
+    fun add(element: E, weight: Double) {
+        require(weight > 0) { "Weight must be positive" }
+        val currentWeight = map[element] ?: 0.0
+        map[element] = currentWeight + weight
+        totalWeight += weight
     }
 
-    fun add(weight: Double, result: E): RandomCollection<E> {
-        if (weight <= 0) return this
-        total += weight
-        map[total] = result
-        return this
+    fun remove(element: E): Boolean {
+        val weight = map.remove(element)
+        if (weight != null) {
+            totalWeight -= weight
+            return true
+        }
+        return false
     }
 
-    operator fun next(): E {
-        val value: Double = random.nextDouble() * total
-        return map.higherEntry(value).value
+    fun decrement(element: E, weight: Double = 1.0): Boolean {
+        val current = map[element] ?: return false
+        val newWeight = current - weight
+        return if (newWeight > 0) {
+            map[element] = newWeight
+            totalWeight -= weight
+            true
+        } else {
+            map.remove(element)
+            totalWeight -= current
+            true
+        }
     }
 
-    fun size(): Int {
-        return map.size
+    fun next(): E? {
+        if (map.isEmpty()) return null
+        var r = random.nextDouble() * totalWeight
+        for ((element, weight) in map) {
+            r -= weight
+            if (r <= 0.0) {
+                return element
+            }
+        }
+        return map.keys.last() // fallback
     }
+
+    fun entries(): Map<E, Double> = map.toMap()
+
+    fun size(): Int = map.size
+
+    fun isEmpty(): Boolean = map.isEmpty()
 }

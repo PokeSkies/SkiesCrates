@@ -84,7 +84,7 @@ class SkiesCrates : ModInitializer {
     }
 
     lateinit var configDir: File
-    var storage: IStorage? = null
+    lateinit var storage: IStorage
 
     lateinit var adventure: FabricServerAudiences
     lateinit var server: MinecraftServer
@@ -105,7 +105,6 @@ class SkiesCrates : ModInitializer {
             if (server.playerList.getPlayer(key.playerUuid) == null) {
                 return@buildAsync CompletableFuture.completedFuture(0)
             }
-            val storage = storage ?: return@buildAsync CompletableFuture.completedFuture(0)
 
             try {
                 CompletableFuture.supplyAsync({
@@ -145,7 +144,6 @@ class SkiesCrates : ModInitializer {
             this.storage = IStorage.load(ConfigManager.CONFIG.storage)
         } catch (e: IOException) {
             Utils.printError(e.message)
-            this.storage = null
         }
         Lang.init()
 
@@ -171,7 +169,7 @@ class SkiesCrates : ModInitializer {
         }
         ServerLifecycleEvents.SERVER_STOPPED.register(ServerLifecycleEvents.ServerStopped { server: MinecraftServer ->
             if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.unload()
-            this.storage?.close()
+            this.storage.close()
         })
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
             tick()
@@ -226,6 +224,12 @@ class SkiesCrates : ModInitializer {
                     asyncScope.launch {
                         CratesManager.openCrate(player, crate, CrateOpenData(null, item), false)
                     }
+                    return@UseBlockCallback InteractionResult.FAIL
+                }
+
+                // Prevent placing keys
+                val keyId = CratesManager.getKeyOrNull(item)
+                if (keyId != null) {
                     return@UseBlockCallback InteractionResult.FAIL
                 }
             }
@@ -285,14 +289,13 @@ class SkiesCrates : ModInitializer {
 
     fun reload() {
         if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.unload()
-        this.storage?.close()
+        this.storage.close()
 
         ConfigManager.load()
         try {
             this.storage = IStorage.load(ConfigManager.CONFIG.storage)
         } catch (e: IOException) {
             Utils.printError(e.message)
-            this.storage = null
         }
         Lang.init()
 
@@ -306,7 +309,7 @@ class SkiesCrates : ModInitializer {
         playerKeyCache.synchronous().asMap().keys.forEach { key ->
             if (server.playerList.getPlayer(key.playerUuid) == null) {
                 playerKeyCache.synchronous().invalidate(key)
-                Utils.printInfo("DEBUGGING @ SkiesCrates#cleanCache - Removed offline player ${key.playerUuid} from key cache")
+                Utils.printDebug("cleanCache - Removed offline player ${key.playerUuid} from key cache")
             }
         }
     }

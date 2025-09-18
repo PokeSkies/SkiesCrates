@@ -1,10 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.util.function.Function
-
 plugins {
     java
     idea
@@ -12,6 +7,7 @@ plugins {
     kotlin("jvm") version ("2.1.0")
     `maven-publish`
 }
+
 val modId = project.properties["mod_id"].toString()
 version = project.properties["mod_version"].toString()
 group = project.properties["mod_group"].toString()
@@ -59,6 +55,7 @@ repositories {
     }
     maven("https://oss.sonatype.org/content/repositories/snapshots")
     maven("https://maven.impactdev.net/repository/development/")
+    maven("https://repo.lucko.me")
 }
 
 dependencies {

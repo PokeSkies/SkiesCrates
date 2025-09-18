@@ -22,13 +22,11 @@ interface IStorage {
 
     fun getUser(uuid: UUID): UserData
     fun getUser(player: ServerPlayer): UserData = getUser(player.uuid)
-    fun saveUser(uuid: UUID, userData: UserData): Boolean
-    fun saveUser(player: ServerPlayer, userData: UserData): Boolean = saveUser(player.uuid, userData)
+    fun saveUser(userData: UserData): Boolean
 
     fun getUserAsync(uuid: UUID): CompletableFuture<UserData>
     fun getUserAsync(player: ServerPlayer): CompletableFuture<UserData> = getUserAsync(player.uuid)
-    fun saveUserAsync(uuid: UUID, userData: UserData): CompletableFuture<Boolean>
-    fun saveUserAsync(player: ServerPlayer, userData: UserData): CompletableFuture<Boolean> = saveUserAsync(player.uuid, userData)
+    fun saveUserAsync(userData: UserData): CompletableFuture<Boolean>
 
     fun close() {}
 }

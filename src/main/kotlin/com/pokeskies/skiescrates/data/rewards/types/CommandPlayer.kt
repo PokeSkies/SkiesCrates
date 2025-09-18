@@ -5,6 +5,7 @@ import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
+import com.pokeskies.skiescrates.data.rewards.RewardLimits
 import com.pokeskies.skiescrates.data.rewards.RewardType
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
@@ -16,10 +17,11 @@ class CommandPlayer(
     name: String = "null",
     display: GenericGUIItem = GenericGUIItem(),
     weight: Int = 1,
+    limits: RewardLimits? = null,
     broadcast: Boolean = false,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     private val commands: List<String> = emptyList()
-) : Reward(type, name, display, weight, broadcast) {
+) : Reward(type, name, display, weight, limits, broadcast) {
     override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
         super.giveReward(player, crate)
@@ -38,6 +40,6 @@ class CommandPlayer(
     }
 
     override fun toString(): String {
-        return "CommandPlayer(type=$type, commands=$commands)"
+        return "CommandPlayer(type=$type, name='$name', display=$display, weight=$weight, limits=$limits, broadcast=$broadcast, commands=$commands)"
     }
 }

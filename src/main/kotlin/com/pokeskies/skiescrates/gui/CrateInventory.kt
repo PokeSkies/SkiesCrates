@@ -1,5 +1,6 @@
 package com.pokeskies.skiescrates.gui
 
+import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.animations.InventoryAnimation
 import com.pokeskies.skiescrates.data.animations.spinners.AnimatedSpinnerInstance
@@ -10,6 +11,8 @@ import com.pokeskies.skiescrates.utils.RandomCollection
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import eu.pb4.sgui.api.gui.SimpleGui
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 
@@ -26,6 +29,11 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
     private var cachedRewardStacks: MutableMap<String, ItemStack> = mutableMapOf()
     private var rewardSpinners: MutableMap<String, RewardSpinnerInstance> = mutableMapOf()
 
+    private val userData = SkiesCrates.INSTANCE.storage.getUser(player)
+
+    // Local instance of the possible rewards to draw from
+    private var randomBag: RandomCollection<Pair<String, Reward>> = crate.generateRewardBag(userData)
+
     init {
         this.title = TextUtils.parseAll(player, crate.parsePlaceholders(animation.settings.title))
 
@@ -40,7 +48,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
             val collection = RandomCollection<ItemStack>()
             presetItems.forEach { animatedItem ->
                 val itemStack = animatedItem.createItemStack(player)
-                collection.add(animatedItem.weight.toDouble(), itemStack)
+                collection.add(itemStack, animatedItem.weight.toDouble())
             }
             cachedAnimatedPresets[id] = collection
         }
@@ -51,8 +59,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
                 return@forEach
             }
 
-            animatedSpinners[id] = AnimatedSpinnerInstance(spinningItem, bag).also { it.init(player, this) }
-
+            animatedSpinners[id] = AnimatedSpinnerInstance(spinningItem, bag).also { it.pregenerate() }
         }
 
         // Setup rewards spinners
@@ -60,7 +67,22 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
             cachedRewardStacks[id] = reward.display.createItemStack(player)
         }
         animation.items.rewards.forEach { (id, item) ->
-            rewardSpinners[id] = RewardSpinnerInstance(item).also { it.init(player, this) }
+            val spinner = RewardSpinnerInstance(item, randomBag, animation.settings.winSlots).also {
+                it.pregenerate()
+            }
+
+            val returnBag = spinner.validateRewards(crate, userData)
+
+            if (returnBag == null) {
+                Utils.printError("No rewards were possible for spinner $id in crate ${crate.id} for player ${player.name.string}. Cancelling crate!")
+                player.sendMessage(Component.text("An error occurred while opening the crate. Please contact an administrator.").color(NamedTextColor.RED))
+                isFinished = true
+                close()
+                return@forEach
+            }
+
+            randomBag = returnBag
+            rewardSpinners[id] = spinner
         }
     }
 
@@ -72,7 +94,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
             }
         } else {
             var allCompleted = true
-            rewardSpinners.forEach { (id, spinner) ->
+            rewardSpinners.forEach { (_, spinner) ->
                 if (spinner.isCompleted()) {
                     return@forEach
                 }
@@ -82,13 +104,14 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
 
             if (allCompleted) {
                 isFinished = true
-                rewardSpinners.forEach { (id, data) ->
-                    data.giveRewards(player, animation.settings.winSlots, crate)
+                rewardSpinners.forEach { (_, data) ->
+                    data.giveRewards(player, crate)
                 }
+                SkiesCrates.INSTANCE.storage.saveUser(userData)
             }
         }
 
-        animatedSpinners.forEach { (id, spinner) ->
+        animatedSpinners.forEach { (_, spinner) ->
             if (spinner.isCompleted()) return@forEach
             spinner.tick(player, this)
         }
@@ -100,8 +123,16 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
 
     override fun onClose() {
         if (!isFinished) {
-            this.open()
-            return
+            if (animation.settings.skippable) {
+                isFinished = true
+                rewardSpinners.forEach { (_, data) ->
+                    data.giveRewards(player, crate)
+                }
+                SkiesCrates.INSTANCE.storage.saveUser(userData)
+            } else {
+                this.open()
+                return
+            }
         }
 
         openingPlayers.remove(player.uuid)

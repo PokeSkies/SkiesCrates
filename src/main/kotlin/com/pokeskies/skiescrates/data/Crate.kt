@@ -1,5 +1,6 @@
 package com.pokeskies.skiescrates.data
 
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.CostOptions
@@ -7,8 +8,8 @@ import com.pokeskies.skiescrates.config.FailureOptions
 import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.config.block.BlockOptions
 import com.pokeskies.skiescrates.data.rewards.Reward
+import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.utils.RandomCollection
-import net.minecraft.server.level.ServerPlayer
 
 class Crate(
     val enabled: Boolean = true,
@@ -25,22 +26,11 @@ class Crate(
     val failure: FailureOptions? = null,
     val keys: Map<String, Int> = emptyMap(),
     val block: BlockOptions = BlockOptions(),
+    @JsonAdapter(Reward.RewardMapAdapter::class)
     val rewards: MutableMap<String, Reward> = mutableMapOf(),
 ) {
     // Local variable that is filled in when creating the object
     lateinit var id: String
-
-    private var randomBag: RandomCollection<Pair<String, Reward>>? = null
-
-    fun generateReward(player: ServerPlayer): Pair<String, Reward> {
-        if (randomBag == null) {
-            randomBag = RandomCollection()
-            rewards.forEach { (id, reward) ->
-                randomBag!!.add(reward.weight.toDouble(), id to reward)
-            }
-        }
-        return randomBag!!.next()
-    }
 
     fun parsePlaceholders(string: String): String {
         return string.replace("%crate_name%", name)
@@ -49,6 +39,16 @@ class Crate(
                 "${ConfigManager.KEYS[keyId]?.name ?: keyId} x$amount"
             })
             .replace("%crate_inventory_space%", inventorySpace.toString())
+    }
+
+    fun generateRewardBag(data: UserData): RandomCollection<Pair<String, Reward>> {
+        val bag = RandomCollection<Pair<String, Reward>>()
+        for ((rewardId, reward) in rewards) {
+            if (!reward.canReceive(data, this)) continue
+            bag.add(rewardId to reward, reward.weight.toDouble())
+        }
+
+        return bag
     }
 
     override fun toString(): String {
