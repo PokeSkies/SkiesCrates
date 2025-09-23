@@ -216,6 +216,20 @@ class SkiesCrates : ModInitializer {
             if (player !is ServerPlayer) return@UseBlockCallback InteractionResult.PASS
             if (hand != InteractionHand.MAIN_HAND) return@UseBlockCallback InteractionResult.PASS
 
+            // Detect for a crate block
+            val blockPos = DimensionalBlockPos(
+                level.dimension().location().toString(),
+                blockHitResult.blockPos.x,
+                blockHitResult.blockPos.y,
+                blockHitResult.blockPos.z
+            )
+            CratesManager.getCrateBlock(blockPos)?.let { crate ->
+                asyncScope.launch {
+                    CratesManager.openCrate(player, crate, CrateOpenData(blockPos, null), false)
+                }
+                return@UseBlockCallback InteractionResult.FAIL
+            }
+
             // Detect for a crate in hand to prevent the placement and attempt to open the crate
             val item = player.getItemInHand(hand)
             if (!item.isEmpty) {
@@ -232,20 +246,6 @@ class SkiesCrates : ModInitializer {
                 if (keyId != null) {
                     return@UseBlockCallback InteractionResult.FAIL
                 }
-            }
-
-            // Detect for a crate block
-            val blockPos = DimensionalBlockPos(
-                level.dimension().location().toString(),
-                blockHitResult.blockPos.x,
-                blockHitResult.blockPos.y,
-                blockHitResult.blockPos.z
-            )
-            CratesManager.getCrateBlock(blockPos)?.let { crate ->
-                asyncScope.launch {
-                    CratesManager.openCrate(player, crate, CrateOpenData(blockPos, null), false)
-                }
-                return@UseBlockCallback InteractionResult.FAIL
             }
 
             return@UseBlockCallback InteractionResult.PASS
