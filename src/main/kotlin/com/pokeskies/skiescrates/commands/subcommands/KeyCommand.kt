@@ -150,10 +150,6 @@ class KeyCommand : SubCommand {
     }
 
     companion object {
-        // This is key to ensuring that we don't have multiple threads trying to give keys at the same time
-        // A ConcurrentHashMap is used because it provides thread safety and ANY is the lock object itself
-        private val dataLocks = ConcurrentHashMap<UUID, Any>()
-
         fun give(
             ctx: CommandContext<CommandSourceStack>,
             targets: List<ServerPlayer>,
@@ -167,11 +163,8 @@ class KeyCommand : SubCommand {
             }
 
             val results = targets.map { player ->
-                val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
-                CompletableFuture.supplyAsync {
-                    synchronized(lock) {
-                        KeyManager.giveKeys(key, player, amount, silent).join()
-                    }
+                KeyManager.queueOperation(player.uuid) {
+                    KeyManager.giveKeys(key, player, amount, silent)
                 }
             }
 
@@ -219,11 +212,8 @@ class KeyCommand : SubCommand {
             }
 
             val results = targets.map { player ->
-                val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
-                CompletableFuture.supplyAsync {
-                    synchronized(lock) {
-                        KeyManager.takeKeys(key, player, amount, silent).join()
-                    }
+                KeyManager.queueOperation(player.uuid) {
+                    KeyManager.takeKeys(key, player, amount, silent)
                 }
             }
 
@@ -275,11 +265,8 @@ class KeyCommand : SubCommand {
             }
 
             val results = targets.map { player ->
-                val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
-                CompletableFuture.supplyAsync {
-                    synchronized(lock) {
-                        KeyManager.setKeys(key, player, amount, silent).join()
-                    }
+                KeyManager.queueOperation(player.uuid) {
+                    KeyManager.setKeys(key, player, amount, silent)
                 }
             }
 

@@ -11,11 +11,36 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.text.replace
 
 object KeyManager {
     const val KEY_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:key"
+
+    // A map to queue operations per user to avoid key data overwrites
+    private val userKeyQueue = ConcurrentHashMap<UUID, CompletableFuture<*>>()
+
+    // Allows queueing key operations to ensure they are processed sequentially per user, waiting for the results on each operation
+    fun <T> queueOperation(userId: UUID, supplier: () -> CompletableFuture<T>): CompletableFuture<T> {
+        val result = CompletableFuture<T>()
+        userKeyQueue.compute(userId) { _, prev ->
+            val base = prev ?: CompletableFuture.completedFuture(Unit)
+            val next = base.handle { _, _ -> }
+                .thenCompose { supplier() }
+
+            next.whenComplete { value, error ->
+                if (error != null) result.completeExceptionally(error) else result.complete(value)
+                // Tail cleanup to prevent queue from growing indefinitely (until restart ofc)
+                userKeyQueue.compute(userId) { _, current ->
+                    if (current === next) null else current
+                }
+            }
+            next
+        }
+        return result
+    }
 
     fun giveKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): CompletableFuture<Boolean> {
         if (key.virtual) {

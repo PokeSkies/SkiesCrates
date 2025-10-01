@@ -25,7 +25,7 @@ class BaseCommand {
             ReloadCommand().build(),
             DebugCommand().build(),
             GiveCommand().build(),
-            KeyCommand().build()
+            KeyCommand().build(),
         )
 
         rootCommands.forEach { root ->
