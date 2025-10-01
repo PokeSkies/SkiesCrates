@@ -6,7 +6,6 @@ import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.CrateOpenData
 import com.pokeskies.skiescrates.data.DimensionalBlockPos
-import com.pokeskies.skiescrates.data.Key
 import com.pokeskies.skiescrates.gui.CrateInventory
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.MinecraftDispatcher
@@ -22,11 +21,9 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
 import net.minecraft.world.phys.Vec3
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
 object CratesManager {
     const val CRATE_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:crate"
-    const val KEY_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:key"
 
     val locations: MutableMap<DimensionalBlockPos, Crate> = mutableMapOf()
     val openingPlayers: MutableList<UUID> = mutableListOf()
@@ -35,7 +32,7 @@ object CratesManager {
     fun init() {
         // load the crate locations
         locations.clear()
-        ConfigManager.CRATES.forEach { (id, crate) ->
+        ConfigManager.CRATES.forEach { (_, crate) ->
             if (!crate.enabled) return@forEach
             for (location in crate.block.locations) {
                 val level = Utils.getLevel(location.dimension)
@@ -89,155 +86,6 @@ object CratesManager {
         }
 
         return true
-    }
-
-    fun giveKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): CompletableFuture<Boolean> {
-        if (key.virtual) {
-            val storage = SkiesCrates.INSTANCE.storage ?: run {
-                Utils.printError("Storage was null while attempting give ${player.name.string} ${amount}x ${key.name} keys! Check elsewhere for errors.")
-                Lang.ERROR_STORAGE.forEach {
-                    player.sendMessage(TextUtils.toNative(it))
-                }
-                return CompletableFuture.completedFuture(false)
-            }
-
-            return storage.getUserAsync(player.uuid)
-                .thenCompose { playerData ->
-                    playerData.addKeys(key.id, amount)
-                    storage.saveUserAsync(playerData)
-                }
-                .thenApplyAsync { result ->
-                    if (result && !silent) {
-                        player.server.execute {
-                            Lang.KEY_GIVE.forEach {
-                                player.sendMessage(TextUtils.parseAll(
-                                    player,
-                                    it.replace("%key_name%", key.name)
-                                        .replace("%amount%", amount.toString())
-                                ))
-                            }
-                        }
-                    }
-                    result
-                }.exceptionally { e ->
-                    Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while giving them keys! Check elsewhere for errors. Local Error: ${e.message}")
-                    Lang.ERROR_STORAGE.forEach {
-                        player.sendMessage(TextUtils.toNative(it))
-                    }
-                    false
-                }
-        }
-
-        // For non-virtual keys, process synchronously since no database access is needed
-        val item = key.display.createItemStack(player)
-        item.count = amount
-
-        // Apply custom data to identify as a crate
-        val tag = CompoundTag()
-        tag.putString(KEY_IDENTIFIER, key.id)
-        item.set(DataComponents.CUSTOM_DATA, CustomData.of(tag))
-
-        // Add to player's inventory
-        player.inventory.placeItemBackInInventory(item)
-
-        if (!silent) {
-            Lang.KEY_GIVE.forEach {
-                player.sendMessage(TextUtils.parseAll(
-                    player,
-                    it.replace("%key_name%", key.name)
-                        .replace("%amount%", amount.toString())
-                ))
-            }
-        }
-
-        return CompletableFuture.completedFuture(true)
-    }
-
-    // TODO: Allow taking non virtual keys, merge into one function with crate removals
-    fun takeKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): CompletableFuture<Boolean> {
-        if (key.virtual) {
-            val storage = SkiesCrates.INSTANCE.storage ?: run {
-                Utils.printError("Storage was null while attempting take ${amount}x ${key.name} keys from ${player.name.string}! Check elsewhere for errors.")
-                Lang.ERROR_STORAGE.forEach {
-                    player.sendMessage(TextUtils.toNative(it))
-                }
-                return CompletableFuture.completedFuture(false)
-            }
-
-            return storage.getUserAsync(player.uuid)
-                .thenCompose { playerData ->
-                    if (!playerData.removeKeys(key.id, amount)) {
-                        CompletableFuture.completedFuture(false)
-                    } else {
-                        storage.saveUserAsync(playerData)
-                    }
-                }
-                .thenApplyAsync { result ->
-                    if (result && !silent) {
-                        player.server.execute {
-                            Lang.KEY_TAKE.forEach {
-                                player.sendMessage(
-                                    TextUtils.parseAll(
-                                        player,
-                                        it.replace("%key_name%", key.name)
-                                            .replace("%amount%", amount.toString())
-                                    )
-                                )
-                            }
-                        }
-                    }
-                    result
-                }.exceptionally { e ->
-                    Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while taking keys from them! Check elsewhere for errors.")
-                    Lang.ERROR_STORAGE.forEach {
-                        player.sendMessage(TextUtils.toNative(it))
-                    }
-                    false
-                }
-        }
-
-        return CompletableFuture.completedFuture(false)
-    }
-
-    // TODO: Allow taking non virtual keys, merge into one function with crate removals
-    fun setKeys(key: Key, player: ServerPlayer, amount: Int, silent: Boolean = false): CompletableFuture<Boolean> {
-        if (key.virtual) {
-            val storage = SkiesCrates.INSTANCE.storage ?: run {
-                Utils.printError("Storage was null while attempting set ${amount}x ${key.name} keys for ${player.name.string}! Check elsewhere for errors.")
-                Lang.ERROR_STORAGE.forEach {
-                    player.sendMessage(TextUtils.toNative(it))
-                }
-                return CompletableFuture.completedFuture(false)
-            }
-
-            return storage.getUserAsync(player.uuid)
-                .thenCompose { playerData ->
-                    playerData.setKeys(key.id, amount)
-                    storage.saveUserAsync(playerData)
-                }
-                .thenApplyAsync { result ->
-                if (result && !silent) {
-                    player.server.execute {
-                        Lang.KEY_SET.forEach {
-                            player.sendMessage(TextUtils.parseAll(
-                                player,
-                                it.replace("%key_name%", key.name)
-                                    .replace("%amount%", amount.toString())
-                            ))
-                        }
-                    }
-                }
-                result
-            }.exceptionally { e ->
-                Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while setting their keys! Check elsewhere for errors.")
-                Lang.ERROR_STORAGE.forEach {
-                    player.sendMessage(TextUtils.toNative(it))
-                }
-                false
-            }
-        }
-
-        return CompletableFuture.completedFuture(false)
     }
 
     // This method is massive, but it handles a lot of things!
@@ -306,16 +154,7 @@ object CratesManager {
             }
         }
 
-        val storage = SkiesCrates.INSTANCE.storage ?: run {
-            handleCrateFail(player, crate, openData)
-            Utils.printError("Storage was null while attempting to open a ${crate.name} crate for ${player.name.string}! Check elsewhere for errors.")
-            Lang.ERROR_STORAGE.forEach {
-                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
-                    it
-                )))
-            }
-            return false
-        }
+        val storage = SkiesCrates.INSTANCE.storage
 
         val playerData = storage.getUser(player.uuid)
 
@@ -367,7 +206,7 @@ object CratesManager {
                             it >= amount
                         } ?: false
                     } else {
-                        player.inventory.contains { getKeyOrNull(it)?.id == keyId && it.count >= amount }
+                        player.inventory.contains { KeyManager.getKeyOrNull(it)?.id == keyId && it.count >= amount }
                     }
                 }) {
                     handleCrateFail(player, crate, openData)
@@ -466,7 +305,7 @@ object CratesManager {
                         } else {
                             for ((i, stack) in player.inventory.items.withIndex()) {
                                 if (!stack.isEmpty) {
-                                    if (getKeyOrNull(stack)?.id == keyId) {
+                                    if (KeyManager.getKeyOrNull(stack)?.id == keyId) {
                                         val stackSize = stack.count
                                         if (removed + stackSize >= amount) {
                                             player.inventory.items[i].shrink(amount - removed)
@@ -607,30 +446,6 @@ object CratesManager {
             return ConfigManager.CRATES[tag.copyTag().getString(CRATE_IDENTIFIER)]
         }
         return null
-    }
-
-    fun getKeyOrNull(itemStack: ItemStack): Key? {
-        val tag = itemStack.get(DataComponents.CUSTOM_DATA) ?: return null
-
-        if (tag.contains(KEY_IDENTIFIER)) {
-            return ConfigManager.KEYS[tag.copyTag().getString(KEY_IDENTIFIER)]
-        }
-
-        // Migration from other crate mods
-        return ConfigManager.CONFIG.migration.keys?.firstNotNullOfOrNull { instance ->
-            val key = ConfigManager.KEYS[instance.key] ?: run {
-                Utils.printError("Migration Key ${instance.key} did not exist while attempting to find valid keys from player!")
-                return@firstNotNullOfOrNull null
-            }
-
-            if (tag.contains(instance.nbt.key)) {
-                val value = tag.copyTag().getString(instance.nbt.key)
-                if (value != null && value.equals(instance.nbt.value)) {
-                    return key
-                }
-            }
-            null
-        }
     }
 
     fun getCrateBlock(pos: DimensionalBlockPos): Crate? {

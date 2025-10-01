@@ -8,7 +8,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.commands.KeysCommand
 import com.pokeskies.skiescrates.config.ConfigManager
-import com.pokeskies.skiescrates.managers.CratesManager
+import com.pokeskies.skiescrates.managers.KeyManager
 import com.pokeskies.skiescrates.utils.SubCommand
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.kyori.adventure.text.Component
@@ -170,7 +170,7 @@ class KeyCommand : SubCommand {
                 val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
                 CompletableFuture.supplyAsync {
                     synchronized(lock) {
-                        CratesManager.giveKeys(key, player, amount, silent).join()
+                        KeyManager.giveKeys(key, player, amount, silent).join()
                     }
                 }
             }
@@ -222,7 +222,7 @@ class KeyCommand : SubCommand {
                 val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
                 CompletableFuture.supplyAsync {
                     synchronized(lock) {
-                        CratesManager.takeKeys(key, player, amount, silent).join()
+                        KeyManager.takeKeys(key, player, amount, silent).join()
                     }
                 }
             }
@@ -278,7 +278,7 @@ class KeyCommand : SubCommand {
                 val lock = dataLocks.computeIfAbsent(player.uuid) { Any() }
                 CompletableFuture.supplyAsync {
                     synchronized(lock) {
-                        CratesManager.setKeys(key, player, amount, silent).join()
+                        KeyManager.setKeys(key, player, amount, silent).join()
                     }
                 }
             }

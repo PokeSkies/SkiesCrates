@@ -23,6 +23,7 @@ import com.pokeskies.skiescrates.gui.InventoryType
 import com.pokeskies.skiescrates.managers.CratesManager
 import com.pokeskies.skiescrates.managers.CratesManager.tick
 import com.pokeskies.skiescrates.managers.HologramsManager
+import com.pokeskies.skiescrates.managers.KeyManager
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
@@ -242,7 +243,7 @@ class SkiesCrates : ModInitializer {
                 }
 
                 // Prevent placing keys
-                val keyId = CratesManager.getKeyOrNull(item)
+                val keyId = KeyManager.getKeyOrNull(item)
                 if (keyId != null) {
                     return@UseBlockCallback InteractionResult.FAIL
                 }
