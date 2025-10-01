@@ -505,15 +505,22 @@ object CratesManager {
         }
 
         playerData.addCrateUse(crate.id)
-        storage.saveUserAsync(playerData)
-
-        Lang.CRATE_OPENING.forEach {
-            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
-                it
-            )))
-        }
 
         return withContext(MinecraftDispatcher(player.server)) {
+            if (!storage.saveUserAsync(playerData).get()) {
+                Utils.printError("Failed to save user data after opening a crate for ${player.name.string}! Check elsewhere for errors.")
+                Lang.ERROR_STORAGE.forEach {
+                    player.sendMessage(TextUtils.toNative(it))
+                }
+                return@withContext false
+            }
+
+            Lang.CRATE_OPENING.forEach {
+                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    it
+                )))
+            }
+
             if (crate.animation.isEmpty()) {
                 // TODO: Update this probably. No option for selecting how many
                 val bag = crate.generateRewardBag(playerData)
