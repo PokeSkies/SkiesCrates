@@ -49,7 +49,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
             item.slots.forEach { slot ->
                 GuiElementBuilder.from(item.createItemStack(player))
                     .setCallback { i, clickType, vanillaClickType ->
-                        if (page < maxPages - 1) {
+                        if (page < maxPages) {
                             page++
                             renderRewards()
                         }
@@ -80,7 +80,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
             this.clearSlot(slot)
         }
         var index = 0
-        for ((id, pair) in rewards.toList().subList(preview.buttons.reward.slots.size * page, rewards.size)) {
+        for ((_, pair) in rewards.toList().subList(preview.buttons.reward.slots.size * page, minOf(preview.buttons.reward.slots.size * (page + 1), rewards.size))) {
             if (index < preview.buttons.reward.slots.size) {
                 GuiElementBuilder.from(pair.second).let {
                     this.setSlot(preview.buttons.reward.slots[index++], it)

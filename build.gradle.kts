@@ -115,6 +115,8 @@ dependencies {
     implementation(include("com.h2database:h2:2.2.224")!!)
     implementation(include("com.mysql:mysql-connector-j:8.2.0")!!)
 
+    modRuntimeOnly("com.cobblemon:fabric:1.6.1+1.21.1-SNAPSHOT")
+
     modCompileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
 
