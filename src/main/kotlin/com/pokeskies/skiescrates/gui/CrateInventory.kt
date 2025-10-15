@@ -16,7 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 
-class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: InventoryAnimation): SimpleGui(
+class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: InventoryAnimation, bag: RandomCollection<Pair<String, Reward>>): SimpleGui(
     animation.settings.menuType.type, player, false
 ) {
     private var isFinished = false
@@ -32,7 +32,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
     private val userData = SkiesCrates.INSTANCE.storage.getUser(player)
 
     // Local instance of the possible rewards to draw from
-    private var randomBag: RandomCollection<Pair<String, Reward>> = crate.generateRewardBag(userData)
+    private var randomBag: RandomCollection<Pair<String, Reward>> = bag
 
     init {
         this.title = TextUtils.parseAll(player, crate.parsePlaceholders(animation.settings.title))

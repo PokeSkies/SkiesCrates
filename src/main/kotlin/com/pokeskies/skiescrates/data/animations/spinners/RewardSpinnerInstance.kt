@@ -48,6 +48,7 @@ class RewardSpinnerInstance(
     }
 
     fun getFinalRewards(): List<Pair<String, Reward>> {
+        if (pregeneratedSlots.isEmpty()) return emptyList()
         return when (spinningItem.mode) {
             SpinMode.RANDOM, SpinMode.SEQUENTIAL, SpinMode.INDEPENDENT -> {
                 val winIndexes = winSlots.map { spinningItem.slots.indexOf(it) }.filter { it >= 0 }
@@ -104,6 +105,10 @@ class RewardSpinnerInstance(
                     }
                 }
             }
+        }
+
+        if (randomBag.size() <= 0) {
+            return null
         }
 
         return randomBag

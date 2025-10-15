@@ -283,9 +283,10 @@ object CratesManager {
                     for ((keyId, amount) in crate.keys) {
                         var removed = 0
                         val key = ConfigManager.KEYS[keyId] ?: run {
-                            Lang.ERROR_NO_REWARDS.forEach {
+                            Utils.printError("Key $keyId does not exist while opening crate ${crate.id} for ${player.name.string}!")
+                            Lang.ERROR_KEY_NOT_FOUND.forEach {
                                 player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
-                                    it
+                                    it.replace("%key_id%", keyId)
                                 )))
                             }
                             return@withContext false
@@ -360,10 +361,20 @@ object CratesManager {
                 )))
             }
 
+            val rewardBag = crate.generateRewardBag(playerData)
+            if (rewardBag.size() <= 0) {
+                handleCrateFail(player, crate, openData)
+                Lang.ERROR_NO_REWARDS.forEach {
+                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                        it
+                    )))
+                }
+                return@withContext false
+            }
+
             if (crate.animation.isEmpty()) {
                 // TODO: Update this probably. No option for selecting how many
-                val bag = crate.generateRewardBag(playerData)
-                val reward = bag.next() ?: run {
+                val reward = rewardBag.next() ?: run {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_NO_REWARDS.forEach {
                         player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
@@ -393,7 +404,7 @@ object CratesManager {
             }
 
             openingPlayers.add(player.uuid)
-            CrateInventory(player, crate, animation).open()
+            CrateInventory(player, crate, animation, rewardBag).open()
             return@withContext true
         }
     }

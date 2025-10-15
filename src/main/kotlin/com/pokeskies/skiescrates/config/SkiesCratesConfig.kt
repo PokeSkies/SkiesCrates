@@ -12,7 +12,7 @@ class SkiesCratesConfig(
     var migration: MigrationOptions = MigrationOptions()
 ) {
     class Storage(
-        val type: StorageType = StorageType.JSON,
+        val type: StorageType = StorageType.SQLITE,
         val host: String = "",
         val port: Int = 3306,
         val database: String = "skiescrates",
