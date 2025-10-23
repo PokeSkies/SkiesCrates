@@ -1,6 +1,7 @@
 package com.pokeskies.skiescrates.data.rewards
 
 import com.google.gson.*
+import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.data.Crate
@@ -34,7 +35,7 @@ abstract class Reward(
 
         if (broadcast) {
             Lang.CRATE_REWARD_BROADCAST.forEach {
-                player.sendMessage(TextUtils.parseAll(
+                SkiesCrates.INSTANCE.adventure.all().sendMessage(TextUtils.parseAll(
                     player,
                     crate.parsePlaceholders(it)
                         .replace("%reward_name%", name)
