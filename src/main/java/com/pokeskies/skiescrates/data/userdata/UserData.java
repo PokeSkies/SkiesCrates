@@ -44,12 +44,12 @@ public class UserData {
     public int getRewardLimits(String crateId, String rewardId) {
         CrateData crateData = crates.get(crateId);
         if (crateData == null) return 0;
-        return crateData.rewards.getOrDefault(rewardId, new RewardLimitData()).claimed;
+        return crateData.getRewards().getOrDefault(rewardId, new RewardLimitData()).claimed;
     }
 
     public void addRewardUse(String crateId, String rewardId) {
         CrateData crateData = crates.computeIfAbsent(crateId, id -> new CrateData(0L, 0, new HashMap<>()));
-        crateData.rewards.merge(rewardId, new RewardLimitData(1, System.currentTimeMillis()), (oldVal, newVal) -> {
+        crateData.getRewards().merge(rewardId, new RewardLimitData(1, System.currentTimeMillis()), (oldVal, newVal) -> {
             oldVal.claimed++;
             oldVal.time = System.currentTimeMillis();
             return oldVal;

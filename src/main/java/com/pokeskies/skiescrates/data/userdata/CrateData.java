@@ -2,6 +2,7 @@ package com.pokeskies.skiescrates.data.userdata;
 
 import org.bson.codecs.pojo.annotations.BsonProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class CrateData {
@@ -19,6 +20,14 @@ public class CrateData {
     }
 
     public CrateData() {}
+
+    public Map<String, RewardLimitData> getRewards() {
+        if (rewards == null) {
+            rewards = new HashMap<>();
+        }
+
+        return rewards;
+    }
 
     @Override
     public String toString() {
