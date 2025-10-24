@@ -46,10 +46,6 @@ object CratesManager {
                 }
                 locations[location] = crate
 
-                if (crate.block.hologram != null) {
-                    // TODO: Hologram implementation
-                }
-
                 if (crate.block.particles != null) {
                     // TODO: Particle implementation
                 }
@@ -160,7 +156,7 @@ object CratesManager {
 
         // Check for a cooldown, if one is present
         if (crate.cooldown > 0) {
-            val lastOpened = playerData.getCrateCooldown(crate.id)
+            val lastOpened = playerData.getCrateCooldown(crate)
             if (lastOpened != null) {
                 val cooldownTime = lastOpened + (crate.cooldown * 1000)
                 if (System.currentTimeMillis() < cooldownTime) {
@@ -273,7 +269,7 @@ object CratesManager {
 
             // Apply a cooldown
             if (crate.cooldown > 0) {
-                playerData.addCrateCooldown(crate.id, System.currentTimeMillis())
+                playerData.addCrateCooldown(crate, System.currentTimeMillis())
             }
 
             // Take keys if needed
@@ -293,7 +289,7 @@ object CratesManager {
                         }
 
                         if (key.virtual) {
-                            if (!playerData.removeKeys(keyId, amount)) {
+                            if (!playerData.removeKeys(key, amount)) {
                                 Utils.printError("Failed to remove $amount keys from ${player.name.string} for crate ${crate.id}, but they were present in the check!")
                                 Lang.ERROR_KEYS_CHANGED.forEach {
                                     player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
@@ -344,7 +340,7 @@ object CratesManager {
             }
         }
 
-        playerData.addCrateUse(crate.id)
+        playerData.addCrateUse(crate)
 
         return withContext(MinecraftDispatcher(player.server)) {
             if (!storage.saveUserAsync(playerData).get()) {
@@ -383,10 +379,10 @@ object CratesManager {
                     }
                     return@withContext false
                 }
-                reward.second.giveReward(player, crate)
+                reward.giveReward(player, crate)
 
-                if (reward.second.getPlayerLimit() > 0) {
-                    playerData.addRewardUse(crate.id, reward.first)
+                if (reward.getPlayerLimit() > 0) {
+                    playerData.addRewardUse(crate, reward)
                     storage.saveUserAsync(playerData)
                 }
 

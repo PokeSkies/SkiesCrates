@@ -6,6 +6,7 @@ import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
+import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.gui.InventoryType
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.TextUtils
@@ -52,7 +53,7 @@ class Preview(
         @JsonAdapter(FlexibleListAdaptorFactory::class)
         val lore: List<String> = emptyList()
     ) {
-        fun createItemStack(player: ServerPlayer, rewardId: String, reward: Reward, crate: Crate): ItemStack {
+        fun createItemStack(player: ServerPlayer, reward: Reward, crate: Crate, userData: UserData): ItemStack {
             if (reward.display.item.isEmpty()) return ItemStack(Items.BARRIER, reward.display.amount)
 
             val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(reward.display.item))
@@ -63,6 +64,15 @@ class Preview(
             }
 
             val stack = ItemStack(parsedItem.get(), reward.display.amount)
+
+            val placeholders: Map<String, String> = mapOf(
+                "%reward_name%" to (reward.display.name ?: ""),
+                "%reward_id%" to reward.id,
+                "%reward_weight%" to reward.weight.toString(),
+                "%reward_percent%" to String.format(Locale.US, "%.2f", calculatePercent(reward, crate)),
+                "%reward_limit_player%" to (reward.limits?.player?.amount?.toString() ?: "0"),
+                "%reward_limit_player_claimed%" to userData.getRewardLimits(crate, reward).toString()
+            )
 
             if (reward.display.nbt != null) {
                 // Parses the nbt and attempts to replace any placeholders
@@ -96,10 +106,8 @@ class Preview(
             if (name != null) {
                 dataComponents.set(
                     DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
-                    .append(TextUtils.toNative(name.replace("%reward_name%", reward.display.name ?: "")
-                        .replace("%reward_id%", rewardId)
-                        .replace("%reward_weight%", reward.weight.toString())
-                        .replace("%reward_percent%", String.format(Locale.US, "%.2f", calculatePercent(reward, crate)))
+                    .append(TextUtils.toNative(
+                        name.let {  placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
                     )))
             }
 
@@ -114,10 +122,7 @@ class Preview(
                 }
                 dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
                     Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(
-                        it.replace("%reward_name%", reward.display.name ?: "")
-                            .replace("%reward_id%", rewardId)
-                            .replace("%reward_weight%", reward.weight.toString())
-                            .replace("%reward_percent%", String.format(Locale.US, "%.2f", calculatePercent(reward, crate)))
+                        it.let { placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
                     )) as Component
                 }.toList()))
             }

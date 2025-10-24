@@ -1,5 +1,6 @@
 package com.pokeskies.skiescrates.gui
 
+import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.previews.Preview
 import com.pokeskies.skiescrates.data.rewards.Reward
@@ -22,6 +23,8 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
     init {
         this.title = TextUtils.parseAll(player, crate.parsePlaceholders(preview.settings.title))
 
+        val userData = SkiesCrates.INSTANCE.storage.getUser(player)
+
         preview.items.forEach { (id, item) ->
             item.createItemStack(player).let {
                 item.slots.forEach { slot ->
@@ -31,7 +34,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
         }
 
         crate.rewards.forEach { (id, reward) ->
-            rewards[id] = reward to preview.buttons.reward.createItemStack(player, id, reward, crate)
+            rewards[id] = reward to preview.buttons.reward.createItemStack(player, reward, crate, userData)
         }
 
         maxPages = (rewards.size + pageSlots - 1) / pageSlots

@@ -41,11 +41,11 @@ class Crate(
             .replace("%crate_inventory_space%", inventorySpace.toString())
     }
 
-    fun generateRewardBag(data: UserData): RandomCollection<Pair<String, Reward>> {
-        val bag = RandomCollection<Pair<String, Reward>>()
-        for ((rewardId, reward) in rewards) {
+    fun generateRewardBag(data: UserData): RandomCollection<Reward> {
+        val bag = RandomCollection<Reward>()
+        for (reward in rewards.values) {
             if (!reward.canReceive(data, this)) continue
-            bag.add(rewardId to reward, reward.weight.toDouble())
+            bag.add(reward, reward.weight.toDouble())
         }
 
         return bag

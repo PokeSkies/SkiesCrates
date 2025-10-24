@@ -48,7 +48,7 @@ object KeyManager {
 
             return storage.getUserAsync(player.uuid)
                 .thenCompose { playerData ->
-                    playerData.addKeys(key.id, amount)
+                    playerData.addKeys(key, amount)
                     storage.saveUserAsync(playerData)
                 }
                 .thenApplyAsync { result ->
@@ -105,7 +105,7 @@ object KeyManager {
 
             return storage.getUserAsync(player.uuid)
                 .thenCompose { playerData ->
-                    if (!playerData.removeKeys(key.id, amount)) {
+                    if (!playerData.removeKeys(key, amount)) {
                         CompletableFuture.completedFuture(false)
                     } else {
                         storage.saveUserAsync(playerData)
@@ -145,7 +145,7 @@ object KeyManager {
 
             return storage.getUserAsync(player.uuid)
                 .thenCompose { playerData ->
-                    playerData.setKeys(key.id, amount)
+                    playerData.setKeys(key, amount)
                     storage.saveUserAsync(playerData)
                 }
                 .thenApplyAsync { result ->

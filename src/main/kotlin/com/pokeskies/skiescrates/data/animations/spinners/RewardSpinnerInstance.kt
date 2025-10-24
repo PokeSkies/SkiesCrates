@@ -17,13 +17,13 @@ class RewardSpinnerInstance(
     ticksPerSpin: Int, // Once spun, this is the number of ticks until the next spin
     ticks: Int, // The number of ticks until the next spin OR until the animation starts
     ticksUntilChange: Int, // The number of spins until the ticksPerSpin is changed
-    rewards: MutableMap<Int, Pair<String, Reward>>, // The rewards displayed in the current slots
-    private val randomBag: RandomCollection<Pair<String, Reward>>, // The current random bag being used to generate rewards
+    rewards: MutableMap<Int, Reward>, // The rewards displayed in the current slots
+    private val randomBag: RandomCollection<Reward>, // The current random bag being used to generate rewards
     private val winSlots: List<Int>, // The slots that will be given to the player as rewards
-): ISpinner<Pair<String, Reward>>(spinningItem, isCompleted, isStarted, spinsRemaining, ticksPerSpin, ticks, ticksUntilChange, rewards) {
+): ISpinner<Reward>(spinningItem, isCompleted, isStarted, spinsRemaining, ticksPerSpin, ticks, ticksUntilChange, rewards) {
     constructor(
         spinningItem: SpinningItem,
-        rewardBag: RandomCollection<Pair<String, Reward>>,
+        rewardBag: RandomCollection<Reward>,
         winSlots: List<Int>,
     ) : this(
         spinningItem,
@@ -38,16 +38,16 @@ class RewardSpinnerInstance(
         winSlots
     )
 
-    override fun generateItem(): Pair<String, Reward>? {
+    override fun generateItem(): Reward? {
         if (randomBag.size() <= 0) return null
         return randomBag.next()
     }
 
-    override fun updateSlot(gui: CrateInventory, slot: Int, value: Pair<String, Reward>) {
+    override fun updateSlot(gui: CrateInventory, slot: Int, value: Reward) {
         gui.updateRewardSlot(slot, value)
     }
 
-    fun getFinalRewards(): List<Pair<String, Reward>> {
+    fun getFinalRewards(): List<Reward> {
         if (pregeneratedSlots.isEmpty()) return emptyList()
         return when (spinningItem.mode) {
             SpinMode.RANDOM, SpinMode.SEQUENTIAL, SpinMode.INDEPENDENT -> {
@@ -65,7 +65,7 @@ class RewardSpinnerInstance(
     }
 
     fun giveRewards(player: ServerPlayer, crate: Crate) {
-        getFinalRewards().forEach { (id, reward) ->
+        getFinalRewards().forEach { reward ->
             reward.giveReward(player, crate)
         }
     }
@@ -73,13 +73,13 @@ class RewardSpinnerInstance(
     // Check if any rewards cause limit exceptions, remove and regenerate them if so
     // Return null if the list couldn't be regenerated (i.e. all rewards hit their limits)
     // Return the modified bag if successful
-    fun validateRewards(crate: Crate, userData: UserData): RandomCollection<Pair<String, Reward>>? {
+    fun validateRewards(crate: Crate, userData: UserData): RandomCollection<Reward>? {
         val rewards = getFinalRewards()
         for ((i, reward) in rewards.withIndex()) {
-            val limit = reward.second.getPlayerLimit()
+            val limit = reward.getPlayerLimit()
             if (limit > 0) {
                 // If the player can't receive this reward, remove it from the bag and regenerate the slot
-                if (!reward.second.canReceive(userData, crate)) {
+                if (!reward.canReceive(userData, crate)) {
                     randomBag.remove(reward)
                     if (randomBag.size() <= 0) {
                         return null
@@ -95,8 +95,8 @@ class RewardSpinnerInstance(
                     pregeneratedSlots[index] = newReward
                 } else {
                     // If the user can receive it, increment their uses and check if we have hit the limit
-                    val uses = userData.getRewardLimits(crate.id, reward.first)
-                    userData.addRewardUse(crate.id, reward.first)
+                    val uses = userData.getRewardLimits(crate, reward)
+                    userData.addRewardUse(crate, reward)
                     if ((uses + 1) > limit) {
                         randomBag.remove(reward)
                         if (randomBag.size() <= 0) {
