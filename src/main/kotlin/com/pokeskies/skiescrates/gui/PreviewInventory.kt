@@ -15,6 +15,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
     // This is a map because we can implement interesting interaction features in the future
     private val rewards: MutableMap<String, Pair<Reward, ItemStack>> = mutableMapOf()
 
+    private val pageSlots = preview.buttons.reward.slots.size.takeIf { it > 0 } ?: 1
     private var page = 0
     private var maxPages = 1
 
@@ -33,7 +34,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
             rewards[id] = reward to preview.buttons.reward.createItemStack(player, id, reward, crate)
         }
 
-        maxPages = (rewards.size / (preview.buttons.reward.slots.size + 1)) + 1
+        maxPages = (rewards.size + pageSlots - 1) / pageSlots
 
         preview.buttons.close?.let { item ->
             GuiElementBuilder.from(item.createItemStack(player))
@@ -49,7 +50,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
             item.slots.forEach { slot ->
                 GuiElementBuilder.from(item.createItemStack(player))
                     .setCallback { i, clickType, vanillaClickType ->
-                        if (page < maxPages) {
+                        if (page < (maxPages - 1)) {
                             page++
                             renderRewards()
                         }
@@ -62,7 +63,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
             item.slots.forEach { slot ->
                 GuiElementBuilder.from(item.createItemStack(player))
                     .setCallback { i, clickType, vanillaClickType ->
-                        if (page > 0) {
+                        if (page > 1) {
                             page--
                             renderRewards()
                         }
@@ -80,8 +81,8 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
             this.clearSlot(slot)
         }
         var index = 0
-        for ((_, pair) in rewards.toList().subList(preview.buttons.reward.slots.size * page, minOf(preview.buttons.reward.slots.size * (page + 1), rewards.size))) {
-            if (index < preview.buttons.reward.slots.size) {
+        for ((_, pair) in rewards.toList().subList(pageSlots * page, minOf(pageSlots * (page + 1), rewards.size))) {
+            if (index < pageSlots) {
                 GuiElementBuilder.from(pair.second).let {
                     this.setSlot(preview.buttons.reward.slots[index++], it)
                 }
