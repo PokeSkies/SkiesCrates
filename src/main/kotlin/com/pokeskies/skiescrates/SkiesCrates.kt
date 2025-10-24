@@ -20,6 +20,7 @@ import com.pokeskies.skiescrates.data.rewards.RewardType
 import com.pokeskies.skiescrates.economy.EconomyType
 import com.pokeskies.skiescrates.economy.IEconomyService
 import com.pokeskies.skiescrates.gui.InventoryType
+import com.pokeskies.skiescrates.integrations.ModIntegrations
 import com.pokeskies.skiescrates.managers.CratesManager
 import com.pokeskies.skiescrates.managers.CratesManager.tick
 import com.pokeskies.skiescrates.managers.HologramsManager
@@ -162,15 +163,15 @@ class SkiesCrates : ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register(ServerLifecycleEvents.ServerStarted { server: MinecraftServer ->
             CratesManager.init()
             PlaceholderManager.init()
-            if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.load()
+            ModIntegrations.enabledIntegrations.forEach { it.init() }
         })
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             BaseCommand().register(dispatcher)
             KeysCommand().register(dispatcher)
         }
-        ServerLifecycleEvents.SERVER_STOPPED.register(ServerLifecycleEvents.ServerStopped { server: MinecraftServer ->
-            if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.unload()
+        ServerLifecycleEvents.SERVER_STOPPING.register(ServerLifecycleEvents.ServerStopping { server: MinecraftServer ->
             this.storage.close()
+            ModIntegrations.enabledIntegrations.forEach { it.shutdown() }
         })
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
             tick()

@@ -56,6 +56,7 @@ repositories {
     maven("https://oss.sonatype.org/content/repositories/snapshots")
     maven("https://maven.impactdev.net/repository/development/")
     maven("https://repo.lucko.me")
+    maven( url = "https://maven.blazing-coop.net/releases") { name = "Flemmli97" }
 }
 
 dependencies {
@@ -115,7 +116,15 @@ dependencies {
     implementation(include("com.h2database:h2:2.2.224")!!)
     implementation(include("com.mysql:mysql-connector-j:8.2.0")!!)
 
+    // Integrations
     modRuntimeOnly("com.cobblemon:fabric:1.6.1+1.21.1-SNAPSHOT")
+
+    modCompileOnly("io.github.flemmli97:flan:1.21.1-1.12.2-fabric:api") {
+        isTransitive = false
+    }
+    modRuntimeOnly("io.github.flemmli97:flan:1.21.1-1.12.2-fabric") {
+        isTransitive = false
+    }
 
     modCompileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
