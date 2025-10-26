@@ -18,7 +18,8 @@ abstract class Reward(
     val display: GenericGUIItem = GenericGUIItem(),
     val weight: Int = 1,
     val limits: RewardLimits? = null,
-    val broadcast: Boolean = false
+    val broadcast: Boolean = false,
+    val preview: GenericGUIItem? = null
 ) {
     lateinit var id: String
 

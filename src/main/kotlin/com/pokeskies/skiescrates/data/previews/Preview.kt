@@ -54,19 +54,21 @@ class Preview(
         val lore: List<String> = emptyList()
     ) {
         fun createItemStack(player: ServerPlayer, reward: Reward, crate: Crate, userData: UserData): ItemStack {
-            if (reward.display.item.isEmpty()) return ItemStack(Items.BARRIER, reward.display.amount)
+            val guiItem = reward.preview ?: reward.display
 
-            val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(reward.display.item))
+            if (guiItem.item.isEmpty()) return ItemStack(Items.BARRIER, guiItem.amount)
+
+            val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(guiItem.item))
 
             if (parsedItem.isEmpty) {
-                Utils.printError("Error while getting Item, defaulting to Barrier: ${reward.display.item}")
-                return ItemStack(Items.BARRIER, reward.display.amount)
+                Utils.printError("Error while getting Item, defaulting to Barrier: ${guiItem.item}")
+                return ItemStack(Items.BARRIER, guiItem.amount)
             }
 
-            val stack = ItemStack(parsedItem.get(), reward.display.amount)
+            val stack = ItemStack(parsedItem.get(), guiItem.amount)
 
             val placeholders: Map<String, String> = mapOf(
-                "%reward_name%" to (reward.display.name ?: ""),
+                "%reward_name%" to (guiItem.name ?: ""),
                 "%reward_id%" to reward.id,
                 "%reward_weight%" to reward.weight.toString(),
                 "%reward_percent%" to String.format(Locale.US, "%.2f", calculatePercent(reward, crate)),
@@ -74,11 +76,11 @@ class Preview(
                 "%reward_limit_player_claimed%" to userData.getRewardLimits(crate, reward).toString()
             )
 
-            if (reward.display.nbt != null) {
+            if (guiItem.nbt != null) {
                 // Parses the nbt and attempts to replace any placeholders
-                val nbtCopy = reward.display.nbt.copy()
-                for (key in reward.display.nbt.allKeys) {
-                    val element = reward.display.nbt.get(key)
+                val nbtCopy = guiItem.nbt.copy()
+                for (key in guiItem.nbt.allKeys) {
+                    val element = guiItem.nbt.get(key)
                     if (element != null) {
                         if (element is StringTag) {
                             nbtCopy.putString(key, element.asString)
@@ -114,10 +116,17 @@ class Preview(
             if (lore.isNotEmpty()) {
                 val parsedLore: MutableList<String> = mutableListOf()
                 for (line in lore.stream().map { it }.toList()) {
-                    if (line.contains("\n")) {
-                        line.split("\n").forEach { parsedLore.add(it) }
+                    var parsedLine = line
+                    if (line.contains("%reward_lore%")) {
+                        parsedLine = parsedLine.replace(
+                            "%reward_lore%",
+                            reward.display.lore.joinToString("\n")
+                        )
+                    }
+                    if (parsedLine.contains("\n")) {
+                        parsedLine.split("\n").forEach { parsedLore.add(it) }
                     } else {
-                        parsedLore.add(line)
+                        parsedLore.add(parsedLine)
                     }
                 }
                 dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
