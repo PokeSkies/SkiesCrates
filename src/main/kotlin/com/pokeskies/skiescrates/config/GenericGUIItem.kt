@@ -27,7 +27,7 @@ class GenericGUIItem(
     val amount: Int = 1,
     val name: String? = null,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
-    val lore: List<String> = emptyList(),
+    val lore: List<String>? = null,
     @SerializedName("nbt", alternate = ["components"])
     val nbt: CompoundTag? = null
 ) {
@@ -77,7 +77,7 @@ class GenericGUIItem(
                 .append(TextUtils.toNative(name)))
         }
 
-        if (lore.isNotEmpty()) {
+        if (!lore.isNullOrEmpty()) {
             val parsedLore: MutableList<String> = mutableListOf()
             for (line in lore.stream().map { it }.toList()) {
                 if (line.contains("\n")) {

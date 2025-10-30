@@ -68,7 +68,7 @@ class Preview(
             val stack = ItemStack(parsedItem.get(), guiItem.amount)
 
             val placeholders: Map<String, String> = mapOf(
-                "%reward_name%" to (guiItem.name ?: ""),
+                "%reward_name%" to (reward.preview?.name ?: reward.name),
                 "%reward_id%" to reward.id,
                 "%reward_weight%" to reward.weight.toString(),
                 "%reward_percent%" to String.format(Locale.US, "%.2f", calculatePercent(reward, crate)),
@@ -105,35 +105,38 @@ class Preview(
 
             val dataComponents = DataComponentPatch.builder()
 
-            if (name != null) {
+            (reward.preview?.name ?: name)?.let { name ->
+                println("Name: $name")
                 dataComponents.set(
                     DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
-                    .append(TextUtils.toNative(
-                        name.let {  placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
-                    )))
+                        .append(TextUtils.toNative(
+                            name.let {  placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
+                        )))
             }
 
-            if (lore.isNotEmpty()) {
-                val parsedLore: MutableList<String> = mutableListOf()
-                for (line in lore.stream().map { it }.toList()) {
-                    var parsedLine = line
-                    if (line.contains("%reward_lore%")) {
-                        parsedLine = parsedLine.replace(
-                            "%reward_lore%",
-                            reward.display.lore.joinToString("\n")
-                        )
+            (reward.preview?.lore ?: lore).let { lore ->
+                if (lore.isNotEmpty()) {
+                    val parsedLore: MutableList<String> = mutableListOf()
+                    for (line in lore.stream().map { it }.toList()) {
+                        var parsedLine = line
+                        if (line.contains("%reward_lore%")) {
+                            parsedLine = parsedLine.replace(
+                                "%reward_lore%",
+                                reward.display.lore?.joinToString("\n") ?: ""
+                            )
+                        }
+                        if (parsedLine.contains("\n")) {
+                            parsedLine.split("\n").forEach { parsedLore.add(it) }
+                        } else {
+                            parsedLore.add(parsedLine)
+                        }
                     }
-                    if (parsedLine.contains("\n")) {
-                        parsedLine.split("\n").forEach { parsedLore.add(it) }
-                    } else {
-                        parsedLore.add(parsedLine)
-                    }
+                    dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
+                        Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(
+                            it.let { placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
+                        )) as Component
+                    }.toList()))
                 }
-                dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
-                    Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(
-                        it.let { placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
-                    )) as Component
-                }.toList()))
             }
 
             stack.applyComponents(dataComponents.build())
