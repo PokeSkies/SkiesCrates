@@ -1,6 +1,6 @@
 package com.pokeskies.skiescrates.data.animations.spinners
 
-import com.pokeskies.skiescrates.data.Crate
+import com.pokeskies.skiescrates.config.CrateConfig
 import com.pokeskies.skiescrates.data.animations.items.SpinMode
 import com.pokeskies.skiescrates.data.animations.items.SpinningItem
 import com.pokeskies.skiescrates.data.rewards.Reward
@@ -64,22 +64,22 @@ class RewardSpinnerInstance(
         }
     }
 
-    fun giveRewards(player: ServerPlayer, crate: Crate) {
+    fun giveRewards(player: ServerPlayer, crateConfig: CrateConfig) {
         getFinalRewards().forEach { reward ->
-            reward.giveReward(player, crate)
+            reward.giveReward(player, crateConfig)
         }
     }
 
     // Check if any rewards cause limit exceptions, remove and regenerate them if so
     // Return null if the list couldn't be regenerated (i.e. all rewards hit their limits)
     // Return the modified bag if successful
-    fun validateRewards(crate: Crate, userData: UserData): RandomCollection<Reward>? {
+    fun validateRewards(crateConfig: CrateConfig, userData: UserData): RandomCollection<Reward>? {
         val rewards = getFinalRewards()
         for ((i, reward) in rewards.withIndex()) {
             val limit = reward.getPlayerLimit()
             if (limit > 0) {
                 // If the player can't receive this reward, remove it from the bag and regenerate the slot
-                if (!reward.canReceive(userData, crate)) {
+                if (!reward.canReceive(userData, crateConfig)) {
                     randomBag.remove(reward)
                     if (randomBag.size() <= 0) {
                         return null
@@ -95,8 +95,8 @@ class RewardSpinnerInstance(
                     pregeneratedSlots[index] = newReward
                 } else {
                     // If the user can receive it, increment their uses and check if we have hit the limit
-                    val uses = userData.getRewardLimits(crate, reward)
-                    userData.addRewardUse(crate, reward)
+                    val uses = userData.getRewardLimits(crateConfig, reward)
+                    userData.addRewardUse(crateConfig, reward)
                     if ((uses + 1) > limit) {
                         randomBag.remove(reward)
                         if (randomBag.size() <= 0) {

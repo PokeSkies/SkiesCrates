@@ -4,7 +4,7 @@ import com.google.gson.JsonParser
 import com.google.gson.stream.JsonReader
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.menu.KeysMenu
-import com.pokeskies.skiescrates.data.Crate
+import com.pokeskies.skiescrates.config.CrateConfig
 import com.pokeskies.skiescrates.data.Key
 import com.pokeskies.skiescrates.data.animations.InventoryAnimation
 import com.pokeskies.skiescrates.data.previews.Preview
@@ -20,7 +20,7 @@ object ConfigManager {
     private var assetPackage = "assets/${SkiesCrates.MOD_ID}"
 
     lateinit var CONFIG: SkiesCratesConfig
-    lateinit var CRATES: MutableMap<String, Crate>
+    lateinit var CRATES: MutableMap<String, CrateConfig>
     lateinit var KEYS: MutableMap<String, Key>
     lateinit var ANIMATIONS_INVENTORY: MutableMap<String, InventoryAnimation>
     lateinit var PREVIEW: MutableMap<String, Preview>
@@ -71,7 +71,7 @@ object ConfigManager {
                         val id = fileName.substring(0, fileName.lastIndexOf(".json"))
                         val jsonReader = JsonReader(InputStreamReader(FileInputStream(file), Charsets.UTF_8))
                         try {
-                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(JsonParser.parseReader(jsonReader), Crate::class.java)
+                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(JsonParser.parseReader(jsonReader), CrateConfig::class.java)
                             if (config.enabled) {
                                 config.id = id
                                 CRATES[id] = config

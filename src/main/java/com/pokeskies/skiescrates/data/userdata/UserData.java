@@ -1,6 +1,6 @@
 package com.pokeskies.skiescrates.data.userdata;
 
-import com.pokeskies.skiescrates.data.Crate;
+import com.pokeskies.skiescrates.config.CrateConfig;
 import com.pokeskies.skiescrates.data.Key;
 import com.pokeskies.skiescrates.data.rewards.Reward;
 import org.bson.codecs.pojo.annotations.BsonProperty;
@@ -32,26 +32,26 @@ public class UserData {
 
     public UserData() {}
 
-    public @Nullable Long getCrateCooldown(Crate crate) {
-        return Optional.ofNullable(crates.get(crate.id)).map(data -> data.lastOpen).orElse(null);
+    public @Nullable Long getCrateCooldown(CrateConfig crateConfig) {
+        return Optional.ofNullable(crates.get(crateConfig.id)).map(data -> data.lastOpen).orElse(null);
     }
 
-    public void addCrateCooldown(Crate crate, Long lastOpen) {
-        crates.computeIfAbsent(crate.id, k -> new CrateData(0L, 0, new HashMap<>())).lastOpen = lastOpen;
+    public void addCrateCooldown(CrateConfig crateConfig, Long lastOpen) {
+        crates.computeIfAbsent(crateConfig.id, k -> new CrateData(0L, 0, new HashMap<>())).lastOpen = lastOpen;
     }
 
-    public void addCrateUse(Crate crate) {
-        crates.computeIfAbsent(crate.id, k -> new CrateData(0L, 0, new HashMap<>())).openCount++;
+    public void addCrateUse(CrateConfig crateConfig) {
+        crates.computeIfAbsent(crateConfig.id, k -> new CrateData(0L, 0, new HashMap<>())).openCount++;
     }
 
-    public int getRewardLimits(Crate crate, Reward reward) {
-        CrateData crateData = crates.get(crate.id);
+    public int getRewardLimits(CrateConfig crateConfig, Reward reward) {
+        CrateData crateData = crates.get(crateConfig.id);
         if (crateData == null) return 0;
         return crateData.getRewards().getOrDefault(reward.id, new RewardLimitData()).claimed;
     }
 
-    public void addRewardUse(Crate crate, Reward reward) {
-        CrateData crateData = crates.computeIfAbsent(crate.id, id -> new CrateData(0L, 0, new HashMap<>()));
+    public void addRewardUse(CrateConfig crateConfig, Reward reward) {
+        CrateData crateData = crates.computeIfAbsent(crateConfig.id, id -> new CrateData(0L, 0, new HashMap<>()));
         crateData.getRewards().merge(reward.id, new RewardLimitData(1, System.currentTimeMillis()), (oldVal, newVal) -> {
             oldVal.claimed++;
             oldVal.time = System.currentTimeMillis();

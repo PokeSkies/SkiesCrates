@@ -8,7 +8,7 @@ import io.github.flemmli97.flan.api.permission.BuiltinPermission
 import net.minecraft.world.InteractionResult
 
 class FlanIntegration: IntegratedMod {
-    override fun init() {
+    override fun onServerStarted() {
         Utils.printInfo("The mod Flans was found, enabling integrations...")
         PermissionCheckEvent.CHECK.register { player, rs, pos ->
             if (!rs.equals(BuiltinPermission.BREAK)) return@register InteractionResult.PASS

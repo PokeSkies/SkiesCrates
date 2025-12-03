@@ -20,7 +20,7 @@ import com.pokeskies.skiescrates.data.rewards.RewardType
 import com.pokeskies.skiescrates.economy.EconomyType
 import com.pokeskies.skiescrates.economy.IEconomyService
 import com.pokeskies.skiescrates.gui.InventoryType
-import com.pokeskies.skiescrates.integrations.ModIntegrations
+import com.pokeskies.skiescrates.integrations.ModIntegration
 import com.pokeskies.skiescrates.managers.CratesManager
 import com.pokeskies.skiescrates.managers.CratesManager.tick
 import com.pokeskies.skiescrates.managers.HologramsManager
@@ -151,6 +151,8 @@ class SkiesCrates : ModInitializer {
 
         this.economyServices = IEconomyService.getLoadedEconomyServices()
 
+        ModIntegration.onInit()
+
         registerEvents()
     }
 
@@ -159,11 +161,12 @@ class SkiesCrates : ModInitializer {
             this.adventure = FabricServerAudiences.of(server)
             this.server = server
             this.nbtOpts = server.registryAccess().createSerializationContext(NbtOps.INSTANCE)
+            ModIntegration.onServerStarting()
         })
         ServerLifecycleEvents.SERVER_STARTED.register(ServerLifecycleEvents.ServerStarted { server: MinecraftServer ->
             CratesManager.init()
             PlaceholderManager.init()
-            ModIntegrations.enabledIntegrations.forEach { it.init() }
+            ModIntegration.onServerStarted()
         })
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             BaseCommand().register(dispatcher)
@@ -171,7 +174,7 @@ class SkiesCrates : ModInitializer {
         }
         ServerLifecycleEvents.SERVER_STOPPING.register(ServerLifecycleEvents.ServerStopping { server: MinecraftServer ->
             this.storage.close()
-            ModIntegrations.enabledIntegrations.forEach { it.shutdown() }
+            ModIntegration.onServerShutdown()
         })
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
             tick()

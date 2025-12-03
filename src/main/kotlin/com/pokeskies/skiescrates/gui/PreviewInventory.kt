@@ -1,7 +1,7 @@
 package com.pokeskies.skiescrates.gui
 
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.data.Crate
+import com.pokeskies.skiescrates.config.CrateConfig
 import com.pokeskies.skiescrates.data.previews.Preview
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.utils.TextUtils
@@ -10,7 +10,7 @@ import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 
-class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Preview): SimpleGui(
+class PreviewInventory(player: ServerPlayer, val crateConfig: CrateConfig, val preview: Preview): SimpleGui(
     preview.settings.menuType.type, player, false
 ) {
     // This is a map because we can implement interesting interaction features in the future
@@ -21,7 +21,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
     private var maxPages = 1
 
     init {
-        this.title = TextUtils.parseAll(player, crate.parsePlaceholders(preview.settings.title))
+        this.title = TextUtils.parseAll(player, crateConfig.parsePlaceholders(preview.settings.title))
 
         val userData = SkiesCrates.INSTANCE.storage.getUser(player)
 
@@ -33,8 +33,8 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
             }
         }
 
-        crate.rewards.forEach { (id, reward) ->
-            rewards[id] = reward to preview.buttons.reward.createItemStack(player, reward, crate, userData)
+        crateConfig.rewards.forEach { (id, reward) ->
+            rewards[id] = reward to preview.buttons.reward.createItemStack(player, reward, crateConfig, userData)
         }
 
         maxPages = (rewards.size + pageSlots - 1) / pageSlots

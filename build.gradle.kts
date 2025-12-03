@@ -48,6 +48,7 @@ repositories {
             includeGroup("maven.modrinth")
         }
     }
+    maven("https://maven.tomalbrc.de")
     maven("https://maven.nucleoid.xyz/") { name = "Nucleoid" }
     maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
         name = "sonatype-oss-snapshots1"
@@ -125,6 +126,14 @@ dependencies {
     modRuntimeOnly("io.github.flemmli97:flan:1.21.1-1.12.2-fabric") {
         isTransitive = false
     }
+
+    // Polymer/BIL Integrations
+    modImplementation("de.tomalbrc:blockbench-import-library:1.2.5+1.21")
+    modImplementation("eu.pb4:polymer-core:0.9.18+1.21.1")
+    modImplementation("eu.pb4:polymer-networking:0.9.18+1.21.1")
+    modImplementation("eu.pb4:polymer-resource-pack:0.9.18+1.21.1")
+    modImplementation("eu.pb4:polymer-virtual-entity:0.9.18+1.21.1")
+    modImplementation("eu.pb4:polymer-autohost:0.9.18+1.21.1")
 
     modCompileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }

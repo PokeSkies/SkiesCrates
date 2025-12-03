@@ -1,7 +1,7 @@
 package com.pokeskies.skiescrates.gui
 
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.data.Crate
+import com.pokeskies.skiescrates.config.CrateConfig
 import com.pokeskies.skiescrates.data.animations.InventoryAnimation
 import com.pokeskies.skiescrates.data.animations.spinners.AnimatedSpinnerInstance
 import com.pokeskies.skiescrates.data.animations.spinners.RewardSpinnerInstance
@@ -16,7 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 
-class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: InventoryAnimation, bag: RandomCollection<Reward>): SimpleGui(
+class CrateInventory(player: ServerPlayer, val crateConfig: CrateConfig, val animation: InventoryAnimation, bag: RandomCollection<Reward>): SimpleGui(
     animation.settings.menuType.type, player, false
 ) {
     private var isFinished = false
@@ -35,7 +35,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
     private var randomBag: RandomCollection<Reward> = bag
 
     init {
-        this.title = TextUtils.parseAll(player, crate.parsePlaceholders(animation.settings.title))
+        this.title = TextUtils.parseAll(player, crateConfig.parsePlaceholders(animation.settings.title))
 
         animation.items.static.forEach { (id, item) ->
             item.slots.forEach { slot ->
@@ -63,7 +63,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
         }
 
         // Setup rewards spinners
-        crate.rewards.forEach { (id, reward) ->
+        crateConfig.rewards.forEach { (id, reward) ->
             cachedRewardStacks[id] = reward.display.createItemStack(player)
         }
         animation.items.rewards.forEach { (id, item) ->
@@ -71,10 +71,10 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
                 it.pregenerate()
             }
 
-            val returnBag = spinner.validateRewards(crate, userData)
+            val returnBag = spinner.validateRewards(crateConfig, userData)
 
             if (returnBag == null) {
-                Utils.printError("No rewards were possible for spinner $id in crate ${crate.id} for player ${player.name.string}. Cancelling crate!")
+                Utils.printError("No rewards were possible for spinner $id in crate ${crateConfig.id} for player ${player.name.string}. Cancelling crate!")
                 player.sendMessage(Component.text("An error occurred while opening the crate. Please contact an administrator.").color(NamedTextColor.RED))
                 isFinished = true
                 close()
@@ -105,7 +105,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
             if (allCompleted) {
                 isFinished = true
                 rewardSpinners.forEach { (_, data) ->
-                    data.giveRewards(player, crate)
+                    data.giveRewards(player, crateConfig)
                 }
                 SkiesCrates.INSTANCE.storage.saveUser(userData)
             }
@@ -126,7 +126,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
             if (animation.settings.skippable) {
                 isFinished = true
                 rewardSpinners.forEach { (_, data) ->
-                    data.giveRewards(player, crate)
+                    data.giveRewards(player, crateConfig)
                 }
                 SkiesCrates.INSTANCE.storage.saveUser(userData)
             } else {
