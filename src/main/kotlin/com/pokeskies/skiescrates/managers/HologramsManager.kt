@@ -7,7 +7,7 @@ import dev.furq.holodisplays.api.HoloDisplaysAPI
 import dev.furq.holodisplays.api.HoloDisplaysAPI.HologramBuilder
 
 object HologramsManager {
-    private var hologramsAPI: HoloDisplaysAPI = HoloDisplaysAPI.get()
+    private var hologramsAPI: HoloDisplaysAPI = HoloDisplaysAPI.get(SkiesCrates.MOD_ID)
     private val holograms = mutableMapOf<String, Crate>()
 
     fun load() {
