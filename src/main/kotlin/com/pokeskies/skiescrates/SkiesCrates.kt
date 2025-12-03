@@ -10,8 +10,6 @@ import com.pokeskies.skiescrates.commands.KeysCommand
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.SoundOption
 import com.pokeskies.skiescrates.config.lang.Lang
-import com.pokeskies.skiescrates.data.CrateOpenData
-import com.pokeskies.skiescrates.data.DimensionalBlockPos
 import com.pokeskies.skiescrates.data.KeyCacheKey
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
@@ -24,23 +22,16 @@ import com.pokeskies.skiescrates.integrations.ModIntegrations
 import com.pokeskies.skiescrates.managers.CratesManager
 import com.pokeskies.skiescrates.managers.CratesManager.tick
 import com.pokeskies.skiescrates.managers.HologramsManager
-import com.pokeskies.skiescrates.managers.KeyManager
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
 import com.pokeskies.skiescrates.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
-import net.fabricmc.fabric.api.event.player.AttackBlockCallback
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
-import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.fabricmc.fabric.api.event.player.UseItemCallback
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.kyori.adventure.platform.fabric.FabricServerAudiences
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -51,11 +42,7 @@ import net.minecraft.nbt.Tag
 import net.minecraft.resources.RegistryOps
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.item.Item
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -180,113 +167,6 @@ class SkiesCrates : ModInitializer {
                 cleanCache()
             }
         })
-        ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, sender, server ->
-            CratesManager.openingPlayers.remove(handler.player.uuid)
-        })
-
-        // Preventing block breaking
-        PlayerBlockBreakEvents.BEFORE.register(PlayerBlockBreakEvents.Before { level, player, blockPos, blockState, blockEntity ->
-            val dimensionalPos = DimensionalBlockPos(
-                level.dimension().location().toString(),
-                blockPos.x,
-                blockPos.y,
-                blockPos.z
-            )
-            CratesManager.getCrateBlock(dimensionalPos)?.let { crate ->
-                return@Before false
-            }
-            return@Before true
-        })
-        // Initially attempting to break a block
-        AttackBlockCallback.EVENT.register(AttackBlockCallback { player, level, hand, blockPos, direction ->
-            if (player !is ServerPlayer) return@AttackBlockCallback InteractionResult.PASS
-
-            val dimensionalPos = DimensionalBlockPos(
-                level.dimension().location().toString(),
-                blockPos.x,
-                blockPos.y,
-                blockPos.z
-            )
-            CratesManager.getCrateBlock(dimensionalPos)?.let { crate ->
-                CratesManager.previewCrate(player, crate)
-                return@AttackBlockCallback InteractionResult.FAIL
-            }
-            return@AttackBlockCallback InteractionResult.PASS
-        })
-        // Called when right clicking a block, whether you use an item or not
-        UseBlockCallback.EVENT.register(UseBlockCallback { player, level, hand, blockHitResult ->
-            if (player !is ServerPlayer) return@UseBlockCallback InteractionResult.PASS
-            if (hand != InteractionHand.MAIN_HAND) return@UseBlockCallback InteractionResult.PASS
-
-            // Detect for a crate block
-            val blockPos = DimensionalBlockPos(
-                level.dimension().location().toString(),
-                blockHitResult.blockPos.x,
-                blockHitResult.blockPos.y,
-                blockHitResult.blockPos.z
-            )
-            CratesManager.getCrateBlock(blockPos)?.let { crate ->
-                asyncScope.launch {
-                    CratesManager.openCrate(player, crate, CrateOpenData(blockPos, null), false)
-                }
-                return@UseBlockCallback InteractionResult.FAIL
-            }
-
-            // Detect for a crate in hand to prevent the placement and attempt to open the crate
-            val item = player.getItemInHand(hand)
-            if (!item.isEmpty) {
-                val crate = CratesManager.getCrateOrNull(item)
-                if (crate != null) {
-                    asyncScope.launch {
-                        CratesManager.openCrate(player, crate, CrateOpenData(null, item), false)
-                    }
-                    return@UseBlockCallback InteractionResult.FAIL
-                }
-
-                // Prevent placing keys
-                val keyId = KeyManager.getKeyOrNull(item)
-                if (keyId != null) {
-                    return@UseBlockCallback InteractionResult.FAIL
-                }
-            }
-
-            return@UseBlockCallback InteractionResult.PASS
-        })
-        // Called when Right Clicking with an item/block in hand.
-        // We need to detect for a crate in hand here, not key as that is handled by UseBlockCallback
-        UseItemCallback.EVENT.register(UseItemCallback { player, level, hand ->
-            if (player !is ServerPlayer) return@UseItemCallback InteractionResultHolder.pass(player.getItemInHand(hand))
-
-            val item = player.getItemInHand(hand)
-            if (hand != InteractionHand.MAIN_HAND) return@UseItemCallback InteractionResultHolder.pass(item)
-
-            val crate = CratesManager.getCrateOrNull(item) ?: return@UseItemCallback InteractionResultHolder.pass(item)
-            asyncScope.launch {
-                CratesManager.openCrate(player, crate, CrateOpenData(null, item), false)
-            }
-
-            return@UseItemCallback InteractionResultHolder.fail(item)
-        })
-        // Called when swinging with your hand. This can happen in both a left-click and a right-click on a block
-//        Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
-//            if (hand != InteractionHand.MAIN_HAND) return@PlayerSwingHandEvent
-//
-//            // Seemingly the thread is somehow on a network thread and not the main server thread
-//            server.executeIfPossible {
-//                // This is a hacky fix to prevent right-clicking on blocks from opening preview menus
-//                // TODO: Find a way around having to do this
-//                val blockResult = player.pick(5.0, 1.0F, false)
-//                if (blockResult != null &&
-//                    blockResult is BlockHitResult &&
-//                    !player.serverLevel().getBlockState(blockResult.blockPos).isAir) return@executeIfPossible
-//
-//                val item = player.getItemInHand(hand)
-//                if (item.isEmpty) return@executeIfPossible
-//
-//                val crate = CratesManager.getCrateOrNull(item) ?: return@executeIfPossible
-//                CratesManager.previewCrate(player, crate)
-//            }
-//        })
     }
 
     fun reload() {
