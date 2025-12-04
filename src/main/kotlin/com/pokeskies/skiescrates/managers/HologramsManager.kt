@@ -53,6 +53,7 @@ object HologramsManager {
 
     fun unload() {
         holograms.forEach { (id, crate) ->
+            hologramsAPI.unregisterDisplay(id)
             hologramsAPI.unregisterHologram(id)
         }
     }
