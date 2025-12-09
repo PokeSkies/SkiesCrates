@@ -23,7 +23,6 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ItemLore
-import java.util.*
 
 class Preview(
     val settings: Settings,
@@ -67,16 +66,7 @@ class Preview(
 
             val stack = ItemStack(parsedItem.get(), guiItem.amount)
 
-            val placeholders: Map<String, String> = mapOf(
-                "%reward_name%" to (reward.preview?.name ?: reward.name),
-                "%reward_display_name%" to (reward.display.name ?: ""),
-                "%reward_display_lore%" to (reward.display.lore?.joinToString("\n") ?: ""),
-                "%reward_id%" to reward.id,
-                "%reward_weight%" to reward.weight.toString(),
-                "%reward_percent%" to String.format(Locale.US, "%.2f", calculatePercent(reward, crate)),
-                "%reward_limit_player%" to (reward.limits?.player?.amount?.toString() ?: "0"),
-                "%reward_limit_player_claimed%" to userData.getRewardLimits(crate, reward).toString()
-            )
+            val placeholders = reward.getPlaceholders(userData, crate)
 
             if (guiItem.nbt != null) {
                 // Parses the nbt and attempts to replace any placeholders
@@ -137,10 +127,6 @@ class Preview(
             stack.applyComponents(dataComponents.build())
 
             return stack
-        }
-
-        private fun calculatePercent(reward: Reward, crate: Crate): Double {
-            return (reward.weight.toDouble() / crate.rewards.values.sumOf { it.weight }) * 100
         }
     }
 }

@@ -31,7 +31,7 @@ class GenericGUIItem(
     @SerializedName("nbt", alternate = ["components"])
     val nbt: CompoundTag? = null
 ) {
-    fun createItemStack(player: ServerPlayer): ItemStack {
+    fun createItemStack(player: ServerPlayer, placeholders: Map<String, String> = emptyMap()): ItemStack {
         if (item.isEmpty()) return ItemStack(Items.BARRIER, amount)
 
         val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(item))
@@ -74,20 +74,25 @@ class GenericGUIItem(
 
         if (name != null) {
             dataComponents.set(DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
-                .append(TextUtils.toNative(name)))
+                .append(TextUtils.toNative(
+                    name.let {  placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
+                )))
         }
 
         if (!lore.isNullOrEmpty()) {
             val parsedLore: MutableList<String> = mutableListOf()
             for (line in lore.stream().map { it }.toList()) {
-                if (line.contains("\n")) {
-                    line.split("\n").forEach { parsedLore.add(it) }
+                val parsedLine = line.let { placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
+                if (parsedLine.contains("\n")) {
+                    parsedLine.split("\n").forEach { parsedLore.add(it) }
                 } else {
-                    parsedLore.add(line)
+                    parsedLore.add(parsedLine)
                 }
             }
             dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
-                Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(it)) as Component
+                Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(
+                    it
+                )) as Component
             }.toList()))
         }
 

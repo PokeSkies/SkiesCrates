@@ -64,7 +64,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
 
         // Setup rewards spinners
         crate.rewards.forEach { (id, reward) ->
-            cachedRewardStacks[id] = reward.display.createItemStack(player)
+            cachedRewardStacks[id] = reward.display.createItemStack(player, reward.getPlaceholders(userData, crate))
         }
         animation.items.rewards.forEach { (id, item) ->
             val spinner = RewardSpinnerInstance(item, randomBag, animation.settings.winSlots).also {
