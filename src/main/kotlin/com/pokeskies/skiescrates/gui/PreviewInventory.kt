@@ -66,7 +66,7 @@ class PreviewInventory(player: ServerPlayer, val crateConfig: CrateConfig, val p
             item.slots.forEach { slot ->
                 GuiElementBuilder.from(item.createItemStack(player))
                     .setCallback { i, clickType, vanillaClickType ->
-                        if (page > 1) {
+                        if (page > 0) {
                             page--
                             renderRewards()
                         }

@@ -1,14 +1,14 @@
 package com.pokeskies.skiescrates.managers
 
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.config.CrateConfig
+import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.utils.Utils
 import dev.furq.holodisplays.api.HoloDisplaysAPI
 import dev.furq.holodisplays.api.HoloDisplaysAPI.HologramBuilder
 
 object HologramsManager {
-    private var hologramsAPI: HoloDisplaysAPI = HoloDisplaysAPI.get()
-    private val holograms = mutableMapOf<String, CrateConfig>()
+    private var hologramsAPI: HoloDisplaysAPI = HoloDisplaysAPI.get(SkiesCrates.MOD_ID)
+    private val holograms = mutableMapOf<String, Crate>()
 
     fun load() {
         CratesManager.locations.forEach { (location, crate) ->
@@ -53,6 +53,7 @@ object HologramsManager {
 
     fun unload() {
         holograms.forEach { (id, crate) ->
+            hologramsAPI.unregisterDisplay(id)
             hologramsAPI.unregisterHologram(id)
         }
     }

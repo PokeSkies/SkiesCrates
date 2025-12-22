@@ -11,6 +11,7 @@ import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
 import java.lang.reflect.Type
+import java.util.Locale
 
 abstract class Reward(
     val type: RewardType = RewardType.COMMAND_PLAYER,
@@ -69,6 +70,23 @@ abstract class Reward(
 
     fun getPlayerLimit(): Int {
         return limits?.player?.amount ?: 0
+    }
+
+    fun getPlaceholders(userData: UserData, crate: Crate): Map<String, String> {
+        return mapOf(
+            "%reward_name%" to (preview?.name ?: name),
+            "%reward_display_name%" to (display.name ?: ""),
+            "%reward_display_lore%" to (display.lore?.joinToString("\n") ?: ""),
+            "%reward_id%" to id,
+            "%reward_weight%" to weight.toString(),
+            "%reward_percent%" to String.format(Locale.US, "%.2f", calculatePercent(this, crate)),
+            "%reward_limit_player%" to (limits?.player?.amount?.toString() ?: "0"),
+            "%reward_limit_player_claimed%" to userData.getRewardLimits(crate, this).toString()
+        )
+    }
+
+    private fun calculatePercent(reward: Reward, crate: Crate): Double {
+        return (reward.weight.toDouble() / crate.rewards.values.sumOf { it.weight }) * 100
     }
 
     override fun toString(): String {
