@@ -11,10 +11,9 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.text.replace
 
 object KeyManager {
     const val KEY_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:key"

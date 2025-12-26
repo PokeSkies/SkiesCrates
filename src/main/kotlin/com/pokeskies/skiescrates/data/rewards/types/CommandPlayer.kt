@@ -3,7 +3,7 @@ package com.pokeskies.skiescrates.data.rewards.types
 import com.google.gson.annotations.JsonAdapter
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.GenericGUIItem
-import com.pokeskies.skiescrates.config.CrateConfig
+import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardLimits
 import com.pokeskies.skiescrates.data.rewards.RewardType
@@ -22,9 +22,9 @@ class CommandPlayer(
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     private val commands: List<String> = emptyList()
 ) : Reward(type, name, display, weight, limits, broadcast) {
-    override fun giveReward(player: ServerPlayer, crateConfig: CrateConfig) {
+    override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
-        super.giveReward(player, crateConfig)
+        super.giveReward(player, crate)
 
         if (SkiesCrates.INSTANCE.server.commands == null) {
             Utils.printError("There was an error while giving a reward for player ${player.name}: Server was somehow null on command execution?")

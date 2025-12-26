@@ -128,7 +128,7 @@ dependencies {
     }
 
     // Polymer/BIL Integrations
-    modImplementation("de.tomalbrc:blockbench-import-library:1.2.5+1.21")
+    modImplementation("de.tomalbrc:blockbench-import-library:1.2.7+1.21")
     modImplementation("eu.pb4:polymer-core:0.9.18+1.21.1")
     modImplementation("eu.pb4:polymer-networking:0.9.18+1.21.1")
     modImplementation("eu.pb4:polymer-resource-pack:0.9.18+1.21.1")

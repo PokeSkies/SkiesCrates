@@ -4,14 +4,14 @@ import com.google.gson.*
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.config.lang.Lang
-import com.pokeskies.skiescrates.config.CrateConfig
+import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.userdata.CrateData
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
 import java.lang.reflect.Type
-import java.util.Locale
+import java.util.*
 
 abstract class Reward(
     val type: RewardType = RewardType.COMMAND_PLAYER,
@@ -24,13 +24,13 @@ abstract class Reward(
 ) {
     lateinit var id: String
 
-    open fun giveReward(player: ServerPlayer, crateConfig: CrateConfig) {
+    open fun giveReward(player: ServerPlayer, crate: Crate) {
         Utils.printDebug("Attempting to execute a ${type.identifier} reward: $this")
 
         Lang.CRATE_REWARD.forEach {
             player.sendMessage(TextUtils.parseAll(
                 player,
-                crateConfig.parsePlaceholders(it)
+                crate.parsePlaceholders(it)
                     .replace("%reward_name%", name)
             ))
         }
@@ -39,7 +39,7 @@ abstract class Reward(
             Lang.CRATE_REWARD_BROADCAST.forEach {
                 SkiesCrates.INSTANCE.adventure.all().sendMessage(TextUtils.parseAll(
                     player,
-                    crateConfig.parsePlaceholders(it)
+                    crate.parsePlaceholders(it)
                         .replace("%reward_name%", name)
                 ))
             }
@@ -47,14 +47,14 @@ abstract class Reward(
     }
 
     // TODO: Add global limit checking, need to provide function a way to access that data
-    fun canReceive(userData: UserData, crateConfig: CrateConfig): Boolean {
+    fun canReceive(userData: UserData, crate: Crate): Boolean {
         if (limits == null) return true
 
         // Check player limits
         val playerLimits = limits.player
         if (playerLimits != null) {
             if (playerLimits.amount >= 0) {
-                val limitData = userData.crates.getOrDefault(crateConfig.id, CrateData()).rewards?.get(id)
+                val limitData = userData.crates.getOrDefault(crate.id, CrateData()).rewards?.get(id)
                 if (limitData != null && limitData.claimed >= playerLimits.amount) { // If the player has limit data, check if their amount has surpassed the limit
                     if (playerLimits.cooldown <= 0 || (limitData.time + (playerLimits.cooldown * 1000)) > System.currentTimeMillis()) { // If it has surpassed, check if the cooldown has not expired
                         return false

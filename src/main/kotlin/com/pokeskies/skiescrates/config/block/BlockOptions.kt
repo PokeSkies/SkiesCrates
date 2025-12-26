@@ -1,9 +1,7 @@
 package com.pokeskies.skiescrates.config.block
 
-import com.pokeskies.skiescrates.data.DimensionalBlockPos
-
 class BlockOptions(
-    val locations: List<DimensionalBlockPos> = listOf(),
+    val locations: List<CrateBlockLocation> = listOf(),
     val model: ModelOptions? = null,
     val hologram: HologramOptions? = null,
     val particles: ParticleOptions? = null,

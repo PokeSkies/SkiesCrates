@@ -1,25 +1,25 @@
 package com.pokeskies.skiescrates.managers
 
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.data.Crate
+import com.pokeskies.skiescrates.data.CrateInstance
 import com.pokeskies.skiescrates.utils.Utils
 import dev.furq.holodisplays.api.HoloDisplaysAPI
 import dev.furq.holodisplays.api.HoloDisplaysAPI.HologramBuilder
 
 object HologramsManager {
     private var hologramsAPI: HoloDisplaysAPI = HoloDisplaysAPI.get(SkiesCrates.MOD_ID)
-    private val holograms = mutableMapOf<String, Crate>()
+    private val holograms = mutableMapOf<String, CrateInstance>()
 
     fun load() {
-        CratesManager.locations.forEach { (location, crate) ->
-            val hologramConfig = crate.block.hologram ?: return@forEach
+        CratesManager.instances.forEach { (location, instance) ->
+            val hologramConfig = instance.hologram ?: return@forEach
             val id = SkiesCrates.asResource(location.hashCode().toString()).toString()
 
             hologramsAPI.createTextDisplay(
                 id
             ) { builder ->
                 builder.text(*hologramConfig.text.map {
-                    crate.parsePlaceholders(it)
+                    instance.crate.parsePlaceholders(it)
                 }.toTypedArray())
                 builder.scale(hologramConfig.scale.x, hologramConfig.scale.y, hologramConfig.scale.z)
                 builder.rotation(hologramConfig.rotation.x, hologramConfig.rotation.y, hologramConfig.rotation.z)
@@ -47,7 +47,7 @@ object HologramsManager {
                 Utils.printError("Failed to register hologram with ID: $id")
                 return@forEach
             }
-            holograms[id] = crate
+            holograms[id] = instance
         }
     }
 
