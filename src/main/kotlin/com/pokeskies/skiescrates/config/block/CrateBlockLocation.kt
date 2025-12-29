@@ -9,7 +9,7 @@ class CrateBlockLocation(
     val z: Int,
     val model: ModelOptions? = null, // Per location override
     val hologram: HologramOptions? = null, // Per location override
-    val particles: ParticleOptions? = null, // Per location override
+    val particles: String? = null, // Per location override
 ) {
     fun getDimensionalBlockPos(): DimensionalBlockPos {
         return DimensionalBlockPos(dimension, x, y, z)

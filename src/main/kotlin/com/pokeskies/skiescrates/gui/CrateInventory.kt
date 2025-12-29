@@ -2,7 +2,7 @@ package com.pokeskies.skiescrates.gui
 
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.Crate
-import com.pokeskies.skiescrates.data.animations.InventoryAnimation
+import com.pokeskies.skiescrates.data.animations.InventoryAnimationOptions
 import com.pokeskies.skiescrates.data.animations.spinners.AnimatedSpinnerInstance
 import com.pokeskies.skiescrates.data.animations.spinners.RewardSpinnerInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
@@ -16,7 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 
-class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: InventoryAnimation, bag: RandomCollection<Reward>): SimpleGui(
+class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: InventoryAnimationOptions, bag: RandomCollection<Reward>): SimpleGui(
     animation.settings.menuType.type, player, false
 ) {
     private var isFinished = false

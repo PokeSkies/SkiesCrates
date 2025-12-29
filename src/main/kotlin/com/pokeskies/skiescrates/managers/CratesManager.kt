@@ -68,7 +68,7 @@ object CratesManager {
                     location,
                     blockLocation.model ?: crate.block.model,
                     blockLocation.hologram ?: crate.block.hologram,
-                    blockLocation.particles ?: crate.block.particles
+                    ConfigManager.ANIMATIONS_PARTICLES[blockLocation.particles ?: crate.block.particles]
                 )
             }
         }

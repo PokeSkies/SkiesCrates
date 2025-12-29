@@ -6,7 +6,8 @@ import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.menu.KeysMenu
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.Key
-import com.pokeskies.skiescrates.data.animations.InventoryAnimation
+import com.pokeskies.skiescrates.data.animations.InventoryAnimationOptions
+import com.pokeskies.skiescrates.data.animations.ParticleAnimationOptions
 import com.pokeskies.skiescrates.data.previews.Preview
 import com.pokeskies.skiescrates.utils.Utils
 import java.io.*
@@ -22,7 +23,8 @@ object ConfigManager {
     lateinit var CONFIG: SkiesCratesConfig
     lateinit var CRATES: MutableMap<String, Crate>
     lateinit var KEYS: MutableMap<String, Key>
-    lateinit var ANIMATIONS_INVENTORY: MutableMap<String, InventoryAnimation>
+    lateinit var ANIMATIONS_INVENTORY: MutableMap<String, InventoryAnimationOptions>
+    lateinit var ANIMATIONS_PARTICLES: MutableMap<String, ParticleAnimationOptions>
     lateinit var PREVIEW: MutableMap<String, Preview>
     lateinit var KEYS_MENU: KeysMenu
 
@@ -35,6 +37,7 @@ object ConfigManager {
         loadCrates()
         loadKeys()
         loadInventoryAnimations()
+        loadParticleAnimations()
         loadPreviews()
         KEYS_MENU = loadFile("keys.json", KeysMenu(), "menus")
     }
@@ -49,6 +52,7 @@ object ConfigManager {
         attemptDefaultDirectoryCopy(classLoader, "keys")
         attemptDefaultDirectoryCopy(classLoader, "animations/inventory")
         attemptDefaultDirectoryCopy(classLoader, "animations/physical")
+        attemptDefaultDirectoryCopy(classLoader, "animations/particles")
         attemptDefaultDirectoryCopy(classLoader, "previews")
         attemptDefaultFileCopy(classLoader, "menus/keys.json")
     }
@@ -153,7 +157,7 @@ object ConfigManager {
                         val id = fileName.substring(0, fileName.lastIndexOf(".json"))
                         val jsonReader = JsonReader(InputStreamReader(FileInputStream(file), Charsets.UTF_8))
                         try {
-                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(JsonParser.parseReader(jsonReader), InventoryAnimation::class.java)
+                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(JsonParser.parseReader(jsonReader), InventoryAnimationOptions::class.java)
                             ANIMATIONS_INVENTORY[id] = config
                             enabledFiles.add(fileName)
                         } catch (ex: Exception) {
@@ -168,6 +172,42 @@ object ConfigManager {
             }
         } else {
             Utils.printError("The 'animations/inventory' directory either does not exist or is not a directory!")
+        }
+    }
+
+    private fun loadParticleAnimations() {
+        ANIMATIONS_PARTICLES = mutableMapOf()
+
+        val dir = SkiesCrates.INSTANCE.configDir.resolve("animations/particles")
+        if (dir.exists() && dir.isDirectory) {
+            val files = Files.walk(dir.toPath())
+                .filter { path: Path -> Files.isRegularFile(path) }
+                .map { it.toFile() }
+                .collect(Collectors.toList())
+            if (files != null) {
+                SkiesCrates.LOGGER.info("Found ${files.size} particle files: ${files.map { it.name }}")
+                val enabledFiles = mutableListOf<String>()
+                for (file in files) {
+                    val fileName = file.name
+                    if (file.isFile && fileName.contains(".json")) {
+                        val id = fileName.substring(0, fileName.lastIndexOf(".json"))
+                        val jsonReader = JsonReader(InputStreamReader(FileInputStream(file), Charsets.UTF_8))
+                        try {
+                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(JsonParser.parseReader(jsonReader), ParticleAnimationOptions::class.java)
+                            ANIMATIONS_PARTICLES[id] = config
+                            enabledFiles.add(fileName)
+                        } catch (ex: Exception) {
+                            Utils.printError("Error while trying to parse the particle animation $fileName!")
+                            ex.printStackTrace()
+                        }
+                    } else {
+                        Utils.printError("File $fileName is either not a file or is not a .json file!")
+                    }
+                }
+                Utils.printInfo("Successfully read and loaded the following enabled particle animation files: $enabledFiles")
+            }
+        } else {
+            Utils.printError("The 'animations/particles' directory either does not exist or is not a directory!")
         }
     }
 

@@ -5,14 +5,9 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.ConfigManager
-import net.minecraft.core.Holder
 import net.minecraft.core.Registry
-import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.server.level.ServerPlayer
-import net.minecraft.sounds.SoundEvent
-import net.minecraft.sounds.SoundSource
 import java.lang.reflect.Type
 
 object Utils {
@@ -36,22 +31,6 @@ object Utils {
             .levelKeys()
             .firstOrNull { it.location() == id }
             ?.let { SkiesCrates.INSTANCE.server.getLevel(it) }
-    }
-
-    // Sends a player a sound packet
-    fun sendPlayerSound(player: ServerPlayer, sound: SoundEvent, volume: Float, pitch: Float) {
-        player.connection.send(
-            ClientboundSoundPacket(
-                Holder.direct(sound),
-                SoundSource.MASTER,
-                player.x,
-                player.y,
-                player.z,
-                volume,
-                pitch,
-                player.level().getRandom().nextLong()
-            )
-        )
     }
 
     // Formats a time in seconds to the format "xd yh zm zs", but truncates unncessary parts
@@ -81,7 +60,7 @@ object Utils {
     data class RegistrySerializer<T>(val registry: Registry<T>) : JsonSerializer<T>, JsonDeserializer<T> {
         @Throws(JsonParseException::class)
         override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): T? {
-            var parsed = if (json.isJsonPrimitive) registry.get(ResourceLocation.tryParse(json.asString)) else null
+            val parsed = if (json.isJsonPrimitive) registry.get(ResourceLocation.tryParse(json.asString)) else null
             if (parsed == null)
                 printError("There was an error while deserializing a Registry Type: $registry")
             return parsed
@@ -94,24 +73,11 @@ object Utils {
     data class CodecSerializer<T>(val codec: Codec<T>) : JsonSerializer<T>, JsonDeserializer<T> {
         @Throws(JsonParseException::class)
         override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): T? {
-            return try {
-                codec.decode(JsonOps.INSTANCE, json).orThrow.first
-            } catch (e: Throwable) {
-                printError("There was an error while deserializing a Codec: $codec")
-                null
-            }
+            return codec.decode(JsonOps.INSTANCE, json).orThrow.first
         }
 
         override fun serialize(src: T?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-            return try {
-                if (src != null)
-                    codec.encodeStart(JsonOps.INSTANCE, src).orThrow
-                else
-                    JsonNull.INSTANCE
-            } catch (e: Throwable) {
-                printError("There was an error while serializing a Codec: $codec")
-                JsonNull.INSTANCE
-            }
+            return codec.encodeStart(JsonOps.INSTANCE, src).orThrow
         }
     }
 }

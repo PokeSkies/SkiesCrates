@@ -13,6 +13,7 @@ import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.data.KeyCacheKey
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
+import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardType
 import com.pokeskies.skiescrates.economy.EconomyType
@@ -26,8 +27,7 @@ import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
 import com.pokeskies.skiescrates.utils.Utils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -35,6 +35,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.kyori.adventure.platform.fabric.FabricServerAudiences
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.minecraft.core.particles.ParticleOptions
+import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
@@ -111,13 +113,25 @@ class SkiesCrates : ModInitializer {
             }
         }
 
+    @OptIn(DelicateCoroutinesApi::class)
+    private val particleThreadPool = newFixedThreadPoolContext(1, "SkiesCratesParticleThread")
+    private val particleScope = CoroutineScope(particleThreadPool + SupervisorJob())
+    fun runOnParticleThread(block: suspend () -> Unit) {
+        particleScope.launch {
+            block()
+            delay(1)
+        }
+    }
+
     var gson: Gson = GsonBuilder().disableHtmlEscaping()
         .registerTypeAdapter(Reward::class.java, RewardType.RewardTypeAdaptor())
         .registerTypeAdapter(Action::class.java, ActionType.ActionTypeAdaptor())
         .registerTypeAdapter(StorageType::class.java, StorageType.StorageTypeAdaptor())
+        .registerTypeAdapter(ParticleEffect::class.java, ParticleEffect.ParticleEffectAdapter())
         .registerTypeHierarchyAdapter(Item::class.java, Utils.RegistrySerializer(BuiltInRegistries.ITEM))
         .registerTypeHierarchyAdapter(SoundEvent::class.java, Utils.RegistrySerializer(BuiltInRegistries.SOUND_EVENT))
         .registerTypeHierarchyAdapter(CompoundTag::class.java, Utils.CodecSerializer(CompoundTag.CODEC))
+        .registerTypeHierarchyAdapter(ParticleOptions::class.java, Utils.CodecSerializer(ParticleTypes.CODEC))
         .registerTypeAdapter(InventoryType::class.java, InventoryType.Deserializer())
         .registerTypeAdapter(SoundOption::class.java, SoundOption.Adaptor())
         .create()

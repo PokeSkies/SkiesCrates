@@ -7,7 +7,7 @@ import com.pokeskies.skiescrates.data.animations.presets.AnimatedItem
 import com.pokeskies.skiescrates.data.animations.presets.RewardItem
 import com.pokeskies.skiescrates.gui.InventoryType
 
-class InventoryAnimation(
+class InventoryAnimationOptions(
     val settings: Settings,
     val items: Items,
     val presets: Presets

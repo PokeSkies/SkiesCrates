@@ -53,7 +53,6 @@ class BILIntegration: IntegratedMod {
     private fun processModelFile(filePath: Path) {
         val name = filePath.name
         val ext = FilenameUtils.getExtension(name).lowercase()
-        println("Processing model file $name with extension $ext located at $filePath")
         val model = when (ext) {
             "bbmodel" -> BbModelLoader.load(filePath.toString())
             "ajmodel" -> AjModelLoader.load(filePath.toString())
