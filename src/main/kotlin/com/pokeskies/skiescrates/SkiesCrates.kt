@@ -13,7 +13,7 @@ import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.data.KeyCacheKey
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
-import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
+import com.pokeskies.skiescrates.data.animations.particles.effects.ParticleEffect
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardType
 import com.pokeskies.skiescrates.economy.EconomyType

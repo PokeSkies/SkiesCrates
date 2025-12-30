@@ -1,10 +1,10 @@
-package com.pokeskies.skiescrates.data.particles.effects
+package com.pokeskies.skiescrates.data.animations.particles.effects
 
 import com.google.gson.*
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.data.CrateInstance
-import com.pokeskies.skiescrates.data.particles.animations.actions.DelayAction
-import com.pokeskies.skiescrates.data.particles.animations.actions.ParticleAction
+import com.pokeskies.skiescrates.data.animations.particles.actions.DelayAction
+import com.pokeskies.skiescrates.data.animations.particles.actions.ParticleAction
 import net.minecraft.core.particles.ParticleOptions
 import net.minecraft.world.phys.Vec3
 import java.lang.reflect.Type

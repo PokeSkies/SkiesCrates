@@ -4,7 +4,7 @@ import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.block.HologramOptions
 import com.pokeskies.skiescrates.config.block.ModelOptions
 import com.pokeskies.skiescrates.data.animations.ParticleAnimationOptions
-import com.pokeskies.skiescrates.data.particles.animations.ParticleAnimation
+import com.pokeskies.skiescrates.data.animations.particles.ParticleAnimation
 import com.pokeskies.skiescrates.integrations.ModIntegration
 import com.pokeskies.skiescrates.integrations.bil.BILCrateData
 import com.pokeskies.skiescrates.integrations.bil.BILIntegration

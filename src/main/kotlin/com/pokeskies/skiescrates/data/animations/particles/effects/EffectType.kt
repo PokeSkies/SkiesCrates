@@ -1,9 +1,9 @@
-package com.pokeskies.skiescrates.data.particles.effects
+package com.pokeskies.skiescrates.data.animations.particles.effects
 
-import com.pokeskies.skiescrates.data.particles.effects.types.BeamEffect
-import com.pokeskies.skiescrates.data.particles.effects.types.CircleEffect
-import com.pokeskies.skiescrates.data.particles.effects.types.PulseEffect
-import com.pokeskies.skiescrates.data.particles.effects.types.SpiralEffect
+import com.pokeskies.skiescrates.data.animations.particles.effects.types.BeamEffect
+import com.pokeskies.skiescrates.data.animations.particles.effects.types.CircleEffect
+import com.pokeskies.skiescrates.data.animations.particles.effects.types.PulseEffect
+import com.pokeskies.skiescrates.data.animations.particles.effects.types.SpiralEffect
 
 enum class EffectType(val identifier: String, val clazz: Class<*>) {
     SPIRAL("spiral", SpiralEffect::class.java),

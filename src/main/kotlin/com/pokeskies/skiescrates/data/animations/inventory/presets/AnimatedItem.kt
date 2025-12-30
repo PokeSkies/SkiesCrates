@@ -1,4 +1,4 @@
-package com.pokeskies.skiescrates.data.animations.presets
+package com.pokeskies.skiescrates.data.animations.inventory.presets
 
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName

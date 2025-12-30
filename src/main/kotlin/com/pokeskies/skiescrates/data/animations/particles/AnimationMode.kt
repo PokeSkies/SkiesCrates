@@ -1,4 +1,4 @@
-package com.pokeskies.skiescrates.data.particles.animations
+package com.pokeskies.skiescrates.data.animations.particles
 
 enum class AnimationMode {
     CONCURRENT,

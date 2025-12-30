@@ -6,7 +6,7 @@ import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.menu.KeysMenu
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.Key
-import com.pokeskies.skiescrates.data.animations.InventoryAnimationOptions
+import com.pokeskies.skiescrates.data.animations.inventory.InventoryAnimationOptions
 import com.pokeskies.skiescrates.data.animations.ParticleAnimationOptions
 import com.pokeskies.skiescrates.data.previews.Preview
 import com.pokeskies.skiescrates.utils.Utils

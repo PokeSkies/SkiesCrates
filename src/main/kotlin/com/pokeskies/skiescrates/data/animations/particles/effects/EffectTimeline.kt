@@ -1,6 +1,6 @@
-package com.pokeskies.skiescrates.data.particles.effects
+package com.pokeskies.skiescrates.data.animations.particles.effects
 
-import com.pokeskies.skiescrates.data.particles.animations.AnimationAction
+import com.pokeskies.skiescrates.data.animations.particles.AnimationAction
 import net.minecraft.server.level.ServerPlayer
 
 class EffectTimeline(

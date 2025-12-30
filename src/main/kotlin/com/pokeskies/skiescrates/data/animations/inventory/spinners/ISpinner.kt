@@ -1,7 +1,7 @@
-package com.pokeskies.skiescrates.data.animations.spinners
+package com.pokeskies.skiescrates.data.animations.inventory.spinners
 
-import com.pokeskies.skiescrates.data.animations.items.SpinMode
-import com.pokeskies.skiescrates.data.animations.items.SpinningItem
+import com.pokeskies.skiescrates.data.animations.inventory.items.SpinMode
+import com.pokeskies.skiescrates.data.animations.inventory.items.SpinningItem
 import com.pokeskies.skiescrates.gui.CrateInventory
 import net.minecraft.server.level.ServerPlayer
 import kotlin.random.Random

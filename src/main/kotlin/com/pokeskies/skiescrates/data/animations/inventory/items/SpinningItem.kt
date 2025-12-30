@@ -1,4 +1,4 @@
-package com.pokeskies.skiescrates.data.animations.items
+package com.pokeskies.skiescrates.data.animations.inventory.items
 
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.config.SoundOption

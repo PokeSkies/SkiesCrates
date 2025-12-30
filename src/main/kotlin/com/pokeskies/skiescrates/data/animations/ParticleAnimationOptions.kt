@@ -1,9 +1,9 @@
 package com.pokeskies.skiescrates.data.animations
 
 import com.pokeskies.skiescrates.data.CrateInstance
-import com.pokeskies.skiescrates.data.particles.animations.AnimationMode
-import com.pokeskies.skiescrates.data.particles.animations.ParticleAnimation
-import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
+import com.pokeskies.skiescrates.data.animations.particles.AnimationMode
+import com.pokeskies.skiescrates.data.animations.particles.ParticleAnimation
+import com.pokeskies.skiescrates.data.animations.particles.effects.ParticleEffect
 
 class ParticleAnimationOptions(
     val mode: AnimationMode,

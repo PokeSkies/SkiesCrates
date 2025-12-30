@@ -1,10 +1,10 @@
-package com.pokeskies.skiescrates.data.animations
+package com.pokeskies.skiescrates.data.animations.inventory
 
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.config.GenericGUIItem
-import com.pokeskies.skiescrates.data.animations.items.SpinningItem
-import com.pokeskies.skiescrates.data.animations.presets.AnimatedItem
-import com.pokeskies.skiescrates.data.animations.presets.RewardItem
+import com.pokeskies.skiescrates.data.animations.inventory.items.SpinningItem
+import com.pokeskies.skiescrates.data.animations.inventory.presets.AnimatedItem
+import com.pokeskies.skiescrates.data.animations.inventory.presets.RewardItem
 import com.pokeskies.skiescrates.gui.InventoryType
 
 class InventoryAnimationOptions(

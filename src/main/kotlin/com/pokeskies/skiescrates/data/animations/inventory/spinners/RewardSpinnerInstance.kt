@@ -1,8 +1,8 @@
-package com.pokeskies.skiescrates.data.animations.spinners
+package com.pokeskies.skiescrates.data.animations.inventory.spinners
 
 import com.pokeskies.skiescrates.data.Crate
-import com.pokeskies.skiescrates.data.animations.items.SpinMode
-import com.pokeskies.skiescrates.data.animations.items.SpinningItem
+import com.pokeskies.skiescrates.data.animations.inventory.items.SpinMode
+import com.pokeskies.skiescrates.data.animations.inventory.items.SpinningItem
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.gui.CrateInventory

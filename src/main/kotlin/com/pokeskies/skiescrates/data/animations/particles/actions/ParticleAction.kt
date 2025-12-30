@@ -1,6 +1,6 @@
-package com.pokeskies.skiescrates.data.particles.animations.actions
+package com.pokeskies.skiescrates.data.animations.particles.actions
 
-import com.pokeskies.skiescrates.data.particles.animations.AnimationAction
+import com.pokeskies.skiescrates.data.animations.particles.AnimationAction
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket
 import net.minecraft.server.level.ServerPlayer
 

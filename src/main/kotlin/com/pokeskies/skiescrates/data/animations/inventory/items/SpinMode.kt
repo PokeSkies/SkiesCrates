@@ -1,4 +1,4 @@
-package com.pokeskies.skiescrates.data.animations.items
+package com.pokeskies.skiescrates.data.animations.inventory.items
 
 enum class SpinMode {
     INDEPENDENT, // Each slot randomly changes independently of each other

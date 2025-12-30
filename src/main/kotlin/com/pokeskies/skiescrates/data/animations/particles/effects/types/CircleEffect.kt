@@ -1,8 +1,8 @@
-package com.pokeskies.skiescrates.data.particles.effects.types
+package com.pokeskies.skiescrates.data.animations.particles.effects.types
 
-import com.pokeskies.skiescrates.data.particles.animations.actions.ParticleAction
-import com.pokeskies.skiescrates.data.particles.effects.EffectType
-import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
+import com.pokeskies.skiescrates.data.animations.particles.actions.ParticleAction
+import com.pokeskies.skiescrates.data.animations.particles.effects.EffectType
+import com.pokeskies.skiescrates.data.animations.particles.effects.ParticleEffect
 import net.minecraft.core.particles.ParticleOptions
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket

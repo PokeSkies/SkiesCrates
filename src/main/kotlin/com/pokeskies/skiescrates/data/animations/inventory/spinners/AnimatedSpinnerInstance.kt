@@ -1,6 +1,6 @@
-package com.pokeskies.skiescrates.data.animations.spinners
+package com.pokeskies.skiescrates.data.animations.inventory.spinners
 
-import com.pokeskies.skiescrates.data.animations.items.SpinningItem
+import com.pokeskies.skiescrates.data.animations.inventory.items.SpinningItem
 import com.pokeskies.skiescrates.gui.CrateInventory
 import com.pokeskies.skiescrates.utils.RandomCollection
 import net.minecraft.world.item.ItemStack
