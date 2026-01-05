@@ -93,6 +93,23 @@ abstract class Reward(
         return "Reward(type=$type, name='$name', display=$display, weight=$weight, limits=$limits, broadcast=$broadcast)"
     }
 
+    internal class Adapter : JsonSerializer<Reward>, JsonDeserializer<Reward> {
+        override fun serialize(src: Reward, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+            return context.serialize(src, src::class.java)
+        }
+
+        override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Reward {
+            val jsonObject: JsonObject = json.getAsJsonObject()
+            val value = jsonObject.get("type").asString
+            val type: RewardType? = RewardType.valueOfAnyCase(value)
+            return try {
+                context.deserialize(json, type!!.clazz)
+            } catch (e: NullPointerException) {
+                throw JsonParseException("Could not deserialize reward type: $value", e)
+            }
+        }
+    }
+
     class RewardMapAdapter: JsonSerializer<MutableMap<String, Reward>>, JsonDeserializer<MutableMap<String, Reward>> {
         override fun serialize(
             src: MutableMap<String, Reward>,

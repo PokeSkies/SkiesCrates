@@ -2,11 +2,11 @@ package com.pokeskies.skiescrates.gui
 
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.Crate
-import com.pokeskies.skiescrates.data.animations.inventory.InventoryAnimationOptions
-import com.pokeskies.skiescrates.data.animations.inventory.spinners.AnimatedSpinnerInstance
-import com.pokeskies.skiescrates.data.animations.inventory.spinners.RewardSpinnerInstance
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningAnimation
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
+import com.pokeskies.skiescrates.data.opening.inventory.spinners.AnimatedSpinnerInstance
+import com.pokeskies.skiescrates.data.opening.inventory.spinners.RewardSpinnerInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
-import com.pokeskies.skiescrates.managers.CratesManager.openingPlayers
 import com.pokeskies.skiescrates.utils.RandomCollection
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
@@ -16,9 +16,10 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 
-class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: InventoryAnimationOptions, bag: RandomCollection<Reward>): SimpleGui(
-    animation.settings.menuType.type, player, false
-) {
+class CrateInventory(
+    player: ServerPlayer,
+    val opening: InventoryOpeningInstance
+): SimpleGui(opening.animation.settings.menuType.type, player, false) {
     private var isFinished = false
     private var closeTicks = 0
 
@@ -31,11 +32,12 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
 
     private val userData = SkiesCrates.INSTANCE.storage.getUser(player)
 
-    // Local instance of the possible rewards to draw from
-    private var randomBag: RandomCollection<Reward> = bag
+    private val crate: Crate = opening.crate
+    private val animation: InventoryOpeningAnimation = opening.animation
+    private var randomBag: RandomCollection<Reward> = opening.randomBag
 
     init {
-        this.title = TextUtils.parseAll(player, crate.parsePlaceholders(animation.settings.title))
+        this.title = TextUtils.parseAll(player, opening.crate.parsePlaceholders(animation.settings.title))
 
         animation.items.static.forEach { (id, item) ->
             item.slots.forEach { slot ->
@@ -86,7 +88,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
         }
     }
 
-    override fun onTick() {
+    fun tick() {
         if (isFinished) {
             if (closeTicks++ >= animation.settings.closeDelay) {
                 this.close()
@@ -135,6 +137,6 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
             }
         }
 
-        openingPlayers.remove(player.uuid)
+        opening.stop()
     }
 }

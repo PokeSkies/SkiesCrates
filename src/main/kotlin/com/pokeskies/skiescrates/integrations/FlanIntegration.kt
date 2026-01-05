@@ -13,7 +13,7 @@ class FlanIntegration: IntegratedMod {
         PermissionCheckEvent.CHECK.register { player, rs, pos ->
             if (!rs.equals(BuiltinPermission.BREAK)) return@register InteractionResult.PASS
             val dimensionalPos = DimensionalBlockPos(player.level().dimension().location().toString(), pos.x, pos.y, pos.z)
-            CratesManager.getCrateBlock(dimensionalPos)?.let { crate ->
+            CratesManager.getCrateFromPos(dimensionalPos)?.let { crate ->
                 return@register InteractionResult.SUCCESS
             }
             return@register InteractionResult.PASS

@@ -2,13 +2,17 @@ package com.pokeskies.skiescrates.managers
 
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.CrateInstance
+import com.pokeskies.skiescrates.integrations.holodisplays.CrateHologramData
+import com.pokeskies.skiescrates.mixins.ViewerHandlerAccessor
 import com.pokeskies.skiescrates.utils.Utils
 import dev.furq.holodisplays.api.HoloDisplaysAPI
 import dev.furq.holodisplays.api.HoloDisplaysAPI.HologramBuilder
+import dev.furq.holodisplays.handlers.ViewerHandler
+import net.minecraft.server.level.ServerPlayer
 
 object HologramsManager {
     private var hologramsAPI: HoloDisplaysAPI = HoloDisplaysAPI.get(SkiesCrates.MOD_ID)
-    private val holograms = mutableMapOf<String, CrateInstance>()
+    private val holograms = mutableMapOf<String, CrateHologramData>()
 
     fun load() {
         CratesManager.instances.forEach { (location, instance) ->
@@ -47,14 +51,33 @@ object HologramsManager {
                 Utils.printError("Failed to register hologram with ID: $id")
                 return@forEach
             }
-            holograms[id] = instance
+            holograms[id] = CrateHologramData(instance)
         }
     }
 
     fun unload() {
-        holograms.forEach { (id, crate) ->
+        holograms.forEach { (id, _) ->
             hologramsAPI.unregisterDisplay(id)
             hologramsAPI.unregisterHologram(id)
         }
+    }
+
+    fun getHologramData(id: String): CrateHologramData? {
+        return holograms[id]
+    }
+
+    fun hideHologramForPlayer(player: ServerPlayer, crateInstance: CrateInstance) {
+        val id = SkiesCrates.asResource(crateInstance.dimPos.hashCode().toString()).toString()
+        val crateHologram = holograms[id] ?: return
+
+        crateHologram.hiddenPlayers.add(player.uuid)
+        (ViewerHandler as ViewerHandlerAccessor).invokeRemoveViewer(player, id)
+    }
+
+    fun showHologramForPlayer(player: ServerPlayer, crateInstance: CrateInstance) {
+        val id = SkiesCrates.asResource(crateInstance.dimPos.hashCode().toString()).toString()
+        val crateHologram = holograms[id] ?: return
+
+        crateHologram.hiddenPlayers.remove(player.uuid)
     }
 }

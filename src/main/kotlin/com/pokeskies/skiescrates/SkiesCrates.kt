@@ -12,10 +12,9 @@ import com.pokeskies.skiescrates.config.SoundOption
 import com.pokeskies.skiescrates.config.lang.Lang
 import com.pokeskies.skiescrates.data.KeyCacheKey
 import com.pokeskies.skiescrates.data.actions.Action
-import com.pokeskies.skiescrates.data.actions.ActionType
-import com.pokeskies.skiescrates.data.animations.particles.effects.ParticleEffect
+import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
+import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
 import com.pokeskies.skiescrates.data.rewards.Reward
-import com.pokeskies.skiescrates.data.rewards.RewardType
 import com.pokeskies.skiescrates.economy.EconomyType
 import com.pokeskies.skiescrates.economy.IEconomyService
 import com.pokeskies.skiescrates.gui.InventoryType
@@ -23,6 +22,7 @@ import com.pokeskies.skiescrates.integrations.ModIntegration
 import com.pokeskies.skiescrates.managers.CratesManager
 import com.pokeskies.skiescrates.managers.CratesManager.tick
 import com.pokeskies.skiescrates.managers.HologramsManager
+import com.pokeskies.skiescrates.managers.OpeningManager
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
@@ -124,10 +124,11 @@ class SkiesCrates : ModInitializer {
     }
 
     var gson: Gson = GsonBuilder().disableHtmlEscaping()
-        .registerTypeAdapter(Reward::class.java, RewardType.RewardTypeAdaptor())
-        .registerTypeAdapter(Action::class.java, ActionType.ActionTypeAdaptor())
-        .registerTypeAdapter(StorageType::class.java, StorageType.StorageTypeAdaptor())
-        .registerTypeAdapter(ParticleEffect::class.java, ParticleEffect.ParticleEffectAdapter())
+        .registerTypeAdapter(Reward::class.java, Reward.Adapter())
+        .registerTypeAdapter(Action::class.java, Action.Adapter())
+        .registerTypeAdapter(StorageType::class.java, StorageType.Adapter())
+        .registerTypeAdapter(ParticleEffect::class.java, ParticleEffect.Adapter())
+        .registerTypeAdapter(WorldOpeningAnimation::class.java, WorldOpeningAnimation.Adapter())
         .registerTypeHierarchyAdapter(Item::class.java, Utils.RegistrySerializer(BuiltInRegistries.ITEM))
         .registerTypeHierarchyAdapter(SoundEvent::class.java, Utils.RegistrySerializer(BuiltInRegistries.SOUND_EVENT))
         .registerTypeHierarchyAdapter(CompoundTag::class.java, Utils.CodecSerializer(CompoundTag.CODEC))
@@ -165,6 +166,7 @@ class SkiesCrates : ModInitializer {
             ModIntegration.onServerStarting()
         })
         ServerLifecycleEvents.SERVER_STARTED.register(ServerLifecycleEvents.ServerStarted { server: MinecraftServer ->
+            OpeningManager.load()
             CratesManager.init()
             PlaceholderManager.init()
             ModIntegration.onServerStarted()
@@ -179,6 +181,7 @@ class SkiesCrates : ModInitializer {
         })
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
             tick()
+            OpeningManager.tick()
 
             if (server.tickCount % 6000 == 0) {
                 cleanCache()
@@ -200,7 +203,9 @@ class SkiesCrates : ModInitializer {
 
         this.economyServices = IEconomyService.getLoadedEconomyServices()
 
+        OpeningManager.load()
         CratesManager.init()
+
         if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.load()
     }
 

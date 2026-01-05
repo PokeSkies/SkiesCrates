@@ -8,7 +8,10 @@ import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.CrateInstance
 import com.pokeskies.skiescrates.data.CrateOpenData
 import com.pokeskies.skiescrates.data.DimensionalBlockPos
-import com.pokeskies.skiescrates.gui.CrateInventory
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningAnimation
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
+import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
+import com.pokeskies.skiescrates.data.opening.world.WorldOpeningInstance
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.MinecraftDispatcher
 import com.pokeskies.skiescrates.utils.TextUtils
@@ -68,7 +71,7 @@ object CratesManager {
                     location,
                     blockLocation.model ?: crate.block.model,
                     blockLocation.hologram ?: crate.block.hologram,
-                    ConfigManager.ANIMATIONS_PARTICLES[blockLocation.particles ?: crate.block.particles]
+                    ConfigManager.PARTICLES[blockLocation.particles ?: crate.block.particles]
                 )
             }
         }
@@ -78,7 +81,7 @@ object CratesManager {
 
     fun registerEvents() {
         ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, sender, server ->
-            openingPlayers.remove(handler.player.uuid)
+            OpeningManager.getInstance(handler.player.uuid)?.stop()
         })
 
         // Preventing block breaking
@@ -89,7 +92,7 @@ object CratesManager {
                 blockPos.y,
                 blockPos.z
             )
-            getCrateBlock(dimensionalPos)?.let { crate ->
+            getCrateFromPos(dimensionalPos)?.let { crate ->
                 return@Before false
             }
             return@Before true
@@ -104,8 +107,8 @@ object CratesManager {
                 blockPos.y,
                 blockPos.z
             )
-            getCrateBlock(dimensionalPos)?.let { crate ->
-                previewCrate(player, crate)
+            getCrateFromPos(dimensionalPos)?.let { instance ->
+                previewCrate(player, instance.crate)
                 return@AttackBlockCallback InteractionResult.FAIL
             }
             return@AttackBlockCallback InteractionResult.PASS
@@ -122,9 +125,9 @@ object CratesManager {
                 blockHitResult.blockPos.y,
                 blockHitResult.blockPos.z
             )
-            getCrateBlock(blockPos)?.let { crate ->
+            getCrateFromPos(blockPos)?.let { instance ->
                 asyncScope.launch {
-                    openCrate(player, crate, CrateOpenData(blockPos, null), false)
+                    openCrate(player, instance.crate, CrateOpenData(blockPos, null), false)
                 }
                 return@UseBlockCallback InteractionResult.FAIL
             }
@@ -227,7 +230,7 @@ object CratesManager {
         interactionLimiter[player.uuid] = System.currentTimeMillis()
 
         // Check if the player is already opening a crate
-        if (openingPlayers.contains(player.uuid)) {
+        if (OpeningManager.getInstance(player.uuid) != null) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_ALREADY_OPENING.forEach {
                 player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
@@ -521,7 +524,7 @@ object CratesManager {
                 return@withContext true
             }
 
-            val animation = ConfigManager.ANIMATIONS_INVENTORY[crate.animation] ?: run {
+            val animation = OpeningManager.getAnimation(crate.animation) ?: run {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_INVALID_ANIMATION.forEach {
                     player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
@@ -531,8 +534,47 @@ object CratesManager {
                 return@withContext false
             }
 
-            openingPlayers.add(player.uuid)
-            CrateInventory(player, crate, animation, rewardBag).open()
+            val opening = when (animation) {
+                is InventoryOpeningAnimation -> {
+                    InventoryOpeningInstance(player, crate, animation, rewardBag)
+                }
+                is WorldOpeningAnimation -> {
+                    val positionData = openData.location ?: run {
+                        handleCrateFail(player, crate, openData)
+                        Utils.printError("No position data found for world opening animation ${crate.animation} for crate ${crate.id} for player ${player.name.string}!")
+                        Lang.ERROR_INVALID_ANIMATION.forEach {
+                            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                                it
+                            )))
+                        }
+                        return@withContext false
+                    }
+                    val crateInstance = getCrateFromPos(positionData) ?: run {
+                        handleCrateFail(player, crate, openData)
+                        Utils.printError("No crate instance found at $positionData for world opening animation ${crate.animation} for crate ${crate.id} for player ${player.name.string}!")
+                        Lang.ERROR_INVALID_ANIMATION.forEach {
+                            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                                it
+                            )))
+                        }
+                        return@withContext false
+                    }
+                    WorldOpeningInstance(player, crate, crateInstance, animation, rewardBag)
+                }
+                else -> {
+                    handleCrateFail(player, crate, openData)
+                    Lang.ERROR_INVALID_ANIMATION.forEach {
+                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                            it
+                        )))
+                    }
+                    return@withContext false
+                }
+            }
+
+            OpeningManager.addInstance(player.uuid, opening)
+            opening.setup()
+
             return@withContext true
         }
     }
@@ -587,7 +629,7 @@ object CratesManager {
         return null
     }
 
-    fun getCrateBlock(pos: DimensionalBlockPos): Crate? {
-        return instances[pos]?.crate
+    fun getCrateFromPos(pos: DimensionalBlockPos): CrateInstance? {
+        return instances[pos]
     }
 }

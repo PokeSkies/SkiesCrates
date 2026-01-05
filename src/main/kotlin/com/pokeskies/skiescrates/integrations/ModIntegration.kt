@@ -1,6 +1,7 @@
 package com.pokeskies.skiescrates.integrations
 
 import com.pokeskies.skiescrates.integrations.bil.BILIntegration
+import com.pokeskies.skiescrates.integrations.holodisplays.HoloDisplaysIntegration
 import net.fabricmc.loader.api.FabricLoader
 
 enum class ModIntegration(val modId: String, val clazz: Class<out IntegratedMod>) {
@@ -17,26 +18,26 @@ enum class ModIntegration(val modId: String, val clazz: Class<out IntegratedMod>
             entries.filter { it.isModLoaded() }.mapNotNull {
                 try {
                     it to it.clazz.getDeclaredConstructor().newInstance()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }.toMap()
         }
 
         fun onInit() {
-            enabledIntegrations.forEach { (mod, integration) -> integration.onInit() }
+            enabledIntegrations.forEach { (_, integration) -> integration.onInit() }
         }
 
         fun onServerStarting() {
-            enabledIntegrations.forEach { (mod, integration) -> integration.onServerStarting() }
+            enabledIntegrations.forEach { (_, integration) -> integration.onServerStarting() }
         }
 
         fun onServerStarted() {
-            enabledIntegrations.forEach { (mod, integration) -> integration.onServerStarted() }
+            enabledIntegrations.forEach { (_, integration) -> integration.onServerStarted() }
         }
 
         fun onServerShutdown() {
-            enabledIntegrations.forEach { (mod, integration) -> integration.onServerShutdown() }
+            enabledIntegrations.forEach { (_, integration) -> integration.onServerShutdown() }
         }
     }
 
