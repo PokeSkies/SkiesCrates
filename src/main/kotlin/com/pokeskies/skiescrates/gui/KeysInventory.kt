@@ -2,7 +2,7 @@ package com.pokeskies.skiescrates.gui
 
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.ConfigManager
-import com.pokeskies.skiescrates.config.lang.Lang
+import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import eu.pb4.sgui.api.gui.SimpleGui
@@ -19,14 +19,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
     }
 
     private fun refresh() {
-        val storage = SkiesCrates.INSTANCE.storage ?: run {
-            Utils.printError("Storage was null while attempting to open the keys menu! Check elsewhere for errors.")
-            Lang.ERROR_STORAGE.forEach {
-                player.sendMessage(TextUtils.toNative(it))
-            }
-            close()
-            return
-        }
+        val storage = SkiesCrates.INSTANCE.storage
 
         keysMenu.items.forEach { (_, item) ->
             item.createItemStack(player).let {

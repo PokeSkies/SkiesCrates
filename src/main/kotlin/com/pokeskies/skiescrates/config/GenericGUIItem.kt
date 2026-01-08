@@ -32,13 +32,13 @@ class GenericGUIItem(
     val nbt: CompoundTag? = null
 ) {
     fun createItemStack(player: ServerPlayer, placeholders: Map<String, String> = emptyMap()): ItemStack {
-        if (item.isEmpty()) return ItemStack(Items.BARRIER, amount)
+        if (item.isEmpty()) return ItemStack(Items.AIR, amount)
 
         val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(item))
 
         if (parsedItem.isEmpty) {
-            Utils.printError("Error while getting Item, defaulting to Barrier: $item")
-            return ItemStack(Items.BARRIER, amount)
+            Utils.printError("Error while getting Item, defaulting to Air: $item")
+            return ItemStack(Items.AIR, amount)
         }
 
         val stack = ItemStack(parsedItem.get(), amount)

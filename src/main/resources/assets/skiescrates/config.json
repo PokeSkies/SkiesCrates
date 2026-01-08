@@ -31,5 +31,10 @@
   },
   "migration": {
     "keys": []
+  },
+  "webhook": {
+    "duplicate_key": {
+      "url": ""
+    }
   }
 }

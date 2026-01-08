@@ -3,7 +3,7 @@ package com.pokeskies.skiescrates.config.menu
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.data.Key
+import com.pokeskies.skiescrates.data.key.Key
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils

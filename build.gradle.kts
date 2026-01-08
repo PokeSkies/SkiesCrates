@@ -3,8 +3,8 @@
 plugins {
     java
     idea
-    id("quiet-fabric-loom") version ("1.9-SNAPSHOT")
-    kotlin("jvm") version ("2.1.0")
+    id("quiet-fabric-loom") version ("1.13-SNAPSHOT")
+    id("org.jetbrains.kotlin.jvm").version("2.3.0")
     `maven-publish`
 }
 
@@ -58,6 +58,7 @@ repositories {
     maven("https://maven.impactdev.net/repository/development/")
     maven("https://repo.lucko.me")
     maven( url = "https://maven.blazing-coop.net/releases") { name = "Flemmli97" }
+    maven("https://maven.pokeskies.com/releases/")
 }
 
 dependencies {
@@ -95,6 +96,10 @@ dependencies {
         include(it)
     }
 
+    modImplementation("com.github.eduardomcb:discord-webhook:1.0.1")?.let {
+        include(it)
+    }
+
     // Placeholder Mods
     modImplementation("io.github.miniplaceholders:miniplaceholders-api:2.2.3")
     modImplementation("io.github.miniplaceholders:miniplaceholders-kotlin-ext:2.2.3")
@@ -121,9 +126,6 @@ dependencies {
     modRuntimeOnly("com.cobblemon:fabric:1.6.1+1.21.1-SNAPSHOT")
 
     modCompileOnly("io.github.flemmli97:flan:1.21.1-1.12.2-fabric:api") {
-        isTransitive = false
-    }
-    modRuntimeOnly("io.github.flemmli97:flan:1.21.1-1.12.2-fabric") {
         isTransitive = false
     }
 

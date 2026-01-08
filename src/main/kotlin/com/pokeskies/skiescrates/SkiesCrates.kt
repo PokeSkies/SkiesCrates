@@ -1,7 +1,5 @@
 package com.pokeskies.skiescrates
 
-import com.github.benmanes.caffeine.cache.AsyncLoadingCache
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -9,8 +7,7 @@ import com.pokeskies.skiescrates.commands.BaseCommand
 import com.pokeskies.skiescrates.commands.KeysCommand
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.SoundOption
-import com.pokeskies.skiescrates.config.lang.Lang
-import com.pokeskies.skiescrates.data.KeyCacheKey
+import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
@@ -22,6 +19,7 @@ import com.pokeskies.skiescrates.integrations.ModIntegration
 import com.pokeskies.skiescrates.managers.CratesManager
 import com.pokeskies.skiescrates.managers.CratesManager.tick
 import com.pokeskies.skiescrates.managers.HologramsManager
+import com.pokeskies.skiescrates.managers.KeyManager
 import com.pokeskies.skiescrates.managers.OpeningManager
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.storage.IStorage
@@ -49,12 +47,8 @@ import net.minecraft.world.item.Item
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.io.File
-import java.io.IOException
-import java.util.*
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 class SkiesCrates : ModInitializer {
     companion object {
@@ -88,31 +82,6 @@ class SkiesCrates : ModInitializer {
         .setDaemon(true)
         .build())
 
-    val playerKeyCache: AsyncLoadingCache<KeyCacheKey, Int> = Caffeine.newBuilder()
-        .expireAfterWrite(30, TimeUnit.SECONDS)
-        .refreshAfterWrite(10, TimeUnit.SECONDS)
-        .executor(asyncExecutor)
-        .buildAsync { key, executor ->
-            if (server.playerList.getPlayer(key.playerUuid) == null) {
-                return@buildAsync CompletableFuture.completedFuture(0)
-            }
-
-            try {
-                CompletableFuture.supplyAsync({
-                    try {
-                        val userData = storage.getUser(key.playerUuid)
-                        userData.keys[key.keyId] ?: 0
-                    } catch (e: Exception) {
-                        LOGGER.error("Error fetching key cache for ${key.playerUuid}: ${e.message}")
-                        0
-                    }
-                }, asyncExecutor)
-            } catch (e: Exception) {
-                LOGGER.error("Failed to start async user data fetch: ${e.message}")
-                CompletableFuture.completedFuture(0)
-            }
-        }
-
     @OptIn(DelicateCoroutinesApi::class)
     private val particleThreadPool = newFixedThreadPoolContext(1, "SkiesCratesParticleThread")
     private val particleScope = CoroutineScope(particleThreadPool + SupervisorJob())
@@ -144,11 +113,7 @@ class SkiesCrates : ModInitializer {
 
         this.configDir = File(FabricLoader.getInstance().configDirectory, MOD_ID)
         ConfigManager.load()
-        try {
-            this.storage = IStorage.load(ConfigManager.CONFIG.storage)
-        } catch (e: IOException) {
-            Utils.printError(e.message)
-        }
+        this.storage = IStorage.load(ConfigManager.CONFIG.storage)
         Lang.init()
 
         this.economyServices = IEconomyService.getLoadedEconomyServices()
@@ -184,7 +149,7 @@ class SkiesCrates : ModInitializer {
             OpeningManager.tick()
 
             if (server.tickCount % 6000 == 0) {
-                cleanCache()
+                KeyManager.cleanCache()
             }
         })
     }
@@ -194,11 +159,7 @@ class SkiesCrates : ModInitializer {
         this.storage.close()
 
         ConfigManager.load()
-        try {
-            this.storage = IStorage.load(ConfigManager.CONFIG.storage)
-        } catch (e: IOException) {
-            Utils.printError(e.message)
-        }
+        this.storage = IStorage.load(ConfigManager.CONFIG.storage)
         Lang.init()
 
         this.economyServices = IEconomyService.getLoadedEconomyServices()
@@ -207,15 +168,6 @@ class SkiesCrates : ModInitializer {
         CratesManager.init()
 
         if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.load()
-    }
-
-    private fun cleanCache() {
-        playerKeyCache.synchronous().asMap().keys.forEach { key ->
-            if (server.playerList.getPlayer(key.playerUuid) == null) {
-                playerKeyCache.synchronous().invalidate(key)
-                Utils.printDebug("cleanCache - Removed offline player ${key.playerUuid} from key cache")
-            }
-        }
     }
 
     fun getLoadedEconomyServices(): Map<EconomyType, IEconomyService> {
@@ -228,9 +180,5 @@ class SkiesCrates : ModInitializer {
 
     fun getEconomyServiceOrDefault(economyType: EconomyType?): IEconomyService? {
         return economyType?.let { this.economyServices[it] } ?: this.economyServices.values.firstOrNull()
-    }
-
-    fun getCachedKeys(uuid: UUID, keyId: String): Int {
-        return playerKeyCache.get(KeyCacheKey(uuid, keyId)).getNow(0) ?: 0
     }
 }

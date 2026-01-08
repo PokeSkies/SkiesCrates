@@ -1,4 +1,4 @@
-package com.pokeskies.skiescrates.data
+package com.pokeskies.skiescrates.data.key
 
 import java.util.*
 

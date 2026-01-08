@@ -11,5 +11,6 @@
       "minecraft:custom_model_data": 1
     }
   },
-  "virtual": true
+  "virtual": true,
+  "unique": false
 }

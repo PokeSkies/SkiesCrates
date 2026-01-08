@@ -3,7 +3,7 @@ package com.pokeskies.skiescrates.data.rewards
 import com.google.gson.*
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.GenericGUIItem
-import com.pokeskies.skiescrates.config.lang.Lang
+import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.userdata.CrateData
 import com.pokeskies.skiescrates.data.userdata.UserData

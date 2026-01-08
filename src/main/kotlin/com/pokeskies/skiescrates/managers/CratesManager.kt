@@ -3,7 +3,7 @@ package com.pokeskies.skiescrates.managers
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.SkiesCrates.Companion.asyncScope
 import com.pokeskies.skiescrates.config.ConfigManager
-import com.pokeskies.skiescrates.config.lang.Lang
+import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.CrateInstance
 import com.pokeskies.skiescrates.data.CrateOpenData
@@ -40,7 +40,6 @@ object CratesManager {
     const val CRATE_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:crate"
 
     val instances: MutableMap<DimensionalBlockPos, CrateInstance> = mutableMapOf()
-    val openingPlayers: MutableList<UUID> = mutableListOf()
     private val interactionLimiter = mutableMapOf<UUID, Long>()
 
     fun init() {
@@ -326,19 +325,18 @@ object CratesManager {
                     val key = ConfigManager.KEYS[keyId] ?: run {
                         Utils.printError("Key $keyId does not exist while opening crate ${crate.id} for ${player.name.string}!")
                         Lang.ERROR_KEY_NOT_FOUND.forEach {
-                            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
-                                it.replace("%key_id%", keyId)
-                            )))
+                            player.sendMessage(
+                                TextUtils.parseAll(
+                                    player, crate.parsePlaceholders(
+                                        it.replace("%key_id%", keyId)
+                                    )
+                                )
+                            )
                         }
                         return@all false
                     }
-                    if (key.virtual) {
-                        playerData.keys[keyId]?.let {
-                            it >= amount
-                        } ?: false
-                    } else {
-                        player.inventory.contains { KeyManager.getKeyOrNull(it)?.id == keyId && it.count >= amount }
-                    }
+
+                    KeyManager.checkPlayerForKeys(player, playerData, key, amount)
                 }) {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_MISSING_KEYS.forEach {
@@ -440,10 +438,12 @@ object CratesManager {
                                     if (KeyManager.getKeyOrNull(stack)?.id == keyId) {
                                         val stackSize = stack.count
                                         if (removed + stackSize >= amount) {
+                                            KeyManager.markStackUsed(stack, key, keyId, player)
                                             player.inventory.items[i].shrink(amount - removed)
                                             removed += (amount - removed)
                                             break
                                         } else {
+                                            KeyManager.markStackUsed(stack, key, keyId, player)
                                             player.inventory.items[i].shrink(stackSize)
                                             removed += stackSize
                                         }

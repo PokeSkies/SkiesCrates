@@ -1,11 +1,19 @@
 package com.pokeskies.skiescrates.managers
 
+import com.github.benmanes.caffeine.cache.AsyncLoadingCache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.pokeskies.skiescrates.SkiesCrates
+import com.pokeskies.skiescrates.SkiesCrates.Companion.LOGGER
 import com.pokeskies.skiescrates.config.ConfigManager
-import com.pokeskies.skiescrates.config.lang.Lang
-import com.pokeskies.skiescrates.data.Key
+import com.pokeskies.skiescrates.config.Lang
+import com.pokeskies.skiescrates.data.key.Key
+import com.pokeskies.skiescrates.data.key.KeyCacheKey
+import com.pokeskies.skiescrates.data.key.KeyDuplicateAlert
+import com.pokeskies.skiescrates.data.userdata.UsedKeyData
+import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.WebhookUtils
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.level.ServerPlayer
@@ -14,12 +22,44 @@ import net.minecraft.world.item.component.CustomData
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 object KeyManager {
     const val KEY_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:key"
+    const val KEY_UNIQUE_IDENTIFIER: String = "${KEY_IDENTIFIER}_unique_id"
 
     // A map to queue operations per user to avoid key data overwrites
     private val userKeyQueue = ConcurrentHashMap<UUID, CompletableFuture<*>>()
+
+    private val playerKeyCache: AsyncLoadingCache<KeyCacheKey, Int> = Caffeine.newBuilder()
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .refreshAfterWrite(10, TimeUnit.SECONDS)
+        .executor(SkiesCrates.INSTANCE.asyncExecutor)
+        .buildAsync { key, executor ->
+            if (SkiesCrates.INSTANCE.server.playerList.getPlayer(key.playerUuid) == null) {
+                return@buildAsync CompletableFuture.completedFuture(0)
+            }
+
+            try {
+                CompletableFuture.supplyAsync({
+                    try {
+                        val userData = SkiesCrates.INSTANCE.storage.getUser(key.playerUuid)
+                        userData.keys[key.keyId] ?: 0
+                    } catch (e: Exception) {
+                        LOGGER.error("Error fetching key cache for ${key.playerUuid}: ${e.message}")
+                        0
+                    }
+                }, SkiesCrates.INSTANCE.asyncExecutor)
+            } catch (e: Exception) {
+                LOGGER.error("Failed to start async user data fetch: ${e.message}")
+                CompletableFuture.completedFuture(0)
+            }
+        }
+
+    private val confirmedUsedCache = Caffeine.newBuilder()
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .maximumSize(10_000)
+        .build<UUID, UsedKeyData>()
 
     // Allows queueing key operations to ensure they are processed sequentially per user, waiting for the results on each operation
     fun <T> queueOperation(userId: UUID, supplier: () -> CompletableFuture<T>): CompletableFuture<T> {
@@ -72,17 +112,32 @@ object KeyManager {
                 }
         }
 
-        // For non-virtual keys, process synchronously since no database access is needed
         val item = key.display.createItemStack(player)
-        item.count = amount
 
-        // Apply custom data to identify as a crate
         val tag = CompoundTag()
         tag.putString(KEY_IDENTIFIER, key.id)
-        item.set(DataComponents.CUSTOM_DATA, CustomData.of(tag))
 
-        // Add to player's inventory
-        player.inventory.placeItemBackInInventory(item)
+        val itemsToGive = mutableListOf<ItemStack>()
+        if (key.unique) {
+            // If Key is unique, we need to give individual items as each needs a unique ID
+            for (i in 1..amount) {
+                val itemStack = item.copy()
+                val tag = tag.copy()
+                tag.putString(KEY_UNIQUE_IDENTIFIER, UUID.randomUUID().toString())
+                itemStack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag))
+
+                itemsToGive.add(itemStack)
+            }
+        } else {
+            item.count = amount
+            item.set(DataComponents.CUSTOM_DATA, CustomData.of(tag))
+
+            itemsToGive.add(item)
+        }
+
+        itemsToGive.forEach {
+            player.inventory.placeItemBackInInventory(it)
+        }
 
         if (!silent) {
             Lang.KEY_GIVE.forEach {
@@ -193,6 +248,149 @@ object KeyManager {
                 }
             }
             null
+        }
+    }
+
+    fun cleanCache() {
+        playerKeyCache.synchronous().asMap().keys.forEach { key ->
+            if (SkiesCrates.INSTANCE.server.playerList.getPlayer(key.playerUuid) == null) {
+                playerKeyCache.synchronous().invalidate(key)
+                Utils.printDebug("cleanCache - Removed offline player ${key.playerUuid} from key cache")
+            }
+        }
+    }
+
+    fun getCachedKeys(uuid: UUID, keyId: String): Int {
+        return playerKeyCache.get(KeyCacheKey(uuid, keyId)).getNow(0) ?: 0
+    }
+
+    fun isUniqueUUIDCached(uuid: UUID): Boolean {
+        return confirmedUsedCache.getIfPresent(uuid) != null
+    }
+
+    fun markUniqueUUIDUsed(data: UsedKeyData) {
+        confirmedUsedCache.put(data.uuid, data)
+        SkiesCrates.INSTANCE.storage.saveUsedKey(data)
+    }
+
+    fun isUniqueUUIDUsedAsync(uuid: UUID): CompletableFuture<Boolean> {
+        if (isUniqueUUIDCached(uuid)) return CompletableFuture.completedFuture(true)
+
+        return try {
+            SkiesCrates.INSTANCE.storage.getUsedKeyAsync(uuid).thenApply { data ->
+                val used = data != null
+                if (used) confirmedUsedCache.put(uuid, data)
+                used
+            }
+        } catch (_: Exception) {
+            CompletableFuture.completedFuture(false)
+        }
+    }
+
+    fun isUniqueUUIDUsed(uuid: UUID): Boolean {
+        if (isUniqueUUIDCached(uuid)) return true
+        val data = SkiesCrates.INSTANCE.storage.getUsedKey(uuid)
+        val used = data != null
+        if (used) confirmedUsedCache.put(uuid, data)
+        return used
+    }
+
+    fun checkPlayerForKeys(player: ServerPlayer, playerData: UserData, key: Key, amount: Int): Boolean {
+       return if (key.virtual) {
+            playerData.keys[key.id]?.let {
+                it >= amount
+            } ?: false
+        } else {
+            var count = 0
+            player.inventory.items.filter {
+                validateStack(player, key, it)
+            }.forEach { keyItem ->
+                count += keyItem.count
+            }
+
+           count >= amount
+        }
+    }
+
+    // Validates that the given item stack is a valid key for the given key, adjusting it if necessary (e.g., removing invalid unique IDs)
+    private fun validateStack(player: ServerPlayer, key: Key, itemStack: ItemStack): Boolean {
+        if (getKeyOrNull(itemStack)?.id != key.id) return false
+
+        if (key.unique) {
+            val tag = itemStack.get(DataComponents.CUSTOM_DATA) ?: run {
+                alertDuplicateKey(player, key, KeyDuplicateAlert.MISSING_UUID)
+                itemStack.count = 0
+                return false
+            }
+            val uniqueId = tag.copyTag().getString(KEY_UNIQUE_IDENTIFIER)
+            if (uniqueId.isEmpty()) {
+                alertDuplicateKey(player, key, KeyDuplicateAlert.MISSING_UUID)
+                itemStack.count = 0
+                return false
+            }
+
+            if (itemStack.count > 1) {
+                alertDuplicateKey(player, key, KeyDuplicateAlert.STACKED, mapOf("%count%" to itemStack.count.toString(), "%uuid%" to uniqueId))
+                itemStack.count = 0
+                return false
+            }
+
+            val uuid = try {
+                UUID.fromString(uniqueId)
+            } catch (_: IllegalArgumentException) {
+                alertDuplicateKey(player, key, KeyDuplicateAlert.INVALID_UUID, mapOf("%uuid%" to uniqueId))
+                itemStack.count = 0
+                return false
+            }
+
+            if (isUniqueUUIDUsed(uuid)) {
+                alertDuplicateKey(player, key, KeyDuplicateAlert.ALREADY_USED, mapOf("%uuid%" to uniqueId))
+                itemStack.count = 0
+                return false
+            }
+        }
+
+        return true
+    }
+
+    fun markStackUsed(itemStack: ItemStack, key: Key, keyId: String, player: ServerPlayer) {
+        if (key.unique) {
+            itemStack.get(DataComponents.CUSTOM_DATA)?.let { data ->
+                val uuidString = data.copyTag()?.getString(KEY_UNIQUE_IDENTIFIER)
+                val uuid = try {
+                    UUID.fromString(uuidString)
+                } catch (_: Exception) {
+                    null
+                }
+                if (uuid != null) {
+                    markUniqueUUIDUsed(UsedKeyData(
+                        uuid,
+                        keyId,
+                        System.currentTimeMillis(),
+                        player.uuid
+                    ))
+                }
+            }
+        }
+    }
+
+    private fun alertDuplicateKey(player: ServerPlayer, key: Key, alert: KeyDuplicateAlert, placeholders: Map<String, String> = emptyMap()) {
+        var message = alert.message
+            .replace("%key_id%", key.id)
+            .replace("%player%", player.name.string)
+            .replace("%player_uuid%", player.uuid.toString())
+
+        placeholders.forEach { (key, value) ->
+            message = message.replace(key, value)
+        }
+
+        Utils.printError("Duplicate Key Alert: $message")
+        Lang.KEY_DUPLICATE_ALERT.forEach {
+            player.sendMessage(TextUtils.parseAll(player, it))
+        }
+
+        if (ConfigManager.CONFIG.webhooks.duplicateKey.url.isNotEmpty()) {
+            WebhookUtils.sendKeyAlert(ConfigManager.CONFIG.webhooks.duplicateKey.url, player, message)
         }
     }
 }
