@@ -12,16 +12,15 @@ import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
 
-class CommandPlayer(
-    type: RewardType = RewardType.COMMAND_PLAYER,
-    name: String = "null",
+class CommandPlayerReward(
+    name: String = "",
     display: GenericGUIItem = GenericGUIItem(),
     weight: Int = 1,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     private val commands: List<String> = emptyList()
-) : Reward(type, name, display, weight, limits, broadcast) {
+) : Reward(RewardType.COMMAND_PLAYER, name, display, weight, limits, broadcast) {
     override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
         super.giveReward(player, crate)
