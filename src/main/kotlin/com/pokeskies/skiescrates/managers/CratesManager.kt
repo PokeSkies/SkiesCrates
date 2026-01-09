@@ -4,6 +4,7 @@ import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.SkiesCrates.Companion.asyncScope
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.Lang
+import com.pokeskies.skiescrates.config.block.CrateBlockLocation
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.CrateInstance
 import com.pokeskies.skiescrates.data.CrateOpenData
@@ -49,30 +50,7 @@ object CratesManager {
         }
         instances.clear()
         ConfigManager.CRATES.forEach { (_, crate) ->
-            if (!crate.enabled) return@forEach
-            for (blockLocation in crate.block.locations) {
-                val location = blockLocation.getDimensionalBlockPos()
-
-                val level = Utils.getLevel(location.dimension)
-                if (level == null) {
-                    Utils.printError("Crate ${crate.name} has an invalid dimension location: $location")
-                    return@forEach
-                }
-                if (instances.containsKey(location)) {
-                    Utils.printError("Crate ${crate.name} has a duplicate location: $location")
-                    return@forEach
-                }
-
-                instances[location] = CrateInstance(
-                    crate,
-                    level,
-                    location.getBlockPos(),
-                    location,
-                    blockLocation.model ?: crate.block.model,
-                    blockLocation.hologram ?: crate.block.hologram,
-                    ConfigManager.PARTICLES[blockLocation.particles ?: crate.block.particles]
-                )
-            }
+            loadCrate(crate)
         }
 
         registerEvents()
@@ -190,6 +168,45 @@ object CratesManager {
 
     fun tick() {
         instances.forEach { (_, instance) -> instance.tick() }
+    }
+
+    fun loadCrate(crate: Crate) {
+        if (!crate.enabled) return
+        for (blockLocation in crate.block.locations) {
+            loadCrateLocation(crate, blockLocation)
+        }
+    }
+
+    fun loadCrateLocation(crate: Crate, blockLocation: CrateBlockLocation): CrateInstance? {
+        val location = blockLocation.getDimensionalBlockPos()
+
+        val level = Utils.getLevel(location.dimension)
+        if (level == null) {
+            Utils.printError("Crate ${crate.name} has an invalid dimension location: $location")
+            return null
+        }
+        if (instances.containsKey(location)) {
+            Utils.printError("Crate ${crate.name} has a duplicate location: $location")
+            return null
+        }
+
+        val instance = CrateInstance(
+            crate,
+            level,
+            location.getBlockPos(),
+            location,
+            blockLocation.model ?: crate.block.model,
+            blockLocation.hologram ?: crate.block.hologram,
+            ConfigManager.PARTICLES[blockLocation.particles ?: crate.block.particles]
+        )
+        instances[location] = instance
+
+        return instance
+    }
+
+    fun removeCrateLocation(instance: CrateInstance): Boolean {
+        instance.destroy()
+        return instances.remove(instance.dimPos) != null
     }
 
     fun giveCrates(crate: Crate, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {

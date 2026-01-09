@@ -6,8 +6,8 @@ import com.google.gson.GsonBuilder
 import com.pokeskies.skiescrates.commands.BaseCommand
 import com.pokeskies.skiescrates.commands.KeysCommand
 import com.pokeskies.skiescrates.config.ConfigManager
-import com.pokeskies.skiescrates.config.SoundOption
 import com.pokeskies.skiescrates.config.Lang
+import com.pokeskies.skiescrates.config.SoundOption
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
@@ -155,7 +155,6 @@ class SkiesCrates : ModInitializer {
     }
 
     fun reload() {
-        if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.unload()
         this.storage.close()
 
         ConfigManager.load()

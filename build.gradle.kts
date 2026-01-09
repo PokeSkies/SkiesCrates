@@ -187,6 +187,8 @@ java {
 }
 
 tasks.withType<AbstractArchiveTask> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     from("LICENSE") {
         rename { "${it}_${modId}" }
     }

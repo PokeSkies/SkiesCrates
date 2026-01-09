@@ -69,7 +69,7 @@ class GiveCommand : SubCommand {
             silent: Boolean = false
         ): Int {
             val crate = ConfigManager.CRATES[crateId] ?: run {
-                ctx.source.sendMessage(Component.text("Crate $crateId could not be found!").color(NamedTextColor.RED))
+                ctx.source.sendMessage(Component.text("Crate $crateId could not be found!", NamedTextColor.RED))
                 return 0
             }
 
@@ -80,7 +80,7 @@ class GiveCommand : SubCommand {
             val successful = results.filter { it }.size
             when (successful) {
                 0 -> ctx.source.sendMessage(
-                    Component.text("Failed to give ${amount}x $crateId crates to any players!").color(NamedTextColor.RED)
+                    Component.text("Failed to give ${amount}x $crateId crates to any players!", NamedTextColor.RED)
                 )
                 targets.size -> ctx.source.sendMessage(
                     Component.text("Successfully gave ${amount}x $crateId crates to $successful players!").color(NamedTextColor.GREEN)

@@ -1,7 +1,7 @@
 package com.pokeskies.skiescrates.config.block
 
 class BlockOptions(
-    val locations: List<CrateBlockLocation> = listOf(),
+    val locations: MutableList<CrateBlockLocation> = mutableListOf(),
     val model: ModelOptions? = null,
     val hologram: HologramOptions? = null,
     val particles: String? = null,

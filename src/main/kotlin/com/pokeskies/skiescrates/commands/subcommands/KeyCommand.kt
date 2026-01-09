@@ -156,7 +156,7 @@ class KeyCommand : SubCommand {
             silent: Boolean = false
         ): Int {
             val key = ConfigManager.KEYS[keyId] ?: run {
-                ctx.source.sendMessage(Component.text("Key $keyId could not be found!").color(NamedTextColor.RED))
+                ctx.source.sendMessage(Component.text("Key $keyId could not be found!", NamedTextColor.RED))
                 return 0
             }
 
@@ -199,13 +199,13 @@ class KeyCommand : SubCommand {
             silent: Boolean = false
         ): Int {
             val key = ConfigManager.KEYS[keyId] ?: run {
-                ctx.source.sendMessage(Component.text("Key $keyId could not be found!").color(NamedTextColor.RED))
+                ctx.source.sendMessage(Component.text("Key $keyId could not be found!", NamedTextColor.RED))
                 return 0
             }
 
             // TODO: Make this support non virtual keys
             if (!key.virtual) {
-                ctx.source.sendMessage(Component.text("Key $keyId is not a virtual key!").color(NamedTextColor.RED))
+                ctx.source.sendMessage(Component.text("Key $keyId is not a virtual key!", NamedTextColor.RED))
                 return 0
             }
 
@@ -219,7 +219,7 @@ class KeyCommand : SubCommand {
                 val successful = results.count { it.join() }
                 when (successful) {
                     0 -> ctx.source.sendMessage(
-                        Component.text("Failed to take ${amount}x $keyId keys from players!").color(NamedTextColor.RED)
+                        Component.text("Failed to take ${amount}x $keyId keys from players!", NamedTextColor.RED)
                     )
 
                     targets.size -> ctx.source.sendMessage(
@@ -247,18 +247,18 @@ class KeyCommand : SubCommand {
             silent: Boolean = false
         ): Int {
             val key = ConfigManager.KEYS[keyId] ?: run {
-                ctx.source.sendMessage(Component.text("Key $keyId could not be found!").color(NamedTextColor.RED))
+                ctx.source.sendMessage(Component.text("Key $keyId could not be found!", NamedTextColor.RED))
                 return 0
             }
 
             // TODO: Make this support non virtual keys
             if (!key.virtual) {
-                ctx.source.sendMessage(Component.text("Key $keyId is not a virtual key!").color(NamedTextColor.RED))
+                ctx.source.sendMessage(Component.text("Key $keyId is not a virtual key!", NamedTextColor.RED))
                 return 0
             }
 
             if (amount <= 0) {
-                ctx.source.sendMessage(Component.text("Amount must be greater than 0!").color(NamedTextColor.RED))
+                ctx.source.sendMessage(Component.text("Amount must be greater than 0!", NamedTextColor.RED))
                 return 0
             }
 
@@ -272,7 +272,7 @@ class KeyCommand : SubCommand {
                 val successful = results.count { it.join() }
                 when (successful) {
                     0 -> ctx.source.sendMessage(
-                        Component.text("Failed to set ${amount}x $keyId keys for players!").color(NamedTextColor.RED)
+                        Component.text("Failed to set ${amount}x $keyId keys for players!", NamedTextColor.RED)
                     )
                     targets.size -> ctx.source.sendMessage(
                         Component.text("Successfully set ${amount}x $keyId keys for $successful players!").color(NamedTextColor.GREEN),

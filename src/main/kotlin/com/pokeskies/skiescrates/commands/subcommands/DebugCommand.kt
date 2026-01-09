@@ -29,7 +29,7 @@ class DebugCommand : SubCommand {
                 if (newMode)
                     Component.text("Debug mode has been enabled!").color(NamedTextColor.GREEN)
                 else
-                    Component.text("Debug mode has been disabled!").color(NamedTextColor.RED)
+                    Component.text("Debug mode has been disabled!", NamedTextColor.RED)
             )
             return 1
         }
