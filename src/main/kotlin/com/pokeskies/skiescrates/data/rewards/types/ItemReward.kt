@@ -10,16 +10,12 @@ import net.minecraft.world.item.ItemStack
 
 class ItemReward(
     name: String = "",
-    display: GenericItem = GenericItem(),
+    display: GenericItem? = null,
     weight: Int = 1,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
     private val item: GenericItem = GenericItem()
 ) : Reward(RewardType.ITEM, name, display, weight, limits, broadcast) {
-    companion object {
-        private val DEFAULT_DISPLAY = GenericItem("minecraft:barrier", name = "Item")
-    }
-
     override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
         super.giveReward(player, crate)
@@ -28,7 +24,7 @@ class ItemReward(
     }
 
     override fun getGenericDisplay(): GenericItem {
-        return display ?: DEFAULT_DISPLAY
+        return display ?: item
     }
 
     override fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String>): ItemStack {

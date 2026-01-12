@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack
 
 class CommandPlayerReward(
     name: String = "",
-    display: GenericItem = GenericItem(),
+    display: GenericItem? = null,
     weight: Int = 1,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,

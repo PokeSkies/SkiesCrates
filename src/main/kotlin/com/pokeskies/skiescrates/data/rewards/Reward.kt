@@ -16,7 +16,7 @@ import java.util.*
 
 abstract class Reward(
     val type: RewardType = RewardType.COMMAND_PLAYER,
-    val name: String = "null",
+    val name: String = "",
     val display: GenericItem? = null,
     val weight: Int = 1,
     val limits: RewardLimits? = null,
