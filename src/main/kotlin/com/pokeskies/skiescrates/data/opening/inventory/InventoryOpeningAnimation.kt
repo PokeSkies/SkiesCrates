@@ -1,7 +1,7 @@
 package com.pokeskies.skiescrates.data.opening.inventory
 
 import com.google.gson.annotations.SerializedName
-import com.pokeskies.skiescrates.config.GenericGUIItem
+import com.pokeskies.skiescrates.config.item.MenuItem
 import com.pokeskies.skiescrates.data.opening.OpeningAnimation
 import com.pokeskies.skiescrates.data.opening.inventory.items.SpinningItem
 import com.pokeskies.skiescrates.data.opening.inventory.presets.AnimatedItem
@@ -32,7 +32,7 @@ class InventoryOpeningAnimation(
         // These are items that update over time
         val animated: MutableMap<String, SpinningItem>,
         // These are items that remain the same throughout the GUI
-        val static: MutableMap<String, GenericGUIItem>
+        val static: MutableMap<String, MenuItem>
     )
 
     class Presets(

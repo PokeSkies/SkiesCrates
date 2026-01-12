@@ -2,25 +2,26 @@ package com.pokeskies.skiescrates.data.rewards
 
 import com.google.gson.*
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.config.Lang
+import com.pokeskies.skiescrates.config.item.GenericItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.userdata.CrateData
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
 import java.lang.reflect.Type
 import java.util.*
 
 abstract class Reward(
     val type: RewardType = RewardType.COMMAND_PLAYER,
     val name: String = "null",
-    val display: GenericGUIItem = GenericGUIItem(),
+    val display: GenericItem? = null,
     val weight: Int = 1,
     val limits: RewardLimits? = null,
     val broadcast: Boolean = false,
-    val preview: GenericGUIItem? = null
+    val preview: GenericItem? = null
 ) {
     lateinit var id: String
 
@@ -28,7 +29,7 @@ abstract class Reward(
         Utils.printDebug("Attempting to execute a ${type.identifier} reward: $this")
 
         Lang.CRATE_REWARD.forEach {
-            player.sendMessage(TextUtils.parseAll(
+            player.sendMessage(TextUtils.parseAllNative(
                 player,
                 crate.parsePlaceholders(it)
                     .replace("%reward_name%", name)
@@ -37,7 +38,7 @@ abstract class Reward(
 
         if (broadcast) {
             Lang.CRATE_REWARD_BROADCAST.forEach {
-                SkiesCrates.INSTANCE.adventure.all().sendMessage(TextUtils.parseAll(
+                SkiesCrates.INSTANCE.adventure.all().sendMessage(TextUtils.parseAllNative(
                     player,
                     crate.parsePlaceholders(it)
                         .replace("%reward_name%", name)
@@ -45,6 +46,9 @@ abstract class Reward(
             }
         }
     }
+
+    abstract fun getGenericDisplay(): GenericItem
+    abstract fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String> = emptyMap()): ItemStack
 
     // TODO: Add global limit checking, need to provide function a way to access that data
     fun canReceive(userData: UserData, crate: Crate): Boolean {
@@ -75,8 +79,8 @@ abstract class Reward(
     fun getPlaceholders(userData: UserData, crate: Crate): Map<String, String> {
         return mapOf(
             "%reward_name%" to (preview?.name ?: name),
-            "%reward_display_name%" to (display.name ?: ""),
-            "%reward_display_lore%" to (display.lore?.joinToString("\n") ?: ""),
+            "%reward_display_name%" to (getGenericDisplay().name ?: ""),
+            "%reward_display_lore%" to (getGenericDisplay().lore?.joinToString("\n") ?: ""),
             "%reward_id%" to id,
             "%reward_weight%" to weight.toString(),
             "%reward_percent%" to String.format(Locale.US, "%.2f", calculatePercent(this, crate)),

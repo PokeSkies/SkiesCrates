@@ -1,11 +1,11 @@
 package com.pokeskies.skiescrates.data.key
 
-import com.pokeskies.skiescrates.config.GenericGUIItem
+import com.pokeskies.skiescrates.config.item.GenericItem
 
 class Key(
     val enabled: Boolean = true,
     val name: String = "",
-    val display: GenericGUIItem = GenericGUIItem(),
+    val display: GenericItem = GenericItem(),
     val virtual: Boolean = false,
     val unique: Boolean = false,
 ) {

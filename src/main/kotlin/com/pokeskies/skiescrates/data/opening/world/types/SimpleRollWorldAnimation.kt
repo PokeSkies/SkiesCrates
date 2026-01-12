@@ -136,7 +136,7 @@ class SimpleRollWorldAnimation(
                 itemEntity = RewardItemEntity(
                     opening.instance.level,
                     pos,
-                    newReward.display.createItemStack(opening.player)
+                    newReward.getDisplayItem(opening.player)
                 )
                 opening.player.connection.send(
                     ClientboundAddEntityPacket(
@@ -160,7 +160,7 @@ class SimpleRollWorldAnimation(
                     SynchedEntityData.DataValue.create(ItemEntityAccessor.getItem(), itemEntity!!.item)
                 )))
             } else {
-                itemEntity!!.item = newReward.display.createItemStack(opening.player)
+                itemEntity!!.item = newReward.getDisplayItem(opening.player)
                 opening.player.connection.send(ClientboundSetEntityDataPacket(itemEntity!!.id, listOf(
                     SynchedEntityData.DataValue.create(EntityAccessor.getCustomName(), Optional.of(TextUtils.toNative(newReward.name))),
                     SynchedEntityData.DataValue.create(ItemEntityAccessor.getItem(), itemEntity!!.item)

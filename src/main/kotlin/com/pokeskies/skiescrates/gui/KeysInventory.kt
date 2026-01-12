@@ -14,7 +14,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
     private val keysMenu = ConfigManager.KEYS_MENU
 
     init {
-        this.title = TextUtils.parseAll(player, keysMenu.title)
+        this.title = TextUtils.parseAllNative(player, keysMenu.title)
         refresh()
     }
 

@@ -3,7 +3,6 @@ package com.pokeskies.skiescrates.config
 import com.google.gson.JsonParser
 import com.google.gson.stream.JsonReader
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.config.menu.KeysMenu
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.key.Key
 import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningAnimation

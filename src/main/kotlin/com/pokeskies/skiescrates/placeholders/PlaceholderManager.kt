@@ -35,8 +35,12 @@ object PlaceholderManager {
         services.forEach { it.finalizeRegister() }
     }
 
-    fun parse(player: ServerPlayer, text: String): String {
-        var returnValue = text
+    fun parse(player: ServerPlayer, text: String, additionalPlaceholders: Map<String, String> = emptyMap()): String {
+        var returnValue = text.let {
+            additionalPlaceholders.entries.fold(it) { acc, (key, value) ->
+                acc.replace(key, value)
+            }
+        }
         for (service in services) {
             returnValue = service.parsePlaceholders(player, returnValue)
         }

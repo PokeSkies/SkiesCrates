@@ -1,25 +1,38 @@
 package com.pokeskies.skiescrates.data.rewards.types
 
-import com.pokeskies.skiescrates.config.GenericGUIItem
+import com.pokeskies.skiescrates.config.item.GenericItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardLimits
 import com.pokeskies.skiescrates.data.rewards.RewardType
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
 
 class ItemReward(
-    name: String = "null",
-    display: GenericGUIItem = GenericGUIItem(),
+    name: String = "",
+    display: GenericItem = GenericItem(),
     weight: Int = 1,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
-    private val item: GenericGUIItem = GenericGUIItem()
+    private val item: GenericItem = GenericItem()
 ) : Reward(RewardType.ITEM, name, display, weight, limits, broadcast) {
+    companion object {
+        private val DEFAULT_DISPLAY = GenericItem("minecraft:barrier", name = "Item")
+    }
+
     override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
         super.giveReward(player, crate)
 
         player.inventory.placeItemBackInInventory(item.createItemStack(player))
+    }
+
+    override fun getGenericDisplay(): GenericItem {
+        return display ?: DEFAULT_DISPLAY
+    }
+
+    override fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String>): ItemStack {
+        return getGenericDisplay().createItemStack(player, placeholders)
     }
 
     override fun toString(): String {

@@ -94,7 +94,7 @@ object KeyManager {
                     if (result && !silent) {
                         player.server.execute {
                             Lang.KEY_GIVE.forEach {
-                                player.sendMessage(TextUtils.parseAll(
+                                player.sendMessage(TextUtils.parseAllNative(
                                     player,
                                     it.replace("%key_name%", key.name)
                                         .replace("%amount%", amount.toString())
@@ -141,7 +141,7 @@ object KeyManager {
 
         if (!silent) {
             Lang.KEY_GIVE.forEach {
-                player.sendMessage(TextUtils.parseAll(
+                player.sendMessage(TextUtils.parseAllNative(
                     player,
                     it.replace("%key_name%", key.name)
                         .replace("%amount%", amount.toString())
@@ -170,7 +170,7 @@ object KeyManager {
                         player.server.execute {
                             Lang.KEY_TAKE.forEach {
                                 player.sendMessage(
-                                    TextUtils.parseAll(
+                                    TextUtils.parseAllNative(
                                         player,
                                         it.replace("%key_name%", key.name)
                                             .replace("%amount%", amount.toString())
@@ -206,7 +206,7 @@ object KeyManager {
                     if (result && !silent) {
                         player.server.execute {
                             Lang.KEY_SET.forEach {
-                                player.sendMessage(TextUtils.parseAll(
+                                player.sendMessage(TextUtils.parseAllNative(
                                     player,
                                     it.replace("%key_name%", key.name)
                                         .replace("%amount%", amount.toString())
@@ -386,7 +386,7 @@ object KeyManager {
 
         Utils.printError("Duplicate Key Alert: $message")
         Lang.KEY_DUPLICATE_ALERT.forEach {
-            player.sendMessage(TextUtils.parseAll(player, it))
+            player.sendMessage(TextUtils.parseAllNative(player, it))
         }
 
         if (ConfigManager.CONFIG.webhooks.duplicateKey.url.isNotEmpty()) {

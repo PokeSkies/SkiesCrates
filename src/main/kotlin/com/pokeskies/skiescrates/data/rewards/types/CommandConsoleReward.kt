@@ -2,7 +2,7 @@ package com.pokeskies.skiescrates.data.rewards.types
 
 import com.google.gson.annotations.JsonAdapter
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.config.GenericGUIItem
+import com.pokeskies.skiescrates.config.item.GenericItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardLimits
@@ -11,16 +11,21 @@ import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
 
 class CommandConsoleReward(
     name: String = "",
-    display: GenericGUIItem = GenericGUIItem(),
     weight: Int = 1,
+    display: GenericItem? = null,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     private val commands: List<String> = emptyList()
 ) : Reward(RewardType.COMMAND_CONSOLE, name, display, weight, limits, broadcast) {
+    companion object {
+        val DEFAULT_DISPLAY = GenericItem("minecraft:paper", name = "Command")
+    }
+
     override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
         super.giveReward(player, crate)
@@ -36,6 +41,14 @@ class CommandConsoleReward(
                 PlaceholderManager.parse(player, command)
             )
         }
+    }
+
+    override fun getGenericDisplay(): GenericItem {
+        return display ?: DEFAULT_DISPLAY
+    }
+
+    override fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String>): ItemStack {
+        return getGenericDisplay().createItemStack(player, placeholders)
     }
 
     override fun toString(): String {

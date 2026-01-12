@@ -37,7 +37,7 @@ class CrateInventory(
     private var randomBag: RandomCollection<Reward> = opening.randomBag
 
     init {
-        this.title = TextUtils.parseAll(player, opening.crate.parsePlaceholders(animation.settings.title))
+        this.title = TextUtils.parseAllNative(player, opening.crate.parsePlaceholders(animation.settings.title))
 
         animation.items.static.forEach { (id, item) ->
             item.slots.forEach { slot ->
@@ -66,7 +66,7 @@ class CrateInventory(
 
         // Setup rewards spinners
         crate.rewards.forEach { (id, reward) ->
-            cachedRewardStacks[id] = reward.display.createItemStack(player, reward.getPlaceholders(userData, crate))
+            cachedRewardStacks[id] = reward.getDisplayItem(player, reward.getPlaceholders(userData, crate))
         }
         animation.items.rewards.forEach { (id, item) ->
             val spinner = RewardSpinnerInstance(item, randomBag, animation.settings.winSlots).also {
@@ -120,7 +120,7 @@ class CrateInventory(
     }
 
     fun updateRewardSlot(slot: Int, reward: Reward) {
-        this.setSlot(slot, cachedRewardStacks[reward.id] ?: reward.display.createItemStack(player))
+        this.setSlot(slot, cachedRewardStacks[reward.id] ?: reward.getDisplayItem(player, reward.getPlaceholders(userData, crate)))
     }
 
     override fun onClose() {

@@ -2,19 +2,21 @@ package com.pokeskies.skiescrates.data.rewards.types
 
 import com.google.gson.annotations.JsonAdapter
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.config.GenericGUIItem
+import com.pokeskies.skiescrates.config.item.GenericItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardLimits
 import com.pokeskies.skiescrates.data.rewards.RewardType
+import com.pokeskies.skiescrates.data.rewards.types.CommandConsoleReward.Companion.DEFAULT_DISPLAY
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
 
 class CommandPlayerReward(
     name: String = "",
-    display: GenericGUIItem = GenericGUIItem(),
+    display: GenericItem = GenericItem(),
     weight: Int = 1,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
@@ -36,6 +38,14 @@ class CommandPlayerReward(
                 PlaceholderManager.parse(player, command)
             )
         }
+    }
+
+    override fun getGenericDisplay(): GenericItem {
+        return display ?: DEFAULT_DISPLAY
+    }
+
+    override fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String>): ItemStack {
+        return getGenericDisplay().createItemStack(player, placeholders)
     }
 
     override fun toString(): String {

@@ -12,6 +12,7 @@ import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
 import com.pokeskies.skiescrates.data.rewards.Reward
+import com.pokeskies.skiescrates.data.rewards.options.boolean.BooleanOption
 import com.pokeskies.skiescrates.economy.EconomyType
 import com.pokeskies.skiescrates.economy.IEconomyService
 import com.pokeskies.skiescrates.gui.InventoryType
@@ -98,6 +99,7 @@ class SkiesCrates : ModInitializer {
         .registerTypeAdapter(StorageType::class.java, StorageType.Adapter())
         .registerTypeAdapter(ParticleEffect::class.java, ParticleEffect.Adapter())
         .registerTypeAdapter(WorldOpeningAnimation::class.java, WorldOpeningAnimation.Adapter())
+        .registerTypeAdapter(BooleanOption::class.java, BooleanOption.Adapter())
         .registerTypeHierarchyAdapter(Item::class.java, Utils.RegistrySerializer(BuiltInRegistries.ITEM))
         .registerTypeHierarchyAdapter(SoundEvent::class.java, Utils.RegistrySerializer(BuiltInRegistries.SOUND_EVENT))
         .registerTypeHierarchyAdapter(CompoundTag::class.java, Utils.CodecSerializer(CompoundTag.CODEC))

@@ -5,8 +5,8 @@ import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.CostOptions
 import com.pokeskies.skiescrates.config.FailureOptions
-import com.pokeskies.skiescrates.config.GenericGUIItem
 import com.pokeskies.skiescrates.config.block.BlockOptions
+import com.pokeskies.skiescrates.config.item.GenericItem
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.utils.RandomCollection
@@ -14,7 +14,7 @@ import com.pokeskies.skiescrates.utils.RandomCollection
 class Crate(
     val enabled: Boolean = true,
     val name: String = "",
-    val display: GenericGUIItem = GenericGUIItem(),
+    val display: GenericItem = GenericItem(),
     val unique: Boolean = false,
     val preview: String = "",
     val animation: String = "",
