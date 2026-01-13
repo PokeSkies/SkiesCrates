@@ -137,12 +137,18 @@ object CratesManager {
             val item = player.getItemInHand(hand)
             if (hand != InteractionHand.MAIN_HAND) return@UseItemCallback InteractionResultHolder.pass(item)
 
-            val crate = getCrateOrNull(item) ?: return@UseItemCallback InteractionResultHolder.pass(item)
-            asyncScope.launch {
-                openCrate(player, crate, CrateOpenData(null, item), false)
+            getCrateOrNull(item)?.let { crate ->
+                asyncScope.launch {
+                    openCrate(player, crate, CrateOpenData(null, item), false)
+                }
+                return@UseItemCallback InteractionResultHolder.fail(item)
             }
 
-            return@UseItemCallback InteractionResultHolder.fail(item)
+            KeyManager.getKeyOrNull(item)?.let { key ->
+                return@UseItemCallback InteractionResultHolder.fail(item)
+            }
+
+            return@UseItemCallback InteractionResultHolder.pass(item)
         })
         // Called when swinging with your hand. This can happen in both a left-click and a right-click on a block
 //        Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
