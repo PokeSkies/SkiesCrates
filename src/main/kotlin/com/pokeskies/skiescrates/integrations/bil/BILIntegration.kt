@@ -72,7 +72,7 @@ class BILIntegration: IntegratedMod {
 
     fun createCrateData(instance: CrateInstance, modelOptions: ModelOptions): BILCrateData? {
         val model = getModel(modelOptions.id) ?: run {
-            Utils.printError("The crate '${instance.crate.id}' is using a model '$${modelOptions.id}' which could not be found!")
+            Utils.printError("The crate '${instance.crate.id}' is using a model '${modelOptions.id}' which could not be found!")
             return null
         }
 
