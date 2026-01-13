@@ -197,7 +197,7 @@ object CratesManager {
             location,
             blockLocation.model ?: crate.block.model,
             blockLocation.hologram ?: crate.block.hologram,
-            ConfigManager.PARTICLES[blockLocation.particles ?: crate.block.particles]
+            ConfigManager.PARTICLES[blockLocation.particles ?: crate.block.particle]
         )
         instances[location] = instance
 

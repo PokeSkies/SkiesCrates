@@ -12,7 +12,6 @@ import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.world.item.ItemStack
 
 class CommandPlayerReward(
     name: String = "",
@@ -42,10 +41,6 @@ class CommandPlayerReward(
 
     override fun getGenericDisplay(): GenericItem {
         return display ?: DEFAULT_DISPLAY
-    }
-
-    override fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String>): ItemStack {
-        return getGenericDisplay().createItemStack(player, placeholders)
     }
 
     override fun toString(): String {

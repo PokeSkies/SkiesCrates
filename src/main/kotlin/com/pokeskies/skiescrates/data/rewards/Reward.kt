@@ -48,7 +48,11 @@ abstract class Reward(
     }
 
     abstract fun getGenericDisplay(): GenericItem
-    abstract fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String> = emptyMap()): ItemStack
+    open fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String> = emptyMap()): ItemStack {
+        return getGenericDisplay().also {
+            if (it.name == null) it.name = name
+        }.createItemStack(player, placeholders)
+    }
 
     // TODO: Add global limit checking, need to provide function a way to access that data
     fun canReceive(userData: UserData, crate: Crate): Boolean {

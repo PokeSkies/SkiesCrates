@@ -68,7 +68,9 @@ class PokemonReward(
     override fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String>): ItemStack {
         // If a display item is set that is not a Pokemon Model item, use that instead
         if (display != null && display.item.isNotEmpty() && !display.item.equals("cobblemon:pokemon_model", ignoreCase = true)) {
-            return display.createItemStack(player, placeholders)
+            return display.also {
+                if (it.name == null) it.name = name
+            }.createItemStack(player, placeholders)
         }
 
         val pokemonInstance = pokemon.createPokemon(true)
@@ -76,6 +78,13 @@ class PokemonReward(
             PokemonItem.from(pokemonInstance)
         } else {
             DEFAULT_DISPLAY.createItemStack(player, placeholders)
+        }
+
+        // Set the name onto the ItemStack, which may get overridden by the display
+        DataComponentPatch.builder().let {
+            it.set(DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
+                    .append(TextUtils.parseAllNative(player, name, placeholders)))
+            itemStack.applyComponents(it.build())
         }
 
         display?.let {
@@ -163,6 +172,8 @@ class PokemonReward(
                     pokemon.shiny = option.getValue()
                 }
             }
+
+            pokemon.initialize()
 
             return pokemon
         }

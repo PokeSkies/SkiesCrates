@@ -29,7 +29,7 @@ import java.util.*
 open class GenericItem(
     val item: String = "",
     val amount: Int = 1,
-    val name: String? = null,
+    var name: String? = null,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     val lore: List<String>? = null,
     @SerializedName("components", alternate = ["nbt"])
@@ -73,7 +73,7 @@ open class GenericItem(
             dataComponents.set(DataComponents.CUSTOM_MODEL_DATA, CustomModelData(customModelData))
         }
 
-        if (name != null) {
+        name?.let { name ->
             dataComponents.set(
                 DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
                     .append(TextUtils.parseAllNative(player, name, placeholders)))

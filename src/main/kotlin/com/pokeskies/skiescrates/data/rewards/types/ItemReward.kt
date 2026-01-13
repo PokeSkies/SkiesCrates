@@ -6,7 +6,6 @@ import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardLimits
 import com.pokeskies.skiescrates.data.rewards.RewardType
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.world.item.ItemStack
 
 class ItemReward(
     name: String = "",
@@ -25,10 +24,6 @@ class ItemReward(
 
     override fun getGenericDisplay(): GenericItem {
         return display ?: item
-    }
-
-    override fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String>): ItemStack {
-        return getGenericDisplay().createItemStack(player, placeholders)
     }
 
     override fun toString(): String {
