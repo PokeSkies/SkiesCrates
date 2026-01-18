@@ -24,6 +24,7 @@ import com.pokeskies.skiescrates.managers.OpeningManager
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
+import com.pokeskies.skiescrates.utils.CompoundTagAdaptor
 import com.pokeskies.skiescrates.utils.Utils
 import kotlinx.coroutines.*
 import net.fabricmc.api.ModInitializer
@@ -99,10 +100,10 @@ class SkiesCrates : ModInitializer {
         .registerTypeAdapter(BooleanOption::class.java, BooleanOption.Adapter())
         .registerTypeHierarchyAdapter(Item::class.java, Utils.RegistrySerializer(BuiltInRegistries.ITEM))
         .registerTypeHierarchyAdapter(SoundEvent::class.java, Utils.RegistrySerializer(BuiltInRegistries.SOUND_EVENT))
-        .registerTypeHierarchyAdapter(CompoundTag::class.java, Utils.CodecSerializer(CompoundTag.CODEC))
         .registerTypeHierarchyAdapter(ParticleOptions::class.java, Utils.CodecSerializer(ParticleTypes.CODEC))
         .registerTypeAdapter(InventoryType::class.java, InventoryType.Deserializer())
         .registerTypeAdapter(SoundOption::class.java, SoundOption.Adaptor())
+        .registerTypeAdapter(CompoundTag::class.java, CompoundTagAdaptor())
         .create()
 
     var gsonPretty: Gson = gson.newBuilder().setPrettyPrinting().create()
