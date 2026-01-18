@@ -19,11 +19,11 @@ class CircleEffect(
     startDelay: Int = 0,
     endDelay: Int = 0,
     offset: Vec3? = null,
-    val radius: Double = 1.0,
-    val points: Int = 20,
-    val phase: Double = 0.0,
+    val radius: Double = 1.0, // radius of the circle
+    val points: Int = 20, // number of points around the circle
+    val phase: Double = 0.0, // angular offset in radians.
     val clockwise: Boolean = true,
-    val strands: Int = 1,
+    val strands: Int = 1, // number of strands, evenly spaced
     val rotation: Vec3? = null,
 ): ParticleEffect(EffectType.CIRCLE, particle, speed, startDelay, endDelay, offset) {
     override fun generateParticle(frame: Int, pos: Vec3): ParticleAction? {

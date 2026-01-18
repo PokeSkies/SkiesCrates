@@ -18,14 +18,14 @@ class SpiralEffect(
     startDelay: Int = 0,
     endDelay: Int = 0,
     offset: Vec3? = null,
-    val radius: Double = 1.0,
-    val points: Int = 20,
-    val turns: Int = 3,
-    val height: Double = 2.0,
-    val phase: Double = 0.0,
+    val radius: Double = 1.0, // radius of the spiral
+    val points: Int = 20, // number of points per strand
+    val turns: Int = 3, // number of rotations
+    val height: Double = 2.0, // total height of the spiral
+    val phase: Double = 0.0, // starting angular offset (radians)
     val clockwise: Boolean = true,
     val reverse: Boolean = false,
-    val strands: Int = 1,
+    val strands: Int = 1, // number of evenly spaced strands
     val rotation: Vec3? = null,
 ): ParticleEffect(EffectType.SPIRAL, particle, speed, startDelay, endDelay, offset) {
     override fun generateParticle(frame: Int, pos: Vec3): ParticleAction? {

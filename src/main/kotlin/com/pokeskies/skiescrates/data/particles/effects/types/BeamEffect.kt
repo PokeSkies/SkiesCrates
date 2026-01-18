@@ -18,10 +18,10 @@ class BeamEffect(
     startDelay: Int = 0,
     endDelay: Int = 0,
     offset: Vec3? = null,
-    val radius: Double = 1.0,
-    val points: Int = 20,
-    val height: Int = 20,
-    val spacing: Double = 1.0,
+    val radius: Double = 1.0, // beam radius
+    val points: Int = 20, // points per ring
+    val height: Int = 20, // total frames / height of beam
+    val spacing: Double = 1.0, // vertical spacing per frame
     val upwards: Boolean = true,
     val rotation: Vec3? = null,
 ): ParticleEffect(EffectType.BEAM, particle, speed, startDelay, endDelay, offset) {

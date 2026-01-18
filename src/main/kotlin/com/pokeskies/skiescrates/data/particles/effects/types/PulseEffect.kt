@@ -21,15 +21,15 @@ class PulseEffect(
     endDelay: Int = 0,
     offset: Vec3? = null,
     @SerializedName("start_radius")
-    val startRadius: Double = 1.0,
+    val startRadius: Double = 1.0, // radius of the first ring
     @SerializedName("end_radius")
-    val endRadius: Double = 1.0,
+    val endRadius: Double = 1.0, // radius of the last ring
     @SerializedName("start_points")
-    val startPoints: Int = 20,
+    val startPoints: Int = 20, // points per ring at start
     @SerializedName("end_points")
-    val endPoints: Int = 20,
-    val rings: Int = 5,
-    val outwards: Boolean = true,
+    val endPoints: Int = 20, // points per ring at end
+    val rings: Int = 5, // number of concentric rings
+    val outwards: Boolean = true, // true = expand outwards, false = contract
     val rotation: Vec3? = null,
 ): ParticleEffect(EffectType.PULSE, particle, speed, startDelay, endDelay, offset) {
     override fun generateParticle(frame: Int, pos: Vec3): ParticleAction? {
