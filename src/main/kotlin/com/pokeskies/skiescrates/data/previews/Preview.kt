@@ -3,7 +3,7 @@ package com.pokeskies.skiescrates.data.previews
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.config.item.MenuItem
+import com.pokeskies.skiescrates.config.item.ActionMenuItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.userdata.UserData
@@ -25,26 +25,12 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ItemLore
 
 class Preview(
-    val settings: Settings,
-    val buttons: PreviewButtons,
-    val items: MutableMap<String, MenuItem>,
+    val title: String,
+    @SerializedName("type", alternate = ["menu_type"])
+    val type: InventoryType,
+    val rewards: RewardButton,
+    val items: MutableMap<String, ActionMenuItem>,
 ) {
-    // This is the general settings for this inventory animation
-    class Settings(
-        val title: String,
-        @SerializedName("menu_type")
-        val menuType: InventoryType
-    )
-
-    class PreviewButtons(
-        val reward: RewardButton,
-        @SerializedName("page_next")
-        val pageNext: MenuItem?,
-        @SerializedName("page_previous")
-        val pagePrevious: MenuItem?,
-        val close: MenuItem?
-    )
-
     class RewardButton(
         @JsonAdapter(FlexibleListAdaptorFactory::class)
         val slots: List<Int> = emptyList(),

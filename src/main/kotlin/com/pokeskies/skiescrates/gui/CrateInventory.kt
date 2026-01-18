@@ -19,7 +19,7 @@ import net.minecraft.world.item.ItemStack
 class CrateInventory(
     player: ServerPlayer,
     val opening: InventoryOpeningInstance
-): SimpleGui(opening.animation.settings.menuType.type, player, false) {
+): SimpleGui(opening.animation.type.type, player, false) {
     private var isFinished = false
     private var closeTicks = 0
 
@@ -37,7 +37,7 @@ class CrateInventory(
     private var randomBag: RandomCollection<Reward> = opening.randomBag
 
     init {
-        this.title = TextUtils.parseAllNative(player, opening.crate.parsePlaceholders(animation.settings.title))
+        this.title = TextUtils.parseAllNative(player, opening.crate.parsePlaceholders(animation.title))
 
         animation.items.static.forEach { (id, item) ->
             item.slots.forEach { slot ->
@@ -69,7 +69,7 @@ class CrateInventory(
             cachedRewardStacks[id] = reward.getDisplayItem(player, reward.getPlaceholders(userData, crate))
         }
         animation.items.rewards.forEach { (id, item) ->
-            val spinner = RewardSpinnerInstance(item, randomBag, animation.settings.winSlots).also {
+            val spinner = RewardSpinnerInstance(item, randomBag, animation.winSlots).also {
                 it.pregenerate()
             }
 
@@ -90,7 +90,7 @@ class CrateInventory(
 
     fun tick() {
         if (isFinished) {
-            if (closeTicks++ >= animation.settings.closeDelay) {
+            if (closeTicks++ >= animation.closeDelay) {
                 this.close()
                 return
             }
@@ -125,7 +125,7 @@ class CrateInventory(
 
     override fun onClose() {
         if (!isFinished) {
-            if (animation.settings.skippable) {
+            if (animation.skippable) {
                 isFinished = true
                 rewardSpinners.forEach { (_, data) ->
                     data.giveRewards(player, crate)

@@ -2,21 +2,21 @@ package com.pokeskies.skiescrates.data.actions.types
 
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
-import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.Utils
+import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
 
 class PlaySound(
-    type: ActionType = ActionType.PLAYSOUND,
+    type: ActionType = ActionType.PLAY_SOUND,
     private val sound: String = "",
     private val source: String? = null,
     private val volume: Float = 1.0F,
     private val pitch: Float = 1.0F
 ) : Action(type) {
-    override fun executeAction(player: ServerPlayer, preview: PreviewInventory) {
+    override fun executeAction(player: ServerPlayer, gui: SimpleGui) {
         if (sound.isEmpty()) {
             Utils.printError("[ACTION - ${type.name}] There was an error while executing for player ${player.name}: Sound ID was empty")
             return
@@ -32,12 +32,16 @@ class PlaySound(
 
         Utils.printDebug("[ACTION - ${type.name}] Player(${player.gameProfile.name}), SoundEvent($soundEvent), Category($category): $this")
 
-        player.playNotifySound(
-            SoundEvent.createVariableRangeEvent(ResourceLocation.parse(sound)),
-            category,
-            volume,
-            pitch,
-        )
+        if (!player.server.isStopped) {
+            player.server.executeIfPossible {
+                player.playNotifySound(
+                    soundEvent,
+                    category,
+                    volume,
+                    pitch,
+                )
+            }
+        }
     }
 
     override fun toString(): String {

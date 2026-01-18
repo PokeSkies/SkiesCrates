@@ -2,14 +2,14 @@ package com.pokeskies.skiescrates.data.actions
 
 import com.google.gson.*
 import com.pokeskies.skiescrates.data.actions.ActionType.Companion.valueOfAnyCase
-import com.pokeskies.skiescrates.gui.PreviewInventory
+import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 import java.lang.reflect.Type
 
 abstract class Action(
     val type: ActionType
 ) {
-    abstract fun executeAction(player: ServerPlayer, preview: PreviewInventory)
+    abstract fun executeAction(player: ServerPlayer, gui: SimpleGui)
 
     override fun toString(): String {
         return "Action(type=$type)"

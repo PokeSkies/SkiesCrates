@@ -1,6 +1,7 @@
 package com.pokeskies.skiescrates.data.rewards.types
 
 import com.google.gson.annotations.JsonAdapter
+import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.item.GenericItem
 import com.pokeskies.skiescrates.data.Crate
@@ -10,7 +11,6 @@ import com.pokeskies.skiescrates.data.rewards.RewardType
 import com.pokeskies.skiescrates.data.rewards.types.CommandConsoleReward.Companion.DEFAULT_DISPLAY
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
-import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.server.level.ServerPlayer
 
 class CommandPlayerReward(
@@ -19,22 +19,26 @@ class CommandPlayerReward(
     weight: Int = 1,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
-    @JsonAdapter(FlexibleListAdaptorFactory::class)
-    private val commands: List<String> = emptyList()
+    @JsonAdapter(FlexibleListAdaptorFactory::class) @SerializedName("commands",  alternate = ["command"])
+    private val commands: List<String> = emptyList(),
+    @SerializedName("permission_level")
+    private val permissionLevel: Int? = null
 ) : Reward(RewardType.COMMAND_PLAYER, name, display, weight, limits, broadcast) {
     override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
         super.giveReward(player, crate)
 
-        if (SkiesCrates.INSTANCE.server.commands == null) {
-            Utils.printError("There was an error while giving a reward for player ${player.name}: Server was somehow null on command execution?")
-            return
+        val parsedCommands = commands.map { PlaceholderManager.parse(player, it) }
+
+        var source = player.createCommandSourceStack()
+        if (permissionLevel != null) {
+            source = source.withPermission(permissionLevel)
         }
 
-        for (command in commands) {
-            SkiesCrates.INSTANCE.server.commands?.performPrefixedCommand(
-                player.createCommandSourceStack(),
-                PlaceholderManager.parse(player, command)
+        for (command in parsedCommands) {
+            SkiesCrates.INSTANCE.server.commands.performPrefixedCommand(
+                source,
+                command
             )
         }
     }
@@ -44,6 +48,6 @@ class CommandPlayerReward(
     }
 
     override fun toString(): String {
-        return "CommandPlayer(type=$type, name='$name', display=$display, weight=$weight, limits=$limits, broadcast=$broadcast, commands=$commands)"
+        return "CommandPlayer(type=$type, name='$name', display=$display, weight=$weight, limits=$limits, broadcast=$broadcast, commands=$commands, permissionLevel=$permissionLevel)"
     }
 }

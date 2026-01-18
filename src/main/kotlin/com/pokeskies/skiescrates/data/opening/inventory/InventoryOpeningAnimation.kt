@@ -9,22 +9,17 @@ import com.pokeskies.skiescrates.data.opening.inventory.presets.RewardItem
 import com.pokeskies.skiescrates.gui.InventoryType
 
 class InventoryOpeningAnimation(
-    val settings: Settings,
+    val title: String,
+    @SerializedName("type", alternate = ["menu_type"])
+    val type: InventoryType,
+    @SerializedName("close_delay")
+    val closeDelay: Int,
+    @SerializedName("win_slots")
+    val winSlots: List<Int>,
+    val skippable: Boolean = false,
     val items: Items,
     val presets: Presets
 ): OpeningAnimation {
-    // This is the general settings for this inventory animation
-    class Settings(
-        val title: String,
-        @SerializedName("menu_type")
-        val menuType: InventoryType,
-        @SerializedName("close_delay")
-        val closeDelay: Int,
-        @SerializedName("win_slots")
-        val winSlots: List<Int>,
-        val skippable: Boolean = false
-    )
-
     // These are the items that are used in the inventory animation
     class Items(
         // These are items that display the rewards

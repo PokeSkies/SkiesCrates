@@ -1,10 +1,8 @@
 {
-  "settings": {
-    "title": "Opening %crate_name%",
-    "menu_type": "GENERIC_9X6",
-    "close_delay": 40,
-    "win_slots": [49]
-  },
+  "title": "Opening %crate_name%",
+  "type": "GENERIC_9X6",
+  "close_delay": 40,
+  "win_slots": [49],
   "items": {
     "rewards": {
       "main": {

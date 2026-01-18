@@ -5,11 +5,12 @@ import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import eu.pb4.sgui.api.elements.GuiElementBuilder
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 
 class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): SimpleGui(
-    ConfigManager.KEYS_MENU.menuType.type, viewer, false
+    ConfigManager.KEYS_MENU.type.type, viewer, false
 ) {
     private val keysMenu = ConfigManager.KEYS_MENU
 
@@ -24,7 +25,13 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
         keysMenu.items.forEach { (_, item) ->
             item.createItemStack(player).let {
                 item.slots.forEach { slot ->
-                    this.setSlot(slot, it)
+                    this.setSlot(slot, GuiElementBuilder(it)
+                        .setCallback { click ->
+                            item.actions.forEach { (_, action) ->
+                                action.executeAction(player, this)
+                            }
+                        }
+                    )
                 }
             }
         }

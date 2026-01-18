@@ -4,18 +4,17 @@ import com.google.gson.annotations.JsonAdapter
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
-import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 
 class MessageBroadcast(
-    type: ActionType = ActionType.BROADCAST,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     private val message: List<String> = emptyList()
-) : Action(type) {
-    override fun executeAction(player: ServerPlayer, preview: PreviewInventory) {
+) : Action(ActionType.BROADCAST) {
+    override fun executeAction(player: ServerPlayer, gui: SimpleGui) {
         val parsedMessages = message.map { it /* TODO: do parsing */ }
 
         Utils.printDebug("[ACTION - ${type.name}] Player(${player.gameProfile.name}), Parsed Messages($parsedMessages): $this")

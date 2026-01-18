@@ -7,7 +7,10 @@ enum class ActionType(val identifier: String, val clazz: Class<*>) {
     COMMAND_PLAYER("command_player", CommandPlayer::class.java),
     MESSAGE("message", MessagePlayer::class.java),
     BROADCAST("broadcast", MessageBroadcast::class.java),
-    PLAYSOUND("playsound", PlaySound::class.java);
+    PLAY_SOUND("play_sound", PlaySound::class.java),
+    NEXT_PAGE("next_page", NextPage::class.java),
+    PREVIOUS_PAGE("previous_page", PreviousPage::class.java),
+    CLOSE_GUI("close_gui", CloseGUI::class.java),;
 
     companion object {
         fun valueOfAnyCase(name: String): ActionType? {

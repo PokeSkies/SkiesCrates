@@ -4,17 +4,16 @@ import com.google.gson.annotations.JsonAdapter
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
-import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
+import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 
 class CommandConsole(
-    type: ActionType = ActionType.COMMAND_CONSOLE,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     private val commands: List<String> = emptyList()
-) : Action(type) {
-    override fun executeAction(player: ServerPlayer, preview: PreviewInventory) {
+) : Action(ActionType.COMMAND_CONSOLE) {
+    override fun executeAction(player: ServerPlayer, gui: SimpleGui) {
         val parsedCommands = commands.map { it /* TODO: do parsing */ }
 
         Utils.printDebug("[ACTION - ${type.name}] Player(${player.gameProfile.name}), Parsed Commands($parsedCommands): $this")
