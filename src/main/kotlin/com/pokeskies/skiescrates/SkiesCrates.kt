@@ -13,8 +13,7 @@ import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.options.boolean.BooleanOption
-import com.pokeskies.skiescrates.economy.EconomyType
-import com.pokeskies.skiescrates.economy.IEconomyService
+import com.pokeskies.skiescrates.economy.EconomyManager
 import com.pokeskies.skiescrates.gui.InventoryType
 import com.pokeskies.skiescrates.integrations.ModIntegration
 import com.pokeskies.skiescrates.managers.CratesManager
@@ -76,8 +75,6 @@ class SkiesCrates : ModInitializer {
     lateinit var server: MinecraftServer
     lateinit var nbtOpts: RegistryOps<Tag>
 
-    private var economyServices: Map<EconomyType, IEconomyService> = emptyMap()
-
     val asyncExecutor: ExecutorService = Executors.newFixedThreadPool(8, ThreadFactoryBuilder()
         .setNameFormat("SkiesCrates-Async-%d")
         .setDaemon(true)
@@ -118,7 +115,7 @@ class SkiesCrates : ModInitializer {
         this.storage = IStorage.load(ConfigManager.CONFIG.storage)
         Lang.init()
 
-        this.economyServices = IEconomyService.getLoadedEconomyServices()
+        EconomyManager.init()
 
         ModIntegration.onInit()
 
@@ -163,23 +160,9 @@ class SkiesCrates : ModInitializer {
         this.storage = IStorage.load(ConfigManager.CONFIG.storage)
         Lang.init()
 
-        this.economyServices = IEconomyService.getLoadedEconomyServices()
-
         OpeningManager.load()
         CratesManager.init()
 
         if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.load()
-    }
-
-    fun getLoadedEconomyServices(): Map<EconomyType, IEconomyService> {
-        return this.economyServices
-    }
-
-    fun getEconomyService(economyType: EconomyType?): IEconomyService? {
-        return economyType?.let { this.economyServices[it] }
-    }
-
-    fun getEconomyServiceOrDefault(economyType: EconomyType?): IEconomyService? {
-        return economyType?.let { this.economyServices[it] } ?: this.economyServices.values.firstOrNull()
     }
 }

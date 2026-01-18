@@ -13,6 +13,7 @@ import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningAnimatio
 import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningInstance
+import com.pokeskies.skiescrates.economy.EconomyManager
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.MinecraftDispatcher
 import com.pokeskies.skiescrates.utils.TextUtils
@@ -286,9 +287,9 @@ object CratesManager {
 
         // Balance check
         if (crate.cost != null && crate.cost.amount > 0) {
-            val service = SkiesCrates.INSTANCE.getEconomyService(crate.cost.provider) ?: run {
+            val service = EconomyManager.getService(crate.cost.provider) ?: run {
                 handleCrateFail(player, crate, openData)
-                Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${SkiesCrates.INSTANCE.getLoadedEconomyServices().keys.joinToString(", ")}")
+                Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${EconomyManager.getServices().keys.joinToString(", ")}")
                 Lang.ERROR_ECONOMY_PROVIDER.forEach {
                     player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                         it
@@ -394,10 +395,10 @@ object CratesManager {
         if (!isForced) {
             // Remove balance if needed
             if (crate.cost != null && crate.cost.amount > 0) {
-                val service = SkiesCrates.INSTANCE.getEconomyService(crate.cost.provider) ?: run {
+                val service = EconomyManager.getService(crate.cost.provider) ?: run {
                     withContext(MinecraftDispatcher(player.server)) {
                         handleCrateFail(player, crate, openData)
-                        Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${SkiesCrates.INSTANCE.getLoadedEconomyServices().keys.joinToString(", ")}")
+                        Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${EconomyManager.getServices().keys.joinToString(", ")}")
                         Lang.ERROR_ECONOMY_PROVIDER.forEach {
                             player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                                 it
