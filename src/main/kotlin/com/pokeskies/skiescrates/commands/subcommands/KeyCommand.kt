@@ -24,6 +24,7 @@ class KeyCommand : SubCommand {
         return Commands.literal("key")
             .requires(Permissions.require("${SkiesCrates.MOD_ID}.command.key", 2))
             .then(Commands.literal("give")
+                .requires(Permissions.require("${SkiesCrates.MOD_ID}.command.key.give", 2))
                 .then(Commands.argument("targets", EntityArgument.players())
                     .then(Commands.argument("key", StringArgumentType.string())
                         .suggests { context, builder ->
@@ -62,6 +63,7 @@ class KeyCommand : SubCommand {
                 )
             )
             .then(Commands.literal("take")
+                .requires(Permissions.require("${SkiesCrates.MOD_ID}.command.key.take", 2))
                 .then(Commands.argument("targets", EntityArgument.players())
                     .then(Commands.argument("key", StringArgumentType.string())
                         .suggests { context, builder ->
@@ -100,6 +102,7 @@ class KeyCommand : SubCommand {
                 )
             )
             .then(Commands.literal("set")
+                .requires(Permissions.require("${SkiesCrates.MOD_ID}.command.key.set", 2))
                 .then(Commands.argument("targets", EntityArgument.players())
                     .then(Commands.argument("key", StringArgumentType.string())
                         .suggests { context, builder ->
@@ -138,6 +141,7 @@ class KeyCommand : SubCommand {
                 )
             )
             .then(Commands.literal("view")
+                .requires(Permissions.require("${SkiesCrates.MOD_ID}.command.key.view", 2))
                 .then(Commands.argument("target", EntityArgument.player())
                     .executes { ctx -> KeysCommand.execute(ctx, EntityArgument.getPlayer(ctx, "target"))}
                 )
