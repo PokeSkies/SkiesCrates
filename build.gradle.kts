@@ -3,8 +3,8 @@
 plugins {
     java
     idea
-    id("quiet-fabric-loom") version ("1.9-SNAPSHOT")
-    kotlin("jvm") version ("2.1.0")
+    id("quiet-fabric-loom") version ("1.13-SNAPSHOT")
+    id("org.jetbrains.kotlin.jvm").version("2.3.0")
     `maven-publish`
 }
 
@@ -48,6 +48,7 @@ repositories {
             includeGroup("maven.modrinth")
         }
     }
+    maven("https://maven.tomalbrc.de")
     maven("https://maven.nucleoid.xyz/") { name = "Nucleoid" }
     maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
         name = "sonatype-oss-snapshots1"
@@ -57,6 +58,7 @@ repositories {
     maven("https://maven.impactdev.net/repository/development/")
     maven("https://repo.lucko.me")
     maven( url = "https://maven.blazing-coop.net/releases") { name = "Flemmli97" }
+    maven("https://maven.pokeskies.com/releases/")
 }
 
 dependencies {
@@ -94,6 +96,10 @@ dependencies {
         include(it)
     }
 
+    modImplementation("com.github.eduardomcb:discord-webhook:1.0.1")?.let {
+        include(it)
+    }
+
     // Placeholder Mods
     modImplementation("io.github.miniplaceholders:miniplaceholders-api:2.2.3")
     modImplementation("io.github.miniplaceholders:miniplaceholders-kotlin-ext:2.2.3")
@@ -117,14 +123,18 @@ dependencies {
     implementation(include("com.mysql:mysql-connector-j:8.2.0")!!)
 
     // Integrations
-    modRuntimeOnly("com.cobblemon:fabric:1.6.1+1.21.1-SNAPSHOT")
-
+    modImplementation("com.cobblemon:fabric:1.7.1+1.21.1-SNAPSHOT")
     modCompileOnly("io.github.flemmli97:flan:1.21.1-1.12.2-fabric:api") {
         isTransitive = false
     }
-    modRuntimeOnly("io.github.flemmli97:flan:1.21.1-1.12.2-fabric") {
-        isTransitive = false
-    }
+
+    // Polymer/BIL Integrations
+    modImplementation("de.tomalbrc:blockbench-import-library:1.2.7+1.21")
+    modImplementation("eu.pb4:polymer-core:0.9.18+1.21.1")
+    modImplementation("eu.pb4:polymer-networking:0.9.18+1.21.1")
+    modImplementation("eu.pb4:polymer-resource-pack:0.9.18+1.21.1")
+    modImplementation("eu.pb4:polymer-virtual-entity:0.9.18+1.21.1")
+    modImplementation("eu.pb4:polymer-autohost:0.9.18+1.21.1")
 
     modCompileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
@@ -176,6 +186,8 @@ java {
 }
 
 tasks.withType<AbstractArchiveTask> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     from("LICENSE") {
         rename { "${it}_${modId}" }
     }

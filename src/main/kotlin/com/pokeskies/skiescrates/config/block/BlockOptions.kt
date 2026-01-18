@@ -1,13 +1,15 @@
 package com.pokeskies.skiescrates.config.block
 
-import com.pokeskies.skiescrates.data.DimensionalBlockPos
+import com.google.gson.annotations.SerializedName
 
 class BlockOptions(
-    val locations: List<DimensionalBlockPos> = listOf(),
+    val locations: MutableList<CrateBlockLocation> = mutableListOf(),
+    val model: ModelOptions? = null,
     val hologram: HologramOptions? = null,
-    val particles: ParticleOptions? = null,
+    @SerializedName("particle", alternate = ["particles"])
+    val particle: String? = null,
 ) {
     override fun toString(): String {
-        return "BlockOptions(locations=$locations, hologram=$hologram, particles=$particles)"
+        return "BlockOptions(locations=$locations, hologram=$hologram, particle=$particle)"
     }
 }

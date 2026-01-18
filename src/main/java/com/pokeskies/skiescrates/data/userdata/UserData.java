@@ -1,7 +1,7 @@
 package com.pokeskies.skiescrates.data.userdata;
 
 import com.pokeskies.skiescrates.data.Crate;
-import com.pokeskies.skiescrates.data.Key;
+import com.pokeskies.skiescrates.data.key.Key;
 import com.pokeskies.skiescrates.data.rewards.Reward;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 import org.jetbrains.annotations.Nullable;

@@ -3,7 +3,7 @@ package com.pokeskies.skiescrates.data.previews
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.config.GenericGUIItem
+import com.pokeskies.skiescrates.config.item.ActionMenuItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.userdata.UserData
@@ -25,26 +25,12 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ItemLore
 
 class Preview(
-    val settings: Settings,
-    val buttons: PreviewButtons,
-    val items: MutableMap<String, GenericGUIItem>,
+    val title: String,
+    @SerializedName("type", alternate = ["menu_type"])
+    val type: InventoryType,
+    val rewards: RewardButton,
+    val items: MutableMap<String, ActionMenuItem>,
 ) {
-    // This is the general settings for this inventory animation
-    class Settings(
-        val title: String,
-        @SerializedName("menu_type")
-        val menuType: InventoryType
-    )
-
-    class PreviewButtons(
-        val reward: RewardButton,
-        @SerializedName("page_next")
-        val pageNext: GenericGUIItem?,
-        @SerializedName("page_previous")
-        val pagePrevious: GenericGUIItem?,
-        val close: GenericGUIItem?
-    )
-
     class RewardButton(
         @JsonAdapter(FlexibleListAdaptorFactory::class)
         val slots: List<Int> = emptyList(),
@@ -53,7 +39,9 @@ class Preview(
         val lore: List<String> = emptyList()
     ) {
         fun createItemStack(player: ServerPlayer, reward: Reward, crate: Crate, userData: UserData): ItemStack {
-            val guiItem = reward.preview ?: reward.display
+            val guiItem = reward.preview ?: run {
+                return reward.getDisplayItem(player, reward.getPlaceholders(userData, crate))
+            }
 
             if (guiItem.item.isEmpty()) return ItemStack(Items.BARRIER, guiItem.amount)
 
@@ -68,11 +56,11 @@ class Preview(
 
             val placeholders = reward.getPlaceholders(userData, crate)
 
-            if (guiItem.nbt != null) {
+            if (guiItem.components != null) {
                 // Parses the nbt and attempts to replace any placeholders
-                val nbtCopy = guiItem.nbt.copy()
-                for (key in guiItem.nbt.allKeys) {
-                    val element = guiItem.nbt.get(key)
+                val nbtCopy = guiItem.components.copy()
+                for (key in guiItem.components.allKeys) {
+                    val element = guiItem.components.get(key)
                     if (element != null) {
                         if (element is StringTag) {
                             nbtCopy.putString(key, element.asString)
@@ -97,7 +85,7 @@ class Preview(
 
             val dataComponents = DataComponentPatch.builder()
 
-            (reward.preview?.name ?: name)?.let { name ->
+            (reward.preview.name ?: name)?.let { name ->
                 dataComponents.set(
                     DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
                         .append(TextUtils.toNative(
@@ -105,7 +93,7 @@ class Preview(
                         )))
             }
 
-            (reward.preview?.lore ?: lore).let { lore ->
+            (reward.preview.lore ?: lore).let { lore ->
                 if (lore.isNotEmpty()) {
                     val parsedLore: MutableList<String> = mutableListOf()
                     for (line in lore.stream().map { it }.toList()) {

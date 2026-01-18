@@ -4,6 +4,7 @@ import com.google.gson.reflect.TypeToken
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.SkiesCratesConfig
 import com.pokeskies.skiescrates.data.userdata.CrateData
+import com.pokeskies.skiescrates.data.userdata.UsedKeyData
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
@@ -61,11 +62,48 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
         }
     }
 
+    override fun getUsedKey(uuid: UUID): UsedKeyData? {
+        try {
+            connectionProvider.createConnection().use {
+                val statement = it.createStatement()
+                val result = statement.executeQuery(String.format("SELECT * FROM ${config.tablePrefix}used_keys WHERE uuid='%s'", uuid.toString()))
+                if (result != null && result.next()) {
+                    return UsedKeyData(
+                        uuid,
+                        result.getString("keyId"),
+                        result.getLong("timeUsed"),
+                        UUID.fromString(result.getString("player"))
+                    )
+                }
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+    override fun saveUsedKey(usedKeyData: UsedKeyData): Boolean {
+        return try {
+            connectionProvider.createConnection().use {
+                val statement = it.createStatement()
+                statement.execute(String.format("REPLACE INTO ${config.tablePrefix}used_keys (uuid, keyId, timeUsed, player) VALUES ('%s', '%s', %d, '%s')",
+                    usedKeyData.uuid.toString(),
+                    usedKeyData.keyId,
+                    usedKeyData.timeUsed,
+                    usedKeyData.player.toString()
+                ))
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     override fun getUserAsync(uuid: UUID): CompletableFuture<UserData> {
         return CompletableFuture.supplyAsync({
             try {
-                val result = getUser(uuid)
-                result
+                getUser(uuid)
             } catch (e: Exception) {
                 UserData(uuid)  // Return default data rather than throwing
             }
@@ -75,6 +113,18 @@ class SQLStorage(private val config: SkiesCratesConfig.Storage) : IStorage {
     override fun saveUserAsync(userData: UserData): CompletableFuture<Boolean> {
         return CompletableFuture.supplyAsync({
             saveUser(userData)
+        }, SkiesCrates.INSTANCE.asyncExecutor)
+    }
+
+    override fun getUsedKeyAsync(uuid: UUID): CompletableFuture<UsedKeyData?> {
+        return CompletableFuture.supplyAsync({
+            getUsedKey(uuid)
+        }, SkiesCrates.INSTANCE.asyncExecutor)
+    }
+
+    override fun saveUsedKeyAsync(usedKeyData: UsedKeyData): CompletableFuture<Boolean> {
+        return CompletableFuture.supplyAsync({
+            saveUsedKey(usedKeyData)
         }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 

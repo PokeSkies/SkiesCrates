@@ -14,7 +14,9 @@ object TextUtils {
         return SkiesCrates.MINI_MESSAGE.deserialize(text)
     }
 
-    fun parseAll(player: ServerPlayer, text: String): Component {
-        return toNative(PlaceholderManager.parse(player, text))
+    fun parseAllNative(player: ServerPlayer, text: String, additionalPlaceholders: Map<String, String> = emptyMap()): Component {
+        return toNative(
+            PlaceholderManager.parse(player, text, additionalPlaceholders)
+        )
     }
 }

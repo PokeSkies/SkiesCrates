@@ -4,10 +4,15 @@
   "package": "com.pokeskies.skiescrates.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "EntityAccessor",
+    "ItemEntityAccessor",
+    "ViewerHandlerAccessor",
+    "ViewerHandlerMixin"
   ],
   "client": [
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "plugin": "com.pokeskies.skiescrates.utils.CratesMixinPlugin"
 }

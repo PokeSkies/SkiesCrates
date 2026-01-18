@@ -3,11 +3,17 @@ package com.pokeskies.skiescrates.managers
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.SkiesCrates.Companion.asyncScope
 import com.pokeskies.skiescrates.config.ConfigManager
-import com.pokeskies.skiescrates.config.lang.Lang
+import com.pokeskies.skiescrates.config.Lang
+import com.pokeskies.skiescrates.config.block.CrateBlockLocation
 import com.pokeskies.skiescrates.data.Crate
+import com.pokeskies.skiescrates.data.CrateInstance
 import com.pokeskies.skiescrates.data.CrateOpenData
 import com.pokeskies.skiescrates.data.DimensionalBlockPos
-import com.pokeskies.skiescrates.gui.CrateInventory
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningAnimation
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
+import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
+import com.pokeskies.skiescrates.data.opening.world.WorldOpeningInstance
+import com.pokeskies.skiescrates.economy.EconomyManager
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.MinecraftDispatcher
 import com.pokeskies.skiescrates.utils.TextUtils
@@ -35,31 +41,17 @@ import java.util.*
 object CratesManager {
     const val CRATE_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:crate"
 
-    val locations: MutableMap<DimensionalBlockPos, Crate> = mutableMapOf()
-    val openingPlayers: MutableList<UUID> = mutableListOf()
+    val instances: MutableMap<DimensionalBlockPos, CrateInstance> = mutableMapOf()
     private val interactionLimiter = mutableMapOf<UUID, Long>()
 
     fun init() {
         // load the crate locations
-        locations.clear()
+        instances.forEach {
+            it.value.destroy()
+        }
+        instances.clear()
         ConfigManager.CRATES.forEach { (_, crate) ->
-            if (!crate.enabled) return@forEach
-            for (location in crate.block.locations) {
-                val level = Utils.getLevel(location.dimension)
-                if (level == null) {
-                    Utils.printError("Crate ${crate.name} has an invalid dimension location: $location")
-                    return@forEach
-                }
-                if (locations.containsKey(location)) {
-                    Utils.printError("Crate ${crate.name} has a duplicate location: $location")
-                    return@forEach
-                }
-                locations[location] = crate
-
-                if (crate.block.particles != null) {
-                    // TODO: Particle implementation
-                }
-            }
+            loadCrate(crate)
         }
 
         registerEvents()
@@ -67,7 +59,7 @@ object CratesManager {
 
     fun registerEvents() {
         ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, sender, server ->
-            openingPlayers.remove(handler.player.uuid)
+            OpeningManager.getInstance(handler.player.uuid)?.stop()
         })
 
         // Preventing block breaking
@@ -78,7 +70,7 @@ object CratesManager {
                 blockPos.y,
                 blockPos.z
             )
-            getCrateBlock(dimensionalPos)?.let { crate ->
+            getCrateFromPos(dimensionalPos)?.let { crate ->
                 return@Before false
             }
             return@Before true
@@ -93,8 +85,8 @@ object CratesManager {
                 blockPos.y,
                 blockPos.z
             )
-            getCrateBlock(dimensionalPos)?.let { crate ->
-                previewCrate(player, crate)
+            getCrateFromPos(dimensionalPos)?.let { instance ->
+                previewCrate(player, instance.crate)
                 return@AttackBlockCallback InteractionResult.FAIL
             }
             return@AttackBlockCallback InteractionResult.PASS
@@ -111,9 +103,9 @@ object CratesManager {
                 blockHitResult.blockPos.y,
                 blockHitResult.blockPos.z
             )
-            getCrateBlock(blockPos)?.let { crate ->
+            getCrateFromPos(blockPos)?.let { instance ->
                 asyncScope.launch {
-                    openCrate(player, crate, CrateOpenData(blockPos, null), false)
+                    openCrate(player, instance.crate, CrateOpenData(blockPos, null), false)
                 }
                 return@UseBlockCallback InteractionResult.FAIL
             }
@@ -146,12 +138,18 @@ object CratesManager {
             val item = player.getItemInHand(hand)
             if (hand != InteractionHand.MAIN_HAND) return@UseItemCallback InteractionResultHolder.pass(item)
 
-            val crate = getCrateOrNull(item) ?: return@UseItemCallback InteractionResultHolder.pass(item)
-            asyncScope.launch {
-                openCrate(player, crate, CrateOpenData(null, item), false)
+            getCrateOrNull(item)?.let { crate ->
+                asyncScope.launch {
+                    openCrate(player, crate, CrateOpenData(null, item), false)
+                }
+                return@UseItemCallback InteractionResultHolder.fail(item)
             }
 
-            return@UseItemCallback InteractionResultHolder.fail(item)
+            KeyManager.getKeyOrNull(item)?.let { key ->
+                return@UseItemCallback InteractionResultHolder.fail(item)
+            }
+
+            return@UseItemCallback InteractionResultHolder.pass(item)
         })
         // Called when swinging with your hand. This can happen in both a left-click and a right-click on a block
 //        Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
@@ -176,8 +174,46 @@ object CratesManager {
     }
 
     fun tick() {
-        // TODO: Particle ticking
-        // TODO: interaction limiter cleanup
+        instances.forEach { (_, instance) -> instance.tick() }
+    }
+
+    fun loadCrate(crate: Crate) {
+        if (!crate.enabled) return
+        for (blockLocation in crate.block.locations) {
+            loadCrateLocation(crate, blockLocation)
+        }
+    }
+
+    fun loadCrateLocation(crate: Crate, blockLocation: CrateBlockLocation): CrateInstance? {
+        val location = blockLocation.getDimensionalBlockPos()
+
+        val level = Utils.getLevel(location.dimension)
+        if (level == null) {
+            Utils.printError("Crate ${crate.name} has an invalid dimension location: $location")
+            return null
+        }
+        if (instances.containsKey(location)) {
+            Utils.printError("Crate ${crate.name} has a duplicate location: $location")
+            return null
+        }
+
+        val instance = CrateInstance(
+            crate,
+            level,
+            location.getBlockPos(),
+            location,
+            blockLocation.model ?: crate.block.model,
+            blockLocation.hologram ?: crate.block.hologram,
+            ConfigManager.PARTICLES[blockLocation.particles ?: crate.block.particle]
+        )
+        instances[location] = instance
+
+        return instance
+    }
+
+    fun removeCrateLocation(instance: CrateInstance): Boolean {
+        instance.destroy()
+        return instances.remove(instance.dimPos) != null
     }
 
     fun giveCrates(crate: Crate, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {
@@ -199,7 +235,7 @@ object CratesManager {
 
         if (!silent) {
             Lang.CRATE_GIVE.forEach {
-                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(it)))
+                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(it)))
             }
         }
 
@@ -217,10 +253,10 @@ object CratesManager {
         interactionLimiter[player.uuid] = System.currentTimeMillis()
 
         // Check if the player is already opening a crate
-        if (openingPlayers.contains(player.uuid)) {
+        if (OpeningManager.getInstance(player.uuid) != null) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_ALREADY_OPENING.forEach {
-                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                     it
                 )))
             }
@@ -231,7 +267,7 @@ object CratesManager {
         if (!isForced && crate.permission.isNotEmpty() && !Permissions.check(player, crate.permission)) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_NO_PERMISSION.forEach {
-                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                     it
                 )))
             }
@@ -242,7 +278,7 @@ object CratesManager {
         if (!isForced && crate.inventorySpace > 0 && player.inventory.items.count { it.isEmpty } >= crate.inventorySpace) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_INVENTORY_SPACE.forEach {
-                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                     it
                 )))
             }
@@ -251,11 +287,11 @@ object CratesManager {
 
         // Balance check
         if (crate.cost != null && crate.cost.amount > 0) {
-            val service = SkiesCrates.INSTANCE.getEconomyService(crate.cost.provider) ?: run {
+            val service = EconomyManager.getService(crate.cost.provider) ?: run {
                 handleCrateFail(player, crate, openData)
-                Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${SkiesCrates.INSTANCE.getLoadedEconomyServices().keys.joinToString(", ")}")
+                Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${EconomyManager.getServices().keys.joinToString(", ")}")
                 Lang.ERROR_ECONOMY_PROVIDER.forEach {
-                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                         it
                     )))
                 }
@@ -264,7 +300,7 @@ object CratesManager {
             if (service.balance(player, crate.cost.currency) < crate.cost.amount) {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_COST.forEach {
-                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                         it
                     )))
                 }
@@ -285,7 +321,7 @@ object CratesManager {
                     withContext(MinecraftDispatcher(player.server)) {
                         handleCrateFail(player, crate, openData)
                         Lang.ERROR_COOLDOWN.forEach {
-                            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                            player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                                 it.replace("%cooldown%", Utils.getFormattedTime((cooldownTime - System.currentTimeMillis()) / 1000))
                             )))
                         }
@@ -300,7 +336,7 @@ object CratesManager {
             withContext(MinecraftDispatcher(player.server)) {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_NO_REWARDS.forEach {
-                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(it)))
+                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(it)))
                 }
             }
             return false
@@ -313,23 +349,22 @@ object CratesManager {
                     val key = ConfigManager.KEYS[keyId] ?: run {
                         Utils.printError("Key $keyId does not exist while opening crate ${crate.id} for ${player.name.string}!")
                         Lang.ERROR_KEY_NOT_FOUND.forEach {
-                            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
-                                it.replace("%key_id%", keyId)
-                            )))
+                            player.sendMessage(
+                                TextUtils.parseAllNative(
+                                    player, crate.parsePlaceholders(
+                                        it.replace("%key_id%", keyId)
+                                    )
+                                )
+                            )
                         }
                         return@all false
                     }
-                    if (key.virtual) {
-                        playerData.keys[keyId]?.let {
-                            it >= amount
-                        } ?: false
-                    } else {
-                        player.inventory.contains { KeyManager.getKeyOrNull(it)?.id == keyId && it.count >= amount }
-                    }
+
+                    KeyManager.checkPlayerForKeys(player, playerData, key, amount)
                 }) {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_MISSING_KEYS.forEach {
-                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                        player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                             it
                         )))
                     }
@@ -347,7 +382,7 @@ object CratesManager {
                     contains = false
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_NO_CRATE.forEach {
-                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                        player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                             it
                         )))
                     }
@@ -360,12 +395,12 @@ object CratesManager {
         if (!isForced) {
             // Remove balance if needed
             if (crate.cost != null && crate.cost.amount > 0) {
-                val service = SkiesCrates.INSTANCE.getEconomyService(crate.cost.provider) ?: run {
+                val service = EconomyManager.getService(crate.cost.provider) ?: run {
                     withContext(MinecraftDispatcher(player.server)) {
                         handleCrateFail(player, crate, openData)
-                        Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${SkiesCrates.INSTANCE.getLoadedEconomyServices().keys.joinToString(", ")}")
+                        Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${EconomyManager.getServices().keys.joinToString(", ")}")
                         Lang.ERROR_ECONOMY_PROVIDER.forEach {
-                            player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                            player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                                 it
                             )))
                         }
@@ -377,7 +412,7 @@ object CratesManager {
                         handleCrateFail(player, crate, openData)
                         Lang.ERROR_BALANCE_CHANGED.forEach {
                             player.sendMessage(
-                                TextUtils.parseAll(
+                                TextUtils.parseAllNative(
                                     player, crate.parsePlaceholders(
                                         it
                                     )
@@ -403,7 +438,7 @@ object CratesManager {
                         val key = ConfigManager.KEYS[keyId] ?: run {
                             Utils.printError("Key $keyId does not exist while opening crate ${crate.id} for ${player.name.string}!")
                             Lang.ERROR_KEY_NOT_FOUND.forEach {
-                                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                                     it.replace("%key_id%", keyId)
                                 )))
                             }
@@ -414,7 +449,7 @@ object CratesManager {
                             if (!playerData.removeKeys(key, amount)) {
                                 Utils.printError("Failed to remove $amount keys from ${player.name.string} for crate ${crate.id}, but they were present in the check!")
                                 Lang.ERROR_KEYS_CHANGED.forEach {
-                                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                                         it.replace("%key_id%", keyId)
                                     )))
                                 }
@@ -427,10 +462,12 @@ object CratesManager {
                                     if (KeyManager.getKeyOrNull(stack)?.id == keyId) {
                                         val stackSize = stack.count
                                         if (removed + stackSize >= amount) {
+                                            KeyManager.markStackUsed(stack, key, keyId, player)
                                             player.inventory.items[i].shrink(amount - removed)
                                             removed += (amount - removed)
                                             break
                                         } else {
+                                            KeyManager.markStackUsed(stack, key, keyId, player)
                                             player.inventory.items[i].shrink(stackSize)
                                             removed += stackSize
                                         }
@@ -443,7 +480,7 @@ object CratesManager {
                             // This should never happen, but just in case
                             Utils.printError("Somehow the ${player.name.string} had $amount keys on check, but we removed $removed instead!")
                             Lang.ERROR_KEYS_CHANGED.forEach {
-                                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                                     it.replace("%key_id%", keyId)
                                 )))
                             }
@@ -474,7 +511,7 @@ object CratesManager {
             }
 
             Lang.CRATE_OPENING.forEach {
-                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                     it
                 )))
             }
@@ -483,7 +520,7 @@ object CratesManager {
             if (rewardBag.size() <= 0) {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_NO_REWARDS.forEach {
-                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                         it
                     )))
                 }
@@ -495,7 +532,7 @@ object CratesManager {
                 val reward = rewardBag.next() ?: run {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_NO_REWARDS.forEach {
-                        player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                        player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                             it
                         )))
                     }
@@ -511,18 +548,57 @@ object CratesManager {
                 return@withContext true
             }
 
-            val animation = ConfigManager.ANIMATIONS_INVENTORY[crate.animation] ?: run {
+            val animation = OpeningManager.getAnimation(crate.animation) ?: run {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_INVALID_ANIMATION.forEach {
-                    player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                         it
                     )))
                 }
                 return@withContext false
             }
 
-            openingPlayers.add(player.uuid)
-            CrateInventory(player, crate, animation, rewardBag).open()
+            val opening = when (animation) {
+                is InventoryOpeningAnimation -> {
+                    InventoryOpeningInstance(player, crate, animation, rewardBag)
+                }
+                is WorldOpeningAnimation -> {
+                    val positionData = openData.location ?: run {
+                        handleCrateFail(player, crate, openData)
+                        Utils.printError("No position data found for world opening animation ${crate.animation} for crate ${crate.id} for player ${player.name.string}!")
+                        Lang.ERROR_INVALID_ANIMATION.forEach {
+                            player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
+                                it
+                            )))
+                        }
+                        return@withContext false
+                    }
+                    val crateInstance = getCrateFromPos(positionData) ?: run {
+                        handleCrateFail(player, crate, openData)
+                        Utils.printError("No crate instance found at $positionData for world opening animation ${crate.animation} for crate ${crate.id} for player ${player.name.string}!")
+                        Lang.ERROR_INVALID_ANIMATION.forEach {
+                            player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
+                                it
+                            )))
+                        }
+                        return@withContext false
+                    }
+                    WorldOpeningInstance(player, crate, crateInstance, animation, rewardBag)
+                }
+                else -> {
+                    handleCrateFail(player, crate, openData)
+                    Lang.ERROR_INVALID_ANIMATION.forEach {
+                        player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
+                            it
+                        )))
+                    }
+                    return@withContext false
+                }
+            }
+
+            OpeningManager.addInstance(player.uuid, opening)
+            opening.setup()
+
             return@withContext true
         }
     }
@@ -538,7 +614,7 @@ object CratesManager {
 
         val preview = ConfigManager.PREVIEW[crate.preview] ?: run {
             Lang.ERROR_INVALID_PREVIEW.forEach {
-                player.sendMessage(TextUtils.parseAll(player, crate.parsePlaceholders(
+                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
                     it
                 )))
             }
@@ -577,7 +653,7 @@ object CratesManager {
         return null
     }
 
-    fun getCrateBlock(pos: DimensionalBlockPos): Crate? {
-        return locations[pos]
+    fun getCrateFromPos(pos: DimensionalBlockPos): CrateInstance? {
+        return instances[pos]
     }
 }

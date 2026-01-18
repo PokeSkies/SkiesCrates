@@ -2,11 +2,11 @@ package com.pokeskies.skiescrates.gui
 
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.Crate
-import com.pokeskies.skiescrates.data.animations.InventoryAnimation
-import com.pokeskies.skiescrates.data.animations.spinners.AnimatedSpinnerInstance
-import com.pokeskies.skiescrates.data.animations.spinners.RewardSpinnerInstance
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningAnimation
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
+import com.pokeskies.skiescrates.data.opening.inventory.spinners.AnimatedSpinnerInstance
+import com.pokeskies.skiescrates.data.opening.inventory.spinners.RewardSpinnerInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
-import com.pokeskies.skiescrates.managers.CratesManager.openingPlayers
 import com.pokeskies.skiescrates.utils.RandomCollection
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
@@ -16,9 +16,10 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 
-class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: InventoryAnimation, bag: RandomCollection<Reward>): SimpleGui(
-    animation.settings.menuType.type, player, false
-) {
+class CrateInventory(
+    player: ServerPlayer,
+    val opening: InventoryOpeningInstance
+): SimpleGui(opening.animation.type.type, player, false) {
     private var isFinished = false
     private var closeTicks = 0
 
@@ -31,11 +32,12 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
 
     private val userData = SkiesCrates.INSTANCE.storage.getUser(player)
 
-    // Local instance of the possible rewards to draw from
-    private var randomBag: RandomCollection<Reward> = bag
+    private val crate: Crate = opening.crate
+    private val animation: InventoryOpeningAnimation = opening.animation
+    private var randomBag: RandomCollection<Reward> = opening.randomBag
 
     init {
-        this.title = TextUtils.parseAll(player, crate.parsePlaceholders(animation.settings.title))
+        this.title = TextUtils.parseAllNative(player, opening.crate.parsePlaceholders(animation.title))
 
         animation.items.static.forEach { (id, item) ->
             item.slots.forEach { slot ->
@@ -64,10 +66,10 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
 
         // Setup rewards spinners
         crate.rewards.forEach { (id, reward) ->
-            cachedRewardStacks[id] = reward.display.createItemStack(player, reward.getPlaceholders(userData, crate))
+            cachedRewardStacks[id] = reward.getDisplayItem(player, reward.getPlaceholders(userData, crate))
         }
         animation.items.rewards.forEach { (id, item) ->
-            val spinner = RewardSpinnerInstance(item, randomBag, animation.settings.winSlots).also {
+            val spinner = RewardSpinnerInstance(item, randomBag, animation.winSlots).also {
                 it.pregenerate()
             }
 
@@ -75,7 +77,7 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
 
             if (returnBag == null) {
                 Utils.printError("No rewards were possible for spinner $id in crate ${crate.id} for player ${player.name.string}. Cancelling crate!")
-                player.sendMessage(Component.text("An error occurred while opening the crate. Please contact an administrator.").color(NamedTextColor.RED))
+                player.sendMessage(Component.text("An error occurred while opening the crate. Please contact an administrator.", NamedTextColor.RED))
                 isFinished = true
                 close()
                 return@forEach
@@ -86,9 +88,9 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
         }
     }
 
-    override fun onTick() {
+    fun tick() {
         if (isFinished) {
-            if (closeTicks++ >= animation.settings.closeDelay) {
+            if (closeTicks++ >= animation.closeDelay) {
                 this.close()
                 return
             }
@@ -118,12 +120,12 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
     }
 
     fun updateRewardSlot(slot: Int, reward: Reward) {
-        this.setSlot(slot, cachedRewardStacks[reward.id] ?: reward.display.createItemStack(player))
+        this.setSlot(slot, cachedRewardStacks[reward.id] ?: reward.getDisplayItem(player, reward.getPlaceholders(userData, crate)))
     }
 
     override fun onClose() {
         if (!isFinished) {
-            if (animation.settings.skippable) {
+            if (animation.skippable) {
                 isFinished = true
                 rewardSpinners.forEach { (_, data) ->
                     data.giveRewards(player, crate)
@@ -135,6 +137,6 @@ class CrateInventory(player: ServerPlayer, val crate: Crate, val animation: Inve
             }
         }
 
-        openingPlayers.remove(player.uuid)
+        opening.stop()
     }
 }

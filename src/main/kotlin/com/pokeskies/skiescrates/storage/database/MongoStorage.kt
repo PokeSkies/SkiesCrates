@@ -13,6 +13,7 @@ import com.mongodb.client.model.ReplaceOptions
 import com.mongodb.connection.ClusterSettings
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.SkiesCratesConfig
+import com.pokeskies.skiescrates.data.userdata.UsedKeyData
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.utils.Utils
@@ -27,6 +28,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
     private var mongoClient: MongoClient? = null
     private var mongoDatabase: MongoDatabase? = null
     private var userdataCollection: MongoCollection<UserData>? = null
+    private var usedKeysCollection: MongoCollection<UsedKeyData>? = null
 
     init {
         try {
@@ -56,6 +58,7 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
             this.mongoDatabase = mongoClient!!.getDatabase(config.database)
                 .withCodecRegistry(codecRegistry)
             this.userdataCollection = this.mongoDatabase!!.getCollection("userdata", UserData::class.java)
+            this.usedKeysCollection = this.mongoDatabase!!.getCollection("used_keys", UsedKeyData::class.java)
         } catch (e: Exception) {
             throw IOException("Error while attempting to setup Mongo Database: $e")
         }
@@ -80,6 +83,25 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
         return result?.wasAcknowledged() ?: false
     }
 
+    override fun getUsedKey(uuid: UUID): UsedKeyData? {
+        if (mongoDatabase == null) {
+            Utils.printError("There was an error while attempting to fetch data from the Mongo database!")
+            return null
+        }
+        return usedKeysCollection?.find(Filters.eq("_id", uuid))?.firstOrNull()
+    }
+
+    override fun saveUsedKey(usedKeyData: UsedKeyData): Boolean {
+        if (mongoDatabase == null) {
+            Utils.printError("There was an error while attempting to save data to the Mongo database!")
+            return false
+        }
+        val query = Filters.eq("_id", usedKeyData.uuid)
+        val result = this.usedKeysCollection?.replaceOne(query, usedKeyData, ReplaceOptions().upsert(true))
+
+        return result?.wasAcknowledged() ?: false
+    }
+
     override fun getUserAsync(uuid: UUID): CompletableFuture<UserData> {
         return CompletableFuture.supplyAsync({
             getUser(uuid)
@@ -89,6 +111,18 @@ class MongoStorage(config: SkiesCratesConfig.Storage) : IStorage {
     override fun saveUserAsync(userData: UserData): CompletableFuture<Boolean> {
         return CompletableFuture.supplyAsync({
             saveUser(userData)
+        }, SkiesCrates.INSTANCE.asyncExecutor)
+    }
+
+    override fun getUsedKeyAsync(uuid: UUID): CompletableFuture<UsedKeyData?> {
+        return CompletableFuture.supplyAsync({
+            getUsedKey(uuid)
+        }, SkiesCrates.INSTANCE.asyncExecutor)
+    }
+
+    override fun saveUsedKeyAsync(usedKeyData: UsedKeyData): CompletableFuture<Boolean> {
+        return CompletableFuture.supplyAsync({
+            saveUsedKey(usedKeyData)
         }, SkiesCrates.INSTANCE.asyncExecutor)
     }
 

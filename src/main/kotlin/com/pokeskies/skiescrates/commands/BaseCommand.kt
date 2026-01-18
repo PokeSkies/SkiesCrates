@@ -3,10 +3,7 @@ package com.pokeskies.skiescrates.commands
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.tree.LiteralCommandNode
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.commands.subcommands.DebugCommand
-import com.pokeskies.skiescrates.commands.subcommands.GiveCommand
-import com.pokeskies.skiescrates.commands.subcommands.KeyCommand
-import com.pokeskies.skiescrates.commands.subcommands.ReloadCommand
+import com.pokeskies.skiescrates.commands.subcommands.*
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
@@ -26,6 +23,8 @@ class BaseCommand {
             DebugCommand().build(),
             GiveCommand().build(),
             KeyCommand().build(),
+            SetCommand().build(),
+            RemoveCommand().build(),
         )
 
         rootCommands.forEach { root ->

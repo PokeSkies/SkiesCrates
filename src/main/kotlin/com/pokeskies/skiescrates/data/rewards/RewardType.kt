@@ -1,13 +1,15 @@
 package com.pokeskies.skiescrates.data.rewards
 
-import com.google.gson.*
-import com.pokeskies.skiescrates.data.rewards.types.CommandConsole
-import com.pokeskies.skiescrates.data.rewards.types.CommandPlayer
-import java.lang.reflect.Type
+import com.pokeskies.skiescrates.data.rewards.types.CommandConsoleReward
+import com.pokeskies.skiescrates.data.rewards.types.CommandPlayerReward
+import com.pokeskies.skiescrates.data.rewards.types.ItemReward
+import com.pokeskies.skiescrates.data.rewards.types.PokemonReward
 
-enum class RewardType(val identifier: String, val clazz: Class<*>) {
-    COMMAND_CONSOLE("command_console", CommandConsole::class.java),
-    COMMAND_PLAYER("command_player", CommandPlayer::class.java);
+enum class RewardType(val identifier: String, val clazz: Class<*>, val dependencies: List<String> = emptyList()) {
+    COMMAND_CONSOLE("command_console", CommandConsoleReward::class.java),
+    COMMAND_PLAYER("command_player", CommandPlayerReward::class.java),
+    ITEM("item", ItemReward::class.java),
+    POKEMON("pokemon", PokemonReward::class.java, listOf("cobblemon"));
 
     companion object {
         fun valueOfAnyCase(name: String): RewardType? {
@@ -15,23 +17,6 @@ enum class RewardType(val identifier: String, val clazz: Class<*>) {
                 if (name.equals(type.identifier, true)) return type
             }
             return null
-        }
-    }
-
-    internal class RewardTypeAdaptor : JsonSerializer<Reward>, JsonDeserializer<Reward> {
-        override fun serialize(src: Reward, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-            return context.serialize(src, src::class.java)
-        }
-
-        override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Reward {
-            val jsonObject: JsonObject = json.getAsJsonObject()
-            val value = jsonObject.get("type").asString
-            val type: RewardType? = RewardType.valueOfAnyCase(value)
-            return try {
-                context.deserialize(json, type!!.clazz)
-            } catch (e: NullPointerException) {
-                throw JsonParseException("Could not deserialize reward type: $value", e)
-            }
         }
     }
 }

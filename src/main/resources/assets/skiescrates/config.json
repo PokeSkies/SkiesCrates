@@ -8,7 +8,7 @@
     "use_menu": true
   },
   "storage": {
-    "type": "json",
+    "type": "SQLITE",
     "host": "localhost",
     "port": 27017,
     "database": "skiescrates",
@@ -31,5 +31,10 @@
   },
   "migration": {
     "keys": []
+  },
+  "webhook": {
+    "duplicate_key": {
+      "url": ""
+    }
   }
 }

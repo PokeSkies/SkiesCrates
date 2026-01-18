@@ -3,10 +3,11 @@ package com.pokeskies.skiescrates.config
 import com.google.gson.JsonParser
 import com.google.gson.stream.JsonReader
 import com.pokeskies.skiescrates.SkiesCrates
-import com.pokeskies.skiescrates.config.menu.KeysMenu
 import com.pokeskies.skiescrates.data.Crate
-import com.pokeskies.skiescrates.data.Key
-import com.pokeskies.skiescrates.data.animations.InventoryAnimation
+import com.pokeskies.skiescrates.data.key.Key
+import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningAnimation
+import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
+import com.pokeskies.skiescrates.data.particles.ParticleAnimationOptions
 import com.pokeskies.skiescrates.data.previews.Preview
 import com.pokeskies.skiescrates.utils.Utils
 import java.io.*
@@ -22,7 +23,9 @@ object ConfigManager {
     lateinit var CONFIG: SkiesCratesConfig
     lateinit var CRATES: MutableMap<String, Crate>
     lateinit var KEYS: MutableMap<String, Key>
-    lateinit var ANIMATIONS_INVENTORY: MutableMap<String, InventoryAnimation>
+    lateinit var OPENINGS_INVENTORY: MutableMap<String, InventoryOpeningAnimation>
+    lateinit var OPENINGS_WORLD: MutableMap<String, WorldOpeningAnimation>
+    lateinit var PARTICLES: MutableMap<String, ParticleAnimationOptions>
     lateinit var PREVIEW: MutableMap<String, Preview>
     lateinit var KEYS_MENU: KeysMenu
 
@@ -34,7 +37,9 @@ object ConfigManager {
         CONFIG = loadFile("config.json", SkiesCratesConfig())
         loadCrates()
         loadKeys()
-        loadInventoryAnimations()
+        loadInventoryOpenings()
+        loadWorldOpenings()
+        loadParticles()
         loadPreviews()
         KEYS_MENU = loadFile("keys.json", KeysMenu(), "menus")
     }
@@ -47,8 +52,9 @@ object ConfigManager {
         attemptDefaultFileCopy(classLoader, "config.json")
         attemptDefaultDirectoryCopy(classLoader, "crates")
         attemptDefaultDirectoryCopy(classLoader, "keys")
-        attemptDefaultDirectoryCopy(classLoader, "animations/inventory")
-        attemptDefaultDirectoryCopy(classLoader, "animations/physical")
+        attemptDefaultDirectoryCopy(classLoader, "openings/inventory")
+        attemptDefaultDirectoryCopy(classLoader, "openings/world")
+        attemptDefaultDirectoryCopy(classLoader, "particles")
         attemptDefaultDirectoryCopy(classLoader, "previews")
         attemptDefaultFileCopy(classLoader, "menus/keys.json")
     }
@@ -135,17 +141,17 @@ object ConfigManager {
         }
     }
 
-    private fun loadInventoryAnimations() {
-        ANIMATIONS_INVENTORY = mutableMapOf()
+    private fun loadInventoryOpenings() {
+        OPENINGS_INVENTORY = mutableMapOf()
 
-        val dir = SkiesCrates.INSTANCE.configDir.resolve("animations/inventory")
+        val dir = SkiesCrates.INSTANCE.configDir.resolve("openings/inventory")
         if (dir.exists() && dir.isDirectory) {
             val files = Files.walk(dir.toPath())
                 .filter { path: Path -> Files.isRegularFile(path) }
                 .map { it.toFile() }
                 .collect(Collectors.toList())
             if (files != null) {
-                SkiesCrates.LOGGER.info("Found ${files.size} animation files: ${files.map { it.name }}")
+                SkiesCrates.LOGGER.info("Found ${files.size} inventory opening files: ${files.map { it.name }}")
                 val enabledFiles = mutableListOf<String>()
                 for (file in files) {
                     val fileName = file.name
@@ -153,21 +159,96 @@ object ConfigManager {
                         val id = fileName.substring(0, fileName.lastIndexOf(".json"))
                         val jsonReader = JsonReader(InputStreamReader(FileInputStream(file), Charsets.UTF_8))
                         try {
-                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(JsonParser.parseReader(jsonReader), InventoryAnimation::class.java)
-                            ANIMATIONS_INVENTORY[id] = config
+                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(
+                                JsonParser.parseReader(jsonReader),
+                                InventoryOpeningAnimation::class.java
+                            )
+                            OPENINGS_INVENTORY[id] = config
                             enabledFiles.add(fileName)
                         } catch (ex: Exception) {
-                            Utils.printError("Error while trying to parse the inventory animation $fileName!")
+                            Utils.printError("Error while trying to parse the inventory opening $fileName!")
                             ex.printStackTrace()
                         }
                     } else {
                         Utils.printError("File $fileName is either not a file or is not a .json file!")
                     }
                 }
-                Utils.printInfo("Successfully read and loaded the following enabled inventory animation files: $enabledFiles")
+                Utils.printInfo("Successfully read and loaded the following enabled inventory opening files: $enabledFiles")
             }
         } else {
-            Utils.printError("The 'animations/inventory' directory either does not exist or is not a directory!")
+            Utils.printError("The 'openings/inventory' directory either does not exist or is not a directory!")
+        }
+    }
+
+    private fun loadWorldOpenings() {
+        OPENINGS_WORLD = mutableMapOf()
+
+        val dir = SkiesCrates.INSTANCE.configDir.resolve("openings/world")
+        if (dir.exists() && dir.isDirectory) {
+            val files = Files.walk(dir.toPath())
+                .filter { path: Path -> Files.isRegularFile(path) }
+                .map { it.toFile() }
+                .collect(Collectors.toList())
+            if (files != null) {
+                SkiesCrates.LOGGER.info("Found ${files.size} world opening files: ${files.map { it.name }}")
+                val enabledFiles = mutableListOf<String>()
+                for (file in files) {
+                    val fileName = file.name
+                    if (file.isFile && fileName.contains(".json")) {
+                        val id = fileName.substring(0, fileName.lastIndexOf(".json"))
+                        val jsonReader = JsonReader(InputStreamReader(FileInputStream(file), Charsets.UTF_8))
+                        try {
+                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(JsonParser.parseReader(jsonReader), WorldOpeningAnimation::class.java)
+                            OPENINGS_WORLD[id] = config
+                            enabledFiles.add(fileName)
+                        } catch (ex: Exception) {
+                            Utils.printError("Error while trying to parse the world opening $fileName!")
+                            ex.printStackTrace()
+                        }
+                    } else {
+                        Utils.printError("File $fileName is either not a file or is not a .json file!")
+                    }
+                }
+                Utils.printInfo("Successfully read and loaded the following enabled world opening files: $enabledFiles")
+            }
+        } else {
+            Utils.printError("The 'openings/world' directory either does not exist or is not a directory!")
+        }
+    }
+
+    private fun loadParticles() {
+        PARTICLES = mutableMapOf()
+
+        val dir = SkiesCrates.INSTANCE.configDir.resolve("particles")
+        if (dir.exists() && dir.isDirectory) {
+            val files = Files.walk(dir.toPath())
+                .filter { path: Path -> Files.isRegularFile(path) }
+                .map { it.toFile() }
+                .collect(Collectors.toList())
+            if (files != null) {
+                SkiesCrates.LOGGER.info("Found ${files.size} particle files: ${files.map { it.name }}")
+                val enabledFiles = mutableListOf<String>()
+                for (file in files) {
+                    val fileName = file.name
+                    if (file.isFile && fileName.contains(".json")) {
+                        val id = fileName.substring(0, fileName.lastIndexOf(".json"))
+                        val jsonReader = JsonReader(InputStreamReader(FileInputStream(file), Charsets.UTF_8))
+                        try {
+                            val config = SkiesCrates.INSTANCE.gsonPretty.fromJson(JsonParser.parseReader(jsonReader), ParticleAnimationOptions::class.java)
+                            PARTICLES[id] = config
+                            enabledFiles.add(fileName)
+                        } catch (ex: Exception) {
+                            Utils.printError("Error while trying to parse the particle $fileName!")
+                            ex.printStackTrace()
+                        }
+                    } else {
+                        Utils.printError("File $fileName is either not a file or is not a .json file!")
+                    }
+                }
+                Utils.printInfo("Successfully read and loaded the following enabled particle files: $enabledFiles")
+            }
+        } else {
+            Utils.printError("The 'particles' directory either does not exist or is not a directory!")
         }
     }
 

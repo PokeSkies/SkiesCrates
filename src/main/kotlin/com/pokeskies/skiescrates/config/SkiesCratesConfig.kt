@@ -9,7 +9,8 @@ class SkiesCratesConfig(
     var interactionLimiter: Long = 1000,
     var storage: Storage = Storage(),
     var keys: KeyOptions = KeyOptions(),
-    var migration: MigrationOptions = MigrationOptions()
+    var migration: MigrationOptions = MigrationOptions(),
+    val webhooks: WebhookSettings = WebhookSettings(),
 ) {
     class Storage(
         val type: StorageType = StorageType.SQLITE,
@@ -55,6 +56,6 @@ class SkiesCratesConfig(
     }
 
     override fun toString(): String {
-        return "SkiesCratesConfig(debug=$debug, interactionLimiter=$interactionLimiter, storage=$storage, keys=$keys)"
+        return "SkiesCratesConfig(debug=$debug, interactionLimiter=$interactionLimiter, storage=$storage, keys=$keys, migration=$migration, webhooks=$webhooks)"
     }
 }

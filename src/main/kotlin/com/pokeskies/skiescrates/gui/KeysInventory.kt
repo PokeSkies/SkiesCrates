@@ -2,36 +2,36 @@ package com.pokeskies.skiescrates.gui
 
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.ConfigManager
-import com.pokeskies.skiescrates.config.lang.Lang
+import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import eu.pb4.sgui.api.elements.GuiElementBuilder
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 
 class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): SimpleGui(
-    ConfigManager.KEYS_MENU.menuType.type, viewer, false
+    ConfigManager.KEYS_MENU.type.type, viewer, false
 ) {
     private val keysMenu = ConfigManager.KEYS_MENU
 
     init {
-        this.title = TextUtils.parseAll(player, keysMenu.title)
+        this.title = TextUtils.parseAllNative(player, keysMenu.title)
         refresh()
     }
 
     private fun refresh() {
-        val storage = SkiesCrates.INSTANCE.storage ?: run {
-            Utils.printError("Storage was null while attempting to open the keys menu! Check elsewhere for errors.")
-            Lang.ERROR_STORAGE.forEach {
-                player.sendMessage(TextUtils.toNative(it))
-            }
-            close()
-            return
-        }
+        val storage = SkiesCrates.INSTANCE.storage
 
         keysMenu.items.forEach { (_, item) ->
             item.createItemStack(player).let {
                 item.slots.forEach { slot ->
-                    this.setSlot(slot, it)
+                    this.setSlot(slot, GuiElementBuilder(it)
+                        .setCallback { click ->
+                            item.actions.forEach { (_, action) ->
+                                action.executeAction(player, this)
+                            }
+                        }
+                    )
                 }
             }
         }

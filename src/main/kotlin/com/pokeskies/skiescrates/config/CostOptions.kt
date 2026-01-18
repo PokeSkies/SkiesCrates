@@ -1,9 +1,10 @@
 package com.pokeskies.skiescrates.config
 
-import com.pokeskies.skiescrates.economy.EconomyType
+import com.google.gson.annotations.SerializedName
 
 class CostOptions(
-    val provider: EconomyType? = null,
+    @SerializedName("provider", alternate = ["economy"])
+    val provider: String? = null,
     val currency: String = "",
     val amount: Double = 0.0,
 ) {

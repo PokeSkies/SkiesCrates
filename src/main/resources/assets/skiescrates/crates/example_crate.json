@@ -1,4 +1,5 @@
 {
+  "enabled": true,
   "name": "Example Crate",
   "display": {
     "item": "minecraft:chest",
@@ -10,6 +11,8 @@
   "unique": false,
   "preview": "default",
   "animation": "enclosing",
+  "permission": "",
+  "inventory_space": -1,
   "cost": {
     "provider": "IMPACTOR",
     "currency": "impactor:dollars",
@@ -28,14 +31,7 @@
     }
   },
   "block": {
-    "locations": [
-      {
-        "dimension": "minecraft:overworld",
-        "x": 2,
-        "y": 64,
-        "z": 68
-      }
-    ],
+    "locations": [],
     "hologram": {
       "text": [
         "<red>Example Crate",
@@ -67,16 +63,14 @@
       "update_rate": 100,
       "view_distance": 50.0
     },
-    "particles": {
-
-    }
+    "particles": "spiral"
   },
   "rewards": {
     "example_reward": {
-      "type": "COMMAND_CONSOLE",
+      "type": "ITEM",
       "weight": 2,
       "name": "<red>Example Reward</red>",
-      "display": {
+      "item": {
         "item": "minecraft:diamond",
         "name": "<red>Example Reward",
         "lore": [
@@ -85,21 +79,18 @@
         "nbt": {
           "minecraft:custom_model_data": 1
         }
-      },
-      "commands": [
-        "give %player% diamond 1"
-      ]
+      }
     },
     "example_reward_2": {
       "type": "COMMAND_CONSOLE",
       "weight": 1,
       "name": "<green><b>Emerald</b></green>",
       "display": {
-          "item": "minecraft:emerald",
-          "name": "<green><b>Emerald",
-          "lore": [
-          "<gray>Example Lore!"
-          ]
+        "item": "minecraft:emerald",
+        "name": "<green><b>Emerald",
+        "lore": [
+        "<gray>Example Lore!"
+        ]
       },
       "commands": [
         "give %player% emerald 1"
