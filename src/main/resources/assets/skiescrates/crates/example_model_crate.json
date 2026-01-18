@@ -27,14 +27,7 @@
     "unique_key": 1
   },
   "block": {
-    "locations": [
-      {
-        "dimension": "minecraft:overworld",
-        "x": 2,
-        "y": 64,
-        "z": 64
-      }
-    ],
+    "locations": [],
     "model": {
       "id": "example_model",
       "rotation": 270.0,

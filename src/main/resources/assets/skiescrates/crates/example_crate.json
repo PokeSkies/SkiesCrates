@@ -31,14 +31,7 @@
     }
   },
   "block": {
-    "locations": [
-      {
-        "dimension": "minecraft:overworld",
-        "x": 2,
-        "y": 64,
-        "z": 68
-      }
-    ],
+    "locations": [],
     "hologram": {
       "text": [
         "<red>Example Crate",
