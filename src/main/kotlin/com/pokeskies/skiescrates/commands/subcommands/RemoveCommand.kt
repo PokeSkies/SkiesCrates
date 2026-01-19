@@ -60,7 +60,10 @@ class RemoveCommand : SubCommand {
 
             var removed = 0
             for ((pos, instance) in locations) {
-                CratesManager.removeCrateLocation(instance) // If it's not removed from here, it was likely never loaded "properly", which is possible
+                CratesManager.unloadCrateLocation(instance) // If it's not removed from here, it was likely never loaded "properly", which is possible
+                instance.crate.block.locations.removeAll { crateLoc ->
+                    crateLoc.equalsDimBlockPos(instance.dimPos)
+                }
                 if (!ConfigManager.saveFile("crates/${instance.crate.id}.json", instance.crate)) {
                     ctx.source.sendMessage(Component.text("Failed to save crate data for ${instance.crate.id}! Check the console for additional errors...", NamedTextColor.RED))
                     continue

@@ -200,7 +200,7 @@ object CratesManager {
         return instance
     }
 
-    fun removeCrateLocation(instance: CrateInstance): Boolean {
+    fun unloadCrateLocation(instance: CrateInstance): Boolean {
         instance.destroy()
         return instances.remove(instance.dimPos) != null
     }

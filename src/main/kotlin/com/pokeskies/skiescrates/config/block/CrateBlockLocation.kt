@@ -14,4 +14,8 @@ class CrateBlockLocation(
     fun getDimensionalBlockPos(): DimensionalBlockPos {
         return DimensionalBlockPos(dimension, x, y, z)
     }
+
+    fun equalsDimBlockPos(other: DimensionalBlockPos): Boolean {
+        return dimension.equals(other.dimension, true) && x == other.x && y == other.y && z == other.z
+    }
 }
