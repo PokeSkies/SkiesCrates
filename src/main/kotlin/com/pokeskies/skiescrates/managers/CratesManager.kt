@@ -14,6 +14,7 @@ import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningInstance
 import com.pokeskies.skiescrates.economy.EconomyManager
+import com.pokeskies.skiescrates.events.ItemSwingEvent
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.utils.MinecraftDispatcher
 import com.pokeskies.skiescrates.utils.TextUtils
@@ -58,25 +59,25 @@ object CratesManager {
     }
 
     fun registerEvents() {
-        ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, sender, server ->
+        ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, _, _ ->
             OpeningManager.getInstance(handler.player.uuid)?.stop()
         })
 
         // Preventing block breaking
-        PlayerBlockBreakEvents.BEFORE.register(PlayerBlockBreakEvents.Before { level, player, blockPos, blockState, blockEntity ->
+        PlayerBlockBreakEvents.BEFORE.register(PlayerBlockBreakEvents.Before { level, _, blockPos, _, _ ->
             val dimensionalPos = DimensionalBlockPos(
                 level.dimension().location().toString(),
                 blockPos.x,
                 blockPos.y,
                 blockPos.z
             )
-            getCrateFromPos(dimensionalPos)?.let { crate ->
+            getCrateFromPos(dimensionalPos)?.let { _ ->
                 return@Before false
             }
             return@Before true
         })
         // Initially attempting to break a block
-        AttackBlockCallback.EVENT.register(AttackBlockCallback { player, level, hand, blockPos, direction ->
+        AttackBlockCallback.EVENT.register(AttackBlockCallback { player, level, _, blockPos, _ ->
             if (player !is ServerPlayer) return@AttackBlockCallback InteractionResult.PASS
 
             val dimensionalPos = DimensionalBlockPos(
@@ -132,7 +133,7 @@ object CratesManager {
         })
         // Called when Right Clicking with an item/block in hand.
         // We need to detect for a crate in hand here, not key as that is handled by UseBlockCallback
-        UseItemCallback.EVENT.register(UseItemCallback { player, level, hand ->
+        UseItemCallback.EVENT.register(UseItemCallback { player, _, hand ->
             if (player !is ServerPlayer) return@UseItemCallback InteractionResultHolder.pass(player.getItemInHand(hand))
 
             val item = player.getItemInHand(hand)
@@ -145,32 +146,23 @@ object CratesManager {
                 return@UseItemCallback InteractionResultHolder.fail(item)
             }
 
-            KeyManager.getKeyOrNull(item)?.let { key ->
+            KeyManager.getKeyOrNull(item)?.let { _ ->
                 return@UseItemCallback InteractionResultHolder.fail(item)
             }
 
             return@UseItemCallback InteractionResultHolder.pass(item)
         })
-        // Called when swinging with your hand. This can happen in both a left-click and a right-click on a block
-//        Stimuli.global().listen(PlayerSwingHandEvent.EVENT, PlayerSwingHandEvent { player, hand ->
-//            if (hand != InteractionHand.MAIN_HAND) return@PlayerSwingHandEvent
-//
-//            // Seemingly the thread is somehow on a network thread and not the main server thread
-//            server.executeIfPossible {
-//                // This is a hacky fix to prevent right-clicking on blocks from opening preview menus
-//                // TODO: Find a way around having to do this
-//                val blockResult = player.pick(5.0, 1.0F, false)
-//                if (blockResult != null &&
-//                    blockResult is BlockHitResult &&
-//                    !player.serverLevel().getBlockState(blockResult.blockPos).isAir) return@executeIfPossible
-//
-//                val item = player.getItemInHand(hand)
-//                if (item.isEmpty) return@executeIfPossible
-//
-//                val crate = getCrateOrNull(item) ?: return@executeIfPossible
-//                previewCrate(player, crate)
-//            }
-//        })
+        ItemSwingEvent.EVENT.register { player, hand ->
+            val item = player.getItemInHand(hand)
+            if (!item.isEmpty) {
+                SkiesCrates.INSTANCE.server.execute { // Ensure we are on the main thread
+                    val crate = getCrateOrNull(item) ?: return@execute
+                    previewCrate(player, crate)
+                }
+            }
+
+            return@register InteractionResult.PASS
+        }
     }
 
     fun tick() {
