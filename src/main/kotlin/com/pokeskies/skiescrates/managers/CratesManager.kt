@@ -152,13 +152,10 @@ object CratesManager {
 
             return@UseItemCallback InteractionResultHolder.pass(item)
         })
-        ItemSwingEvent.EVENT.register { player, hand ->
-            val item = player.getItemInHand(hand)
-            if (!item.isEmpty) {
-                SkiesCrates.INSTANCE.server.execute { // Ensure we are on the main thread
-                    val crate = getCrateOrNull(item) ?: return@execute
-                    previewCrate(player, crate)
-                }
+        ItemSwingEvent.EVENT.register { player, itemStack, _ ->
+            SkiesCrates.INSTANCE.server.execute { // Ensure we are on the main thread
+                val crate = getCrateOrNull(itemStack) ?: return@execute
+                previewCrate(player, crate)
             }
 
             return@register InteractionResult.PASS

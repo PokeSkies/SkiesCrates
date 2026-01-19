@@ -19,11 +19,13 @@ public class ServerGamePacketListenerImplMixin {
 
     @Inject(method = "handleAnimate", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;resetLastActionTime()V", shift = At.Shift.AFTER))
     private void skiescrates$onHandleAnimate(ServerboundSwingPacket packet, CallbackInfo ci) {
+        var itemStack = this.player.getItemInHand(packet.getHand());
+        if (!itemStack.isEmpty()) return;
         var result = this.player.pick(player.blockInteractionRange(), 1.0F, false);
         if (!(result instanceof BlockHitResult) || result.getType() != HitResult.Type.MISS) {
             return;
         }
 
-        ItemSwingEvent.EVENT.invoker().interact(player, packet.getHand());
+        ItemSwingEvent.EVENT.invoker().interact(player, itemStack, packet.getHand());
     }
 }
