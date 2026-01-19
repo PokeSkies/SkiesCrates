@@ -20,20 +20,17 @@ interface IntOption {
     }
 
     class Adapter : JsonSerializer<IntOption>, JsonDeserializer<IntOption> {
-        override fun serialize(src: IntOption, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-            val obj = JsonObject()
-
-            when (src) {
-                is IntValue -> {
-                    obj.addProperty("value", src.int)
-                }
+        override fun serialize(value: IntOption, type: Type, context: JsonSerializationContext): JsonElement {
+            return when (value) {
+                is IntValue -> JsonPrimitive(value.int)
                 is IntRanged -> {
-                    obj.addProperty("min", src.min)
-                    obj.addProperty("max", src.max)
+                    val obj = JsonObject()
+                    obj.addProperty("min", value.min)
+                    obj.addProperty("max", value.max)
+                    obj
                 }
+                else -> context.serialize(value, value::class.java)
             }
-
-            return obj
         }
 
         override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): IntOption {

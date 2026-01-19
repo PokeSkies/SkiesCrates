@@ -8,11 +8,15 @@ interface BooleanOption {
 
     class Adapter : JsonSerializer<BooleanOption>, JsonDeserializer<BooleanOption> {
         override fun serialize(
-            src: BooleanOption,
-            typeOfSrc: Type,
+            value: BooleanOption,
+            type: Type,
             context: JsonSerializationContext
         ): JsonElement {
-            return context.serialize(src, src::class.java)
+            return when (value) {
+                is BooleanValue -> JsonPrimitive(value.bool)
+                is BooleanChance -> JsonPrimitive(value.chance)
+                else -> context.serialize(value, value::class.java)
+            }
         }
 
         override fun deserialize(
