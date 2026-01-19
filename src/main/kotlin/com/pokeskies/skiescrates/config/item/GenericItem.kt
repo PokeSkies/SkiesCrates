@@ -62,7 +62,7 @@ open class GenericItem(
                 }
             }
 
-            DataComponentPatch.CODEC.decode(SkiesCrates.Companion.INSTANCE.nbtOpts, nbtCopy).result().ifPresent { result ->
+            DataComponentPatch.CODEC.decode(SkiesCrates.INSTANCE.nbtOpts, nbtCopy).result().ifPresent { result ->
                 stack.applyComponents(result.first)
             }
         }
@@ -82,7 +82,7 @@ open class GenericItem(
         if (!lore.isNullOrEmpty()) {
             val parsedLore: MutableList<String> = mutableListOf()
             for (line in lore.stream().map { it }.toList()) {
-                val parsedLine = PlaceholderManager.parse(player, line)
+                val parsedLine = PlaceholderManager.parse(player, line, placeholders)
                 if (parsedLine.contains("\n")) {
                     parsedLine.split("\n").forEach { parsedLore.add(it) }
                 } else {
