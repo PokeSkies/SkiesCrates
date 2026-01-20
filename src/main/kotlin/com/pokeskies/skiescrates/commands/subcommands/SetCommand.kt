@@ -24,7 +24,7 @@ class SetCommand : SubCommand {
         return Commands.literal("set")
             .requires(Permissions.require("${SkiesCrates.MOD_ID}.command.set", 2))
             .then(Commands.argument("crate", StringArgumentType.string())
-                .suggests { context, builder ->
+                .suggests { _, builder ->
                     ConfigManager.CRATES.forEach { builder.suggest(it.key) }
                     builder.buildFuture()
                 }
@@ -63,18 +63,18 @@ class SetCommand : SubCommand {
                 return 0
             }
 
-            val dimLoc = DimensionalBlockPos(
+            val dimPos = DimensionalBlockPos(
                 player.serverLevel().dimension().location().asString(),
                 blockResult.blockPos.x,
                 blockResult.blockPos.y,
                 blockResult.blockPos.z
             )
-            if (CratesManager.instances.any { (pos, _) -> pos == dimLoc }) {
+            if (CratesManager.getCrateFromPos(dimPos) != null) {
                 ctx.source.sendMessage(TextUtils.toComponent("<red>This block is already set as a ${crate.name} crate!"))
                 return 0
             }
 
-            val blockLocation = CrateBlockLocation(dimLoc.dimension, dimLoc.x, dimLoc.y, dimLoc.z)
+            val blockLocation = CrateBlockLocation(dimPos.dimension, dimPos.x, dimPos.y, dimPos.z)
             crate.block.locations.add(blockLocation)
 
             if (!ConfigManager.saveFile("crates/${crateId}.json", crate)) {
@@ -88,10 +88,10 @@ class SetCommand : SubCommand {
             }
 
             if (FabricLoader.getInstance().isModLoaded("holodisplays")) {
-                HologramsManager.loadCrateHologram(dimLoc, instance)
+                HologramsManager.loadCrateHologram(instance)
             }
 
-            ctx.source.sendMessage(Component.text("Successfully set a ${crate.name} crate at the position ${dimLoc.x}, ${dimLoc.y}, ${dimLoc.z}!", NamedTextColor.GREEN))
+            ctx.source.sendMessage(Component.text("Successfully set a ${crate.name} crate at the position ${dimPos.x}, ${dimPos.y}, ${dimPos.z}!", NamedTextColor.GREEN))
 
             return 1
         }

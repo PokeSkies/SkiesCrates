@@ -6,11 +6,9 @@ import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.data.DimensionalBlockPos
 import com.pokeskies.skiescrates.managers.CratesManager
-import com.pokeskies.skiescrates.managers.HologramsManager
 import com.pokeskies.skiescrates.utils.SubCommand
 import com.pokeskies.skiescrates.utils.TextUtils
 import me.lucko.fabric.api.permissions.v0.Permissions
-import net.fabricmc.loader.api.FabricLoader
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.commands.CommandSourceStack
@@ -45,43 +43,45 @@ class RemoveCommand : SubCommand {
                 return 0
             }
 
-            val dimLoc = DimensionalBlockPos(
+            val dimPos = DimensionalBlockPos(
                 player.serverLevel().dimension().location().asString(),
                 blockResult.blockPos.x,
                 blockResult.blockPos.y,
                 blockResult.blockPos.z
             )
 
-            val locations = CratesManager.instances.filter { (pos, _) -> pos == dimLoc }
-            if (locations.isEmpty()) {
+            val crateInstances = ConfigManager.CRATES.filter { (_, crate) ->
+                crate.block.locations.any { it.equalsDimBlockPos(dimPos) }
+            }
+            if (crateInstances.isEmpty()) {
                 ctx.source.sendMessage(TextUtils.toComponent("<red>This block is not set as any active crate!"))
                 return 0
             }
 
+            // Unload crate location from CratesManager once as only one of the shared locations can be loaded
+            CratesManager.getCrateFromPos(dimPos)?.let {
+                CratesManager.unloadCrateLocation(it)
+            }
+
             var removed = 0
-            for ((pos, instance) in locations) {
-                CratesManager.unloadCrateLocation(instance) // If it's not removed from here, it was likely never loaded "properly", which is possible
-                instance.crate.block.locations.removeAll { crateLoc ->
-                    crateLoc.equalsDimBlockPos(instance.dimPos)
+            for ((_, crate) in crateInstances) {
+                crate.block.locations.removeAll { crateLoc ->
+                    crateLoc.equalsDimBlockPos(dimPos)
                 }
-                if (!ConfigManager.saveFile("crates/${instance.crate.id}.json", instance.crate)) {
-                    ctx.source.sendMessage(Component.text("Failed to save crate data for ${instance.crate.id}! Check the console for additional errors...", NamedTextColor.RED))
+                if (!ConfigManager.saveFile("crates/${crate.id}.json", crate)) {
+                    ctx.source.sendMessage(Component.text("Failed to save crate data for ${crate.id}! Check the console for additional errors...", NamedTextColor.RED))
                     continue
                 }
 
                 removed++
-
-                if (FabricLoader.getInstance().isModLoaded("holodisplays")) {
-                    HologramsManager.unloadCrateHologram(pos)
-                }
             }
 
             if (removed == 0) {
-                ctx.source.sendMessage(Component.text("Failed to remove crates at the position ${dimLoc.x}, ${dimLoc.y}, ${dimLoc.z}! Check the console for additional errors...", NamedTextColor.RED))
+                ctx.source.sendMessage(Component.text("Failed to remove crates at the position ${dimPos.x}, ${dimPos.y}, ${dimPos.z}! Check the console for additional errors...", NamedTextColor.RED))
                 return 0
             }
 
-            ctx.source.sendMessage(Component.text("Successfully removed $removed crate(s) at the position ${dimLoc.x}, ${dimLoc.y}, ${dimLoc.z}!", NamedTextColor.GREEN))
+            ctx.source.sendMessage(Component.text("Successfully removed $removed crate(s) at the position ${dimPos.x}, ${dimPos.y}, ${dimPos.z}!", NamedTextColor.GREEN))
 
             return 1
         }

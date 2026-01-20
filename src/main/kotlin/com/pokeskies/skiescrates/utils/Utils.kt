@@ -5,9 +5,11 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.ConfigManager
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.chunk.LevelChunk
 import java.lang.reflect.Type
 
 object Utils {
@@ -80,4 +82,10 @@ object Utils {
             return codec.encodeStart(JsonOps.INSTANCE, src).orThrow
         }
     }
+}
+
+fun LevelChunk.contains(pos: BlockPos): Boolean {
+    val chunkX = pos.x shr 4
+    val chunkZ = pos.z shr 4
+    return this.pos.x == chunkX && this.pos.z == chunkZ
 }

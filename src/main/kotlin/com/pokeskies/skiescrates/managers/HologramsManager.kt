@@ -2,7 +2,6 @@ package com.pokeskies.skiescrates.managers
 
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.CrateInstance
-import com.pokeskies.skiescrates.data.DimensionalBlockPos
 import com.pokeskies.skiescrates.integrations.holodisplays.CrateHologramData
 import com.pokeskies.skiescrates.mixins.ViewerHandlerAccessor
 import com.pokeskies.skiescrates.utils.Utils
@@ -17,14 +16,14 @@ object HologramsManager {
 
     fun load() {
         unload()
-        CratesManager.instances.forEach { (location, instance) ->
-            loadCrateHologram(location, instance)
+        CratesManager.getAllInstances().forEach { instance ->
+            loadCrateHologram(instance)
         }
     }
 
-    fun loadCrateHologram(location: DimensionalBlockPos, instance: CrateInstance) {
+    fun loadCrateHologram(instance: CrateInstance) {
         val hologramConfig = instance.hologram ?: return
-        val id = SkiesCrates.asResource(location.hashCode().toString()).toString()
+        val id = SkiesCrates.asResource(instance.dimPos.hashCode().toString()).toString()
 
         hologramsAPI.createTextDisplay(
             id
@@ -45,11 +44,11 @@ object HologramsManager {
         val builder: HologramBuilder = hologramsAPI.createHologramBuilder()
             // Position is modified by 0.5f to center the hologram on the block
             .position(
-                location.x + 0.5f + hologramConfig.offset.x,
-                location.y + 0.5f + hologramConfig.offset.y,
-                location.z + 0.5f + hologramConfig.offset.z
+                instance.dimPos.x + 0.5f + hologramConfig.offset.x,
+                instance.dimPos.y + 0.5f + hologramConfig.offset.y,
+                instance.dimPos.z + 0.5f + hologramConfig.offset.z
             )
-            .world(location.dimension)
+            .world(instance.dimPos.dimension)
             .addDisplay(id)
             .updateRate(hologramConfig.updateRate)
             .viewRange(hologramConfig.viewDistance)
@@ -68,8 +67,8 @@ object HologramsManager {
         }
     }
 
-    fun unloadCrateHologram(location: DimensionalBlockPos) {
-        val id = SkiesCrates.asResource(location.hashCode().toString()).toString()
+    fun unloadCrateHologram(instance: CrateInstance) {
+        val id = SkiesCrates.asResource(instance.dimPos.hashCode().toString()).toString()
         hologramsAPI.unregisterDisplay(id)
         hologramsAPI.unregisterHologram(id)
         holograms.remove(id)

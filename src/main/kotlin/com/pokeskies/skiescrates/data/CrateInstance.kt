@@ -7,11 +7,13 @@ import com.pokeskies.skiescrates.data.particles.ParticleAnimation
 import com.pokeskies.skiescrates.data.particles.ParticleAnimationOptions
 import com.pokeskies.skiescrates.integrations.ModIntegration
 import com.pokeskies.skiescrates.integrations.bil.BILCrateData
-import com.pokeskies.skiescrates.integrations.bil.BILIntegration
+import com.pokeskies.skiescrates.managers.HologramsManager
 import com.pokeskies.skiescrates.utils.Utils
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.chunk.LevelChunk
 
 class CrateInstance(
     val crate: Crate,
@@ -23,7 +25,7 @@ class CrateInstance(
     val particles: ParticleAnimationOptions? = null,
 ) {
     private var particleAnimation: ParticleAnimation? = null
-    private var bilData: BILCrateData? = null
+    var bilData: BILCrateData? = null
 
     private var nearPlayers = mutableSetOf<ServerPlayer>()
     private var ticks = 0
@@ -37,18 +39,26 @@ class CrateInstance(
                 return@let
             }
 
-            val integration = ModIntegration.BIL.getIntegration() as? BILIntegration ?: run {
-                Utils.printError("The crate '${crate.id}' is using a model but the Blockbench Import Library integration is not available!")
-                return@let
+            var chunk: LevelChunk? = null
+            if (level.isLoaded(pos)) {
+                try {
+                    chunk = level.getChunkAt(pos)
+                } catch (e: Exception) {
+                    Utils.printError("Error while attaching BIL Crate at chunk ${pos}!")
+                    e.printStackTrace()
+                }
             }
 
-            bilData = integration.createCrateData(this, modelOptions)
+            bilData = BILCrateData.create(this, chunk, modelOptions)
         }
     }
 
     fun destroy() {
         bilData?.holder?.destroy()
-        bilData?.attachment?.destroy()
+
+        if (FabricLoader.getInstance().isModLoaded("holodisplays")) {
+            HologramsManager.unloadCrateHologram(this)
+        }
     }
 
     fun tick() {

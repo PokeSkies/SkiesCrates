@@ -16,12 +16,15 @@ import com.pokeskies.skiescrates.data.opening.world.WorldOpeningInstance
 import com.pokeskies.skiescrates.economy.EconomyManager
 import com.pokeskies.skiescrates.events.ItemSwingEvent
 import com.pokeskies.skiescrates.gui.PreviewInventory
+import com.pokeskies.skiescrates.integrations.bil.BILCrateData
+import com.pokeskies.skiescrates.utils.ChunkKey
 import com.pokeskies.skiescrates.utils.MinecraftDispatcher
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.lucko.fabric.api.permissions.v0.Permissions
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
@@ -30,27 +33,31 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.Vec3
 import java.util.*
 
 object CratesManager {
     const val CRATE_IDENTIFIER: String = "${SkiesCrates.MOD_ID}:crate"
 
-    val instances: MutableMap<DimensionalBlockPos, CrateInstance> = mutableMapOf()
+    // Chunk -> List of Crate Instances in that chunk
+    private val instancesByChunk: MutableMap<ChunkKey, MutableMap<DimensionalBlockPos, CrateInstance>> = mutableMapOf()
     private val interactionLimiter = mutableMapOf<UUID, Long>()
 
     fun init() {
-        // load the crate locations
-        instances.forEach {
-            it.value.destroy()
+        // destroy existing instances and load from config
+        instancesByChunk.values.forEach { chunkInstances ->
+            chunkInstances.values.forEach { it.destroy() }
         }
-        instances.clear()
+        instancesByChunk.clear()
+
         ConfigManager.CRATES.forEach { (_, crate) ->
             loadCrate(crate)
         }
@@ -160,10 +167,23 @@ object CratesManager {
 
             return@register InteractionResult.PASS
         }
+
+        ServerChunkEvents.CHUNK_LOAD.register { level, chunk ->
+            // Filters instances that have bilData but are not attached
+            val unattached = getInstancesAtChunk(level, chunk).filter {
+                it.bilData?.let { bilData -> !bilData.isAttached() } ?: false
+            }
+
+            for (instance in unattached) {
+                instance.model?.let { modelOptions ->
+                    instance.bilData = BILCrateData.create(instance, chunk, modelOptions)
+                }
+            }
+        }
     }
 
     fun tick() {
-        instances.forEach { (_, instance) -> instance.tick() }
+        instancesByChunk.forEach { (_, chunkInstances) -> chunkInstances.values.forEach { it.tick() } }
     }
 
     fun loadCrate(crate: Crate) {
@@ -181,7 +201,10 @@ object CratesManager {
             Utils.printError("Crate ${crate.name} has an invalid dimension location: $location")
             return null
         }
-        if (instances.containsKey(location)) {
+
+        val key = ChunkKey.of(location)
+        val chunkInstances = getChunkInstances(key)
+        if (chunkInstances.containsKey(location)) {
             Utils.printError("Crate ${crate.name} has a duplicate location: $location")
             return null
         }
@@ -195,14 +218,17 @@ object CratesManager {
             blockLocation.hologram ?: crate.block.hologram,
             ConfigManager.PARTICLES[blockLocation.particles ?: crate.block.particle]
         )
-        instances[location] = instance
-
+        chunkInstances[location] = instance
         return instance
     }
 
     fun unloadCrateLocation(instance: CrateInstance): Boolean {
         instance.destroy()
-        return instances.remove(instance.dimPos) != null
+        val key = ChunkKey.of(instance.dimPos)
+        val chunkInstances = instancesByChunk[key] ?: return false
+        val removed = chunkInstances.remove(instance.dimPos) != null
+        if (chunkInstances.isEmpty()) instancesByChunk.remove(key) // Remove chunk from map if the instances is empty now
+        return removed
     }
 
     fun giveCrates(crate: Crate, player: ServerPlayer, amount: Int, silent: Boolean = false): Boolean {
@@ -642,7 +668,25 @@ object CratesManager {
         return null
     }
 
+    private fun getChunkInstances(key: ChunkKey): MutableMap<DimensionalBlockPos, CrateInstance> =
+        instancesByChunk.computeIfAbsent(key) { mutableMapOf() }
+
     fun getCrateFromPos(pos: DimensionalBlockPos): CrateInstance? {
-        return instances[pos]
+        val key = ChunkKey.of(pos)
+        val chunkInstances = instancesByChunk[key] ?: return null
+        return chunkInstances[pos]
+    }
+
+    fun getInstancesAtChunk(level: ServerLevel, chunk: LevelChunk): List<CrateInstance> {
+        val key = ChunkKey.of(level, chunk)
+        val chunkInstances = instancesByChunk[key] ?: return emptyList()
+
+        return chunkInstances.values.toList()
+    }
+
+    fun getAllInstances(): List<CrateInstance> {
+        return instancesByChunk.values.flatMap { instances ->
+            instances.values.toList()
+        }
     }
 }

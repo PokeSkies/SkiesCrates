@@ -130,7 +130,7 @@ class SkiesCrates : ModInitializer {
             this.nbtOpts = server.registryAccess().createSerializationContext(NbtOps.INSTANCE)
             ModIntegration.onServerStarting()
         })
-        ServerLifecycleEvents.SERVER_STARTED.register(ServerLifecycleEvents.ServerStarted { server: MinecraftServer ->
+        ServerLifecycleEvents.SERVER_STARTED.register(ServerLifecycleEvents.ServerStarted { _: MinecraftServer ->
             OpeningManager.load()
             CratesManager.init()
             PlaceholderManager.init()
@@ -140,7 +140,7 @@ class SkiesCrates : ModInitializer {
             BaseCommand().register(dispatcher)
             KeysCommand().register(dispatcher)
         }
-        ServerLifecycleEvents.SERVER_STOPPING.register(ServerLifecycleEvents.ServerStopping { server: MinecraftServer ->
+        ServerLifecycleEvents.SERVER_STOPPING.register(ServerLifecycleEvents.ServerStopping { _: MinecraftServer ->
             this.storage.close()
             ModIntegration.onServerShutdown()
         })
