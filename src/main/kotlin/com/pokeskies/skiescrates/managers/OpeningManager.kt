@@ -5,9 +5,10 @@ import com.pokeskies.skiescrates.data.opening.OpeningAnimation
 import com.pokeskies.skiescrates.data.opening.OpeningInstance
 import com.pokeskies.skiescrates.utils.Utils
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 object OpeningManager {
-    private val activeInstances: MutableMap<UUID, OpeningInstance> = mutableMapOf()
+    private val activeInstances: MutableMap<UUID, OpeningInstance> = ConcurrentHashMap()
     private val animations: MutableMap<String, OpeningAnimation> = mutableMapOf()
 
     fun load() {
@@ -23,10 +24,8 @@ object OpeningManager {
     }
 
     fun tick() {
-        val iterator = activeInstances.entries.iterator()
-        while (iterator.hasNext()) {
-            val next = iterator.next()
-            next.value.tick()
+        for ((_, instance) in activeInstances) {
+            instance.tick()
         }
     }
 
