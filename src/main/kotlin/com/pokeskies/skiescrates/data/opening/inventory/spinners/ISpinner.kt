@@ -58,8 +58,10 @@ abstract class ISpinner<T>(
         pregeneratedSlots = when (spinningItem.mode) {
             // Since each slot ticks independently, we add all the spins for all slots
             SpinMode.INDEPENDENT -> List(spinningItem.slots.size * spinningItem.spinCount) { generateItem() }.filterNotNull().toMutableList()
+
             // Each slot has its own sequence of items but all of them are related, so we only generate spinCount items
             SpinMode.SEQUENTIAL, SpinMode.SYNCED -> List(spinningItem.spinCount) { generateItem() }.filterNotNull().toMutableList()
+
             // Every slot ticks independently, but each spin changes one random slot, so we need to generate a lot of items
             SpinMode.RANDOM -> {
                 val list: MutableList<T> = mutableListOf()

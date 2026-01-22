@@ -13,7 +13,6 @@ import net.minecraft.world.item.ItemStack
 class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Preview): SimpleGui(
     preview.type.type, player, false
 ) {
-    // This is a map because we can implement interesting interaction features in the future
     private val rewards: MutableMap<String, Pair<Reward, ItemStack>> = mutableMapOf()
 
     private val pageSlots = preview.rewards.slots.size.takeIf { it > 0 } ?: 1
@@ -29,7 +28,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
             item.createItemStack(player).let {
                 item.slots.forEach { slot ->
                     this.setSlot(slot, GuiElementBuilder(it)
-                        .setCallback { click ->
+                        .setCallback { _ ->
                             item.actions.forEach { (id, action) ->
                                 action.executeAction(player, this)
                             }

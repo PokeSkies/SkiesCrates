@@ -3,6 +3,7 @@ package com.pokeskies.skiescrates.data.actions.types
 import com.google.gson.annotations.JsonAdapter
 import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
+import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
@@ -14,8 +15,10 @@ class MessagePlayer(
     private val message: List<String> = emptyList()
 ) : Action(ActionType.MESSAGE) {
     override fun executeAction(player: ServerPlayer, gui: SimpleGui) {
-        val parsedMessages = message.map { it /* TODO: do parsing */ }
+        val parsedMessages = message.map { PlaceholderManager.parse(player, it) }
+
         Utils.printDebug("[ACTION - ${type.name}] Player(${player.gameProfile.name}), Parsed Messages($parsedMessages): $this")
+
         for (line in parsedMessages) {
             player.sendMessage(TextUtils.toNative(line))
         }

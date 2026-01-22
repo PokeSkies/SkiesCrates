@@ -290,7 +290,7 @@ object CratesManager {
         }
 
         // Inventory space check
-        if (!isForced && crate.inventorySpace > 0 && player.inventory.items.count { it.isEmpty } >= crate.inventorySpace) {
+        if (!isForced && crate.inventorySpace > 0 && player.inventory.items.count { it.isEmpty } < crate.inventorySpace) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_INVENTORY_SPACE.forEach {
                 player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(

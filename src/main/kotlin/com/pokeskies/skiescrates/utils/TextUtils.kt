@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerPlayer
 
 object TextUtils {
     fun toNative(text: String): Component {
-        return SkiesCrates.INSTANCE.adventure.toNative(SkiesCrates.MINI_MESSAGE.deserialize(text))
+        return SkiesCrates.INSTANCE.adventure.toNative(toComponent(text))
     }
 
     fun toComponent(text: String): net.kyori.adventure.text.Component {
