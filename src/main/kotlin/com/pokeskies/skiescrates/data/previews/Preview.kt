@@ -2,7 +2,6 @@ package com.pokeskies.skiescrates.data.previews
 
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
-import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.item.ActionMenuItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
@@ -10,18 +9,12 @@ import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.gui.InventoryType
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.TextUtils
-import com.pokeskies.skiescrates.utils.Utils
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.nbt.ListTag
-import net.minecraft.nbt.StringTag
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ItemLore
 
 class Preview(
@@ -39,53 +32,17 @@ class Preview(
         val lore: List<String> = emptyList()
     ) {
         fun createItemStack(player: ServerPlayer, reward: Reward, crate: Crate, userData: UserData): ItemStack {
-            val guiItem = reward.preview ?: run {
-                return reward.getDisplayItem(player, reward.getPlaceholders(userData, crate))
-            }
-
-            if (guiItem.item.isEmpty()) return ItemStack(Items.BARRIER, guiItem.amount)
-
-            val parsedItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(guiItem.item))
-
-            if (parsedItem.isEmpty) {
-                Utils.printError("Error while getting Item, defaulting to Barrier: ${guiItem.item}")
-                return ItemStack(Items.BARRIER, guiItem.amount)
-            }
-
-            val stack = ItemStack(parsedItem.get(), guiItem.amount)
-
             val placeholders = reward.getPlaceholders(userData, crate)
 
-            if (guiItem.components != null) {
-                // Parses the nbt and attempts to replace any placeholders
-                val nbtCopy = guiItem.components.copy()
-                for (key in guiItem.components.allKeys) {
-                    val element = guiItem.components.get(key)
-                    if (element != null) {
-                        if (element is StringTag) {
-                            nbtCopy.putString(key, element.asString)
-                        } else if (element is ListTag) {
-                            val parsed = ListTag()
-                            for (entry in element) {
-                                if (entry is StringTag) {
-                                    parsed.add(StringTag.valueOf(entry.asString))
-                                } else {
-                                    parsed.add(entry)
-                                }
-                            }
-                            nbtCopy.put(key, parsed)
-                        }
-                    }
-                }
-
-                DataComponentPatch.CODEC.decode(SkiesCrates.INSTANCE.nbtOpts, nbtCopy).result().ifPresent { result ->
-                    stack.applyComponents(result.first)
-                }
-            }
+            // Either get the preview override item from the reward's "preview" option, or create a default display item
+            val item: ItemStack = reward.preview?.let { guiItem ->
+                return@let guiItem.createItemStack(player, placeholders)
+            } ?: reward.getDisplayItem(player, placeholders)
 
             val dataComponents = DataComponentPatch.builder()
 
-            (reward.preview.name ?: name)?.let { name ->
+            // Apply name and lore overrides or defaults, if either are defined
+            (reward.preview?.name ?: name)?.let { name ->
                 dataComponents.set(
                     DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
                         .append(TextUtils.toNative(
@@ -93,7 +50,7 @@ class Preview(
                         )))
             }
 
-            (reward.preview.lore ?: lore).let { lore ->
+            (reward.preview?.lore ?: lore).let { lore ->
                 if (lore.isNotEmpty()) {
                     val parsedLore: MutableList<String> = mutableListOf()
                     for (line in lore.stream().map { it }.toList()) {
@@ -112,9 +69,9 @@ class Preview(
                 }
             }
 
-            stack.applyComponents(dataComponents.build())
+            item.applyComponents(dataComponents.build())
 
-            return stack
+            return item
         }
     }
 }
