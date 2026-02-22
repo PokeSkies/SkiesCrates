@@ -89,7 +89,9 @@ dependencies {
     modImplementation("me.lucko:fabric-permissions-api:0.3.1")
 
     // GUI libraries
-    modImplementation("eu.pb4:sgui:1.6.1+1.21.1")
+    modImplementation("eu.pb4:sgui:1.6.1+1.21.1")?.let {
+        include(it)
+    }
 
     // Events
     modImplementation("xyz.nucleoid:stimuli:0.4.12+1.21")?.let {
