@@ -12,7 +12,7 @@ import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.particles.effects.ParticleEffect
 import com.pokeskies.skiescrates.data.rewards.Reward
-import com.pokeskies.skiescrates.data.rewards.options.boolean.BooleanOption
+import com.pokeskies.skiescrates.data.rewards.options.bool.BooleanOption
 import com.pokeskies.skiescrates.data.rewards.options.int.IntOption
 import com.pokeskies.skiescrates.economy.EconomyManager
 import com.pokeskies.skiescrates.gui.InventoryType

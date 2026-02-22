@@ -12,9 +12,9 @@ import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.rewards.RewardLimits
 import com.pokeskies.skiescrates.data.rewards.RewardType
-import com.pokeskies.skiescrates.data.rewards.options.boolean.BooleanChance
-import com.pokeskies.skiescrates.data.rewards.options.boolean.BooleanOption
-import com.pokeskies.skiescrates.data.rewards.options.boolean.BooleanValue
+import com.pokeskies.skiescrates.data.rewards.options.bool.BooleanChance
+import com.pokeskies.skiescrates.data.rewards.options.bool.BooleanOption
+import com.pokeskies.skiescrates.data.rewards.options.bool.BooleanValue
 import com.pokeskies.skiescrates.data.rewards.options.int.IntOption
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory

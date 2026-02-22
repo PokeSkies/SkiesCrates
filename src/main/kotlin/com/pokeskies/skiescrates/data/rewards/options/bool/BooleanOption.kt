@@ -1,4 +1,4 @@
-package com.pokeskies.skiescrates.data.rewards.options.boolean
+package com.pokeskies.skiescrates.data.rewards.options.bool
 
 import com.google.gson.*
 import java.lang.reflect.Type

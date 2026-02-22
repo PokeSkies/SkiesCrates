@@ -1,4 +1,4 @@
-package com.pokeskies.skiescrates.data.rewards.options.boolean
+package com.pokeskies.skiescrates.data.rewards.options.bool
 
 class BooleanChance(
     val chance: Float
