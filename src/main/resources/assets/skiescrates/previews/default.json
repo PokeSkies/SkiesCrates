@@ -25,7 +25,8 @@
       ],
       "actions": {
         "close": {
-          "type": "NEXT_PAGE"
+          "type": "NEXT_PAGE",
+          "wrap": true
         }
       }
     },
@@ -38,7 +39,8 @@
       ],
       "actions": {
         "close": {
-          "type": "PREVIOUS_PAGE"
+          "type": "PREVIOUS_PAGE",
+          "wrap": true
         }
       }
     },

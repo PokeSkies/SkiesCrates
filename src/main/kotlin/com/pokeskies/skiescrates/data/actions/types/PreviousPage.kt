@@ -8,6 +8,7 @@ import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 
 class PreviousPage(
+    val wrap: Boolean = false
 ) : Action(ActionType.PREVIOUS_PAGE) {
     override fun executeAction(player: ServerPlayer, gui: SimpleGui) {
         Utils.printDebug("[ACTION - ${type.name}] Player(${player.gameProfile.name}) $this")
@@ -17,10 +18,10 @@ class PreviousPage(
             return
         }
 
-        gui.previousPage()
+        gui.previousPage(wrap)
     }
 
     override fun toString(): String {
-        return "PreviousPage()"
+        return "PreviousPage(wrap=$wrap)"
     }
 }

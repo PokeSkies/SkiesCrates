@@ -47,17 +47,27 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
         renderRewards()
     }
 
-    fun nextPage() {
+    fun nextPage(wrap: Boolean) {
         if (page < (maxPages - 1)) {
             page++
             renderRewards()
+        } else {
+            if (wrap) {
+                page = 0
+                renderRewards()
+            }
         }
     }
 
-    fun previousPage() {
+    fun previousPage(wrap: Boolean) {
         if (page > 0) {
             page--
             renderRewards()
+        } else {
+            if (wrap) {
+                page = maxPages - 1
+                renderRewards()
+            }
         }
     }
 

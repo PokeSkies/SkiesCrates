@@ -8,6 +8,7 @@ import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 
 class NextPage(
+    val wrap: Boolean = false
 ) : Action(ActionType.NEXT_PAGE) {
     override fun executeAction(player: ServerPlayer, gui: SimpleGui) {
         Utils.printDebug("[ACTION - ${type.name}] Player(${player.gameProfile.name}) $this")
@@ -17,10 +18,10 @@ class NextPage(
             return
         }
 
-        gui.nextPage()
+        gui.nextPage(wrap)
     }
 
     override fun toString(): String {
-        return "NextPage()"
+        return "NextPage(wrap=$wrap)"
     }
 }
