@@ -48,8 +48,9 @@ abstract class Reward(
     }
 
     abstract fun getGenericDisplay(): GenericItem
+
     open fun getDisplayItem(player: ServerPlayer, placeholders: Map<String, String> = emptyMap()): ItemStack {
-        return getGenericDisplay().also {
+        return getGenericDisplay().copy().also {
             if (it.name == null) it.name = name
         }.createItemStack(player, placeholders)
     }

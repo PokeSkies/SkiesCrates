@@ -165,6 +165,10 @@ open class GenericItem(
         return ItemStack(newItem.get(), amount)
     }
 
+    fun copy(): GenericItem {
+        return GenericItem(item, amount, name, lore, components, customModelData)
+    }
+
     override fun toString(): String {
         return "GenericItem(item=$item, amount=$amount, name=$name, lore=$lore, components=$components, customModelData=$customModelData)"
     }
