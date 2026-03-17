@@ -30,6 +30,7 @@ class Crate(
     val rewards: MutableMap<String, Reward> = mutableMapOf(),
 ) {
     // Local variable that is filled in when creating the object
+    @Transient
     lateinit var id: String
 
     fun parsePlaceholders(string: String): String {
