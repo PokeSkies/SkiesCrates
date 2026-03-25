@@ -11,7 +11,7 @@ import com.pokeskies.skiescrates.integrations.ModIntegration
 import com.pokeskies.skiescrates.managers.HologramsManager
 import com.pokeskies.skiescrates.mixins.EntityAccessor
 import com.pokeskies.skiescrates.mixins.ItemEntityAccessor
-import com.pokeskies.skiescrates.utils.TextUtils
+import com.pokeskies.skiescrates.utils.asNative
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
@@ -155,14 +155,14 @@ class SimpleRollWorldAnimation(
                 )
                 opening.player.connection.send(ClientboundSetEntityDataPacket(itemEntity!!.id, listOf(
                     SynchedEntityData.DataValue.create(EntityAccessor.getNoGravity(), true),
-                    SynchedEntityData.DataValue.create(EntityAccessor.getCustomName(), Optional.of(TextUtils.toNative(newReward.name))),
+                    SynchedEntityData.DataValue.create(EntityAccessor.getCustomName(), Optional.of(newReward.name.asNative())),
                     SynchedEntityData.DataValue.create(EntityAccessor.getCustomNameVisible(), true),
                     SynchedEntityData.DataValue.create(ItemEntityAccessor.getItem(), itemEntity!!.item)
                 )))
             } else {
                 itemEntity!!.item = newReward.getDisplayItem(opening.player)
                 opening.player.connection.send(ClientboundSetEntityDataPacket(itemEntity!!.id, listOf(
-                    SynchedEntityData.DataValue.create(EntityAccessor.getCustomName(), Optional.of(TextUtils.toNative(newReward.name))),
+                    SynchedEntityData.DataValue.create(EntityAccessor.getCustomName(), Optional.of(newReward.name.asNative())),
                     SynchedEntityData.DataValue.create(ItemEntityAccessor.getItem(), itemEntity!!.item)
                 )))
             }

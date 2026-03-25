@@ -4,8 +4,8 @@ import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
-import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.asNative
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
@@ -74,7 +74,7 @@ class AnimatedItem(
         if (name != null) {
             dataComponents.set(
                 DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
-                .append(TextUtils.toNative(name)))
+                .append(name.asNative()))
         }
 
         if (lore.isNotEmpty()) {
@@ -87,7 +87,7 @@ class AnimatedItem(
                 }
             }
             dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
-                Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(it)) as Component
+                Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(it.asNative()) as Component
             }.toList()))
         }
 

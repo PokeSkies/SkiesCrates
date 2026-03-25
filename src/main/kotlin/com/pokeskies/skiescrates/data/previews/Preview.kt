@@ -8,7 +8,7 @@ import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.data.userdata.UserData
 import com.pokeskies.skiescrates.gui.InventoryType
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
-import com.pokeskies.skiescrates.utils.TextUtils
+import com.pokeskies.skiescrates.utils.asNative
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
@@ -32,7 +32,7 @@ class Preview(
         val lore: List<String> = emptyList()
     ) {
         fun createItemStack(player: ServerPlayer, reward: Reward, crate: Crate, userData: UserData): ItemStack {
-            val placeholders = reward.getPlaceholders(userData, crate)
+            val placeholders = reward.getPlaceholders(userData, crate).toMutableMap()
 
             // Either get the preview override item from the reward's "preview" option, or create a default display item
             val item: ItemStack = reward.preview?.let { guiItem ->
@@ -45,16 +45,25 @@ class Preview(
             (reward.preview?.name ?: name)?.let { name ->
                 dataComponents.set(
                     DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
-                        .append(TextUtils.toNative(
-                            name.let {  placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
-                        )))
+                        .append(
+                            name.let {
+                                placeholders.entries.fold(it) { acc, (key, value) ->
+                                    acc.replace(key, value)
+                                }
+                            }.asNative()
+                        ))
             }
 
             (reward.preview?.lore ?: lore).let { lore ->
                 if (lore.isNotEmpty()) {
                     val parsedLore: MutableList<String> = mutableListOf()
                     for (line in lore.stream().map { it }.toList()) {
-                        val parsedLine = line.let { placeholders.entries.fold(it) { acc, (key, value) -> acc.replace(key, value) } }
+                        val parsedLine = line.let {
+                            placeholders.entries.fold(it) { acc, (key, value) ->
+                                acc.replace(key, value)
+                            }
+                        }
+
                         if (parsedLine.contains("\n")) {
                             parsedLine.split("\n").forEach { parsedLore.add(it) }
                         } else {
@@ -62,9 +71,7 @@ class Preview(
                         }
                     }
                     dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
-                        Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(TextUtils.toNative(
-                            it
-                        )) as Component
+                        Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(it.asNative()) as Component
                     }.toList()))
                 }
             }

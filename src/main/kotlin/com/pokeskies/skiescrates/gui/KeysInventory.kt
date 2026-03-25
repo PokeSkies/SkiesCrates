@@ -3,8 +3,8 @@ package com.pokeskies.skiescrates.gui
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.Lang
-import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.asNative
 import eu.pb4.sgui.api.elements.GuiElementBuilder
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
@@ -15,7 +15,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
     private val keysMenu = ConfigManager.KEYS_MENU
 
     init {
-        this.title = TextUtils.parseAllNative(player, keysMenu.title)
+        this.title = keysMenu.title.asNative(player)
         refresh()
     }
 
@@ -51,7 +51,7 @@ class KeysInventory(viewer: ServerPlayer, private val target: ServerPlayer): Sim
         }.exceptionally {
             Utils.printError("Player data for ${target.name} could not be found while opening keys menu! Is the storage properly initialized?")
             Lang.ERROR_STORAGE.forEach {
-                player.sendMessage(TextUtils.toNative(it))
+                player.sendMessage(it.asNative())
             }
             close()
             return@exceptionally null

@@ -8,8 +8,8 @@ import com.pokeskies.skiescrates.data.opening.inventory.spinners.AnimatedSpinner
 import com.pokeskies.skiescrates.data.opening.inventory.spinners.RewardSpinnerInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.utils.RandomCollection
-import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.asNative
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -37,7 +37,7 @@ class CrateInventory(
     private var randomBag: RandomCollection<Reward> = opening.randomBag
 
     init {
-        this.title = TextUtils.parseAllNative(player, opening.crate.parsePlaceholders(animation.title))
+        this.title = opening.crate.parsePlaceholders(animation.title).asNative(player)
 
         animation.items.static.forEach { (id, item) ->
             item.slots.forEach { slot ->

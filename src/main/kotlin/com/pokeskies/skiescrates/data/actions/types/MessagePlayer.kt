@@ -5,8 +5,8 @@ import com.pokeskies.skiescrates.data.actions.Action
 import com.pokeskies.skiescrates.data.actions.ActionType
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
-import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.asNative
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
 
@@ -20,7 +20,7 @@ class MessagePlayer(
         Utils.printDebug("[ACTION - ${type.name}] Player(${player.gameProfile.name}), Parsed Messages($parsedMessages): $this")
 
         for (line in parsedMessages) {
-            player.sendMessage(TextUtils.toNative(line))
+            player.sendMessage(line.asNative())
         }
     }
 

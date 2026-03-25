@@ -4,7 +4,7 @@ import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.previews.Preview
 import com.pokeskies.skiescrates.data.rewards.Reward
-import com.pokeskies.skiescrates.utils.TextUtils
+import com.pokeskies.skiescrates.utils.asNative
 import eu.pb4.sgui.api.elements.GuiElementBuilder
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.server.level.ServerPlayer
@@ -20,7 +20,7 @@ class PreviewInventory(player: ServerPlayer, val crate: Crate, val preview: Prev
     private var maxPages = 1
 
     init {
-        this.title = TextUtils.parseAllNative(player, crate.parsePlaceholders(preview.title))
+        this.title = crate.parsePlaceholders(preview.title).asNative(player)
 
         val userData = SkiesCrates.INSTANCE.storage.getUser(player)
 

@@ -18,8 +18,8 @@ import com.pokeskies.skiescrates.data.rewards.options.bool.BooleanValue
 import com.pokeskies.skiescrates.data.rewards.options.int.IntOption
 import com.pokeskies.skiescrates.placeholders.PlaceholderManager
 import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
-import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.asNative
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
@@ -83,7 +83,7 @@ class PokemonReward(
         // Set the name onto the ItemStack, which may get overridden by the display
         DataComponentPatch.builder().let {
             it.set(DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
-                    .append(TextUtils.parseAllNative(player, name, placeholders)))
+                    .append(name.asNative(player, placeholders)))
             itemStack.applyComponents(it.build())
         }
 
@@ -93,7 +93,7 @@ class PokemonReward(
             if (display.name != null) {
                 dataComponents.set(
                     DataComponents.ITEM_NAME, Component.empty().setStyle(Style.EMPTY.withItalic(false))
-                        .append(TextUtils.parseAllNative(player, name, placeholders)))
+                        .append(name.asNative(player, placeholders)))
             }
 
             if (!display.lore.isNullOrEmpty()) {
@@ -107,11 +107,7 @@ class PokemonReward(
                     }
                 }
                 dataComponents.set(DataComponents.LORE, ItemLore(parsedLore.stream().map {
-                    Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(
-                        TextUtils.toNative(
-                            it
-                        )
-                    ) as Component
+                    Component.empty().setStyle(Style.EMPTY.withItalic(false)).append(it.asNative()) as Component
                 }.toList()))
             }
 

@@ -11,9 +11,9 @@ import com.pokeskies.skiescrates.data.key.KeyCacheKey
 import com.pokeskies.skiescrates.data.key.KeyDuplicateAlert
 import com.pokeskies.skiescrates.data.userdata.UsedKeyData
 import com.pokeskies.skiescrates.data.userdata.UserData
-import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
 import com.pokeskies.skiescrates.utils.WebhookUtils
+import com.pokeskies.skiescrates.utils.asNative
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.level.ServerPlayer
@@ -94,11 +94,11 @@ object KeyManager {
                     if (result && !silent) {
                         player.server.execute {
                             Lang.KEY_GIVE.forEach {
-                                player.sendMessage(TextUtils.parseAllNative(
-                                    player,
+                                player.sendMessage(
                                     it.replace("%key_name%", key.name)
                                         .replace("%amount%", amount.toString())
-                                ))
+                                        .asNative(player)
+                                )
                             }
                         }
                     }
@@ -106,7 +106,7 @@ object KeyManager {
                 }.exceptionally { e ->
                     Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while giving them keys! Check elsewhere for errors. Local Error: ${e.message}")
                     Lang.ERROR_STORAGE.forEach {
-                        player.sendMessage(TextUtils.toNative(it))
+                        player.sendMessage(it.asNative())
                     }
                     false
                 }
@@ -141,11 +141,11 @@ object KeyManager {
 
         if (!silent) {
             Lang.KEY_GIVE.forEach {
-                player.sendMessage(TextUtils.parseAllNative(
-                    player,
+                player.sendMessage(
                     it.replace("%key_name%", key.name)
                         .replace("%amount%", amount.toString())
-                ))
+                        .asNative(player)
+                )
             }
         }
 
@@ -170,11 +170,9 @@ object KeyManager {
                         player.server.execute {
                             Lang.KEY_TAKE.forEach {
                                 player.sendMessage(
-                                    TextUtils.parseAllNative(
-                                        player,
-                                        it.replace("%key_name%", key.name)
-                                            .replace("%amount%", amount.toString())
-                                    )
+                                    it.replace("%key_name%", key.name)
+                                        .replace("%amount%", amount.toString())
+                                        .asNative(player)
                                 )
                             }
                         }
@@ -183,7 +181,7 @@ object KeyManager {
                 }.exceptionally { e ->
                     Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while taking keys from them! Check elsewhere for errors.")
                     Lang.ERROR_STORAGE.forEach {
-                        player.sendMessage(TextUtils.toNative(it))
+                        player.sendMessage(it.asNative())
                     }
                     false
                 }
@@ -206,11 +204,11 @@ object KeyManager {
                     if (result && !silent) {
                         player.server.execute {
                             Lang.KEY_SET.forEach {
-                                player.sendMessage(TextUtils.parseAllNative(
-                                    player,
+                                player.sendMessage(
                                     it.replace("%key_name%", key.name)
                                         .replace("%amount%", amount.toString())
-                                ))
+                                        .asNative(player)
+                                )
                             }
                         }
                     }
@@ -218,7 +216,7 @@ object KeyManager {
                 }.exceptionally { e ->
                     Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while setting their keys! Check elsewhere for errors.")
                     Lang.ERROR_STORAGE.forEach {
-                        player.sendMessage(TextUtils.toNative(it))
+                        player.sendMessage(it.asNative())
                     }
                     false
                 }
@@ -386,7 +384,7 @@ object KeyManager {
 
         Utils.printError("Duplicate Key Alert: $message")
         Lang.KEY_DUPLICATE_ALERT.forEach {
-            player.sendMessage(TextUtils.parseAllNative(player, it))
+            player.sendMessage(it.asNative(player))
         }
 
         if (ConfigManager.CONFIG.webhooks.duplicateKey.url.isNotEmpty()) {

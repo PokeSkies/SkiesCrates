@@ -19,8 +19,8 @@ import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.integrations.bil.BILCrateData
 import com.pokeskies.skiescrates.utils.ChunkKey
 import com.pokeskies.skiescrates.utils.MinecraftDispatcher
-import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.asNative
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.lucko.fabric.api.permissions.v0.Permissions
@@ -250,7 +250,7 @@ object CratesManager {
 
         if (!silent) {
             Lang.CRATE_GIVE.forEach {
-                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(it)))
+                player.sendMessage( crate.parsePlaceholders(it).asNative(player))
             }
         }
 
@@ -271,9 +271,7 @@ object CratesManager {
         if (OpeningManager.getInstance(player.uuid) != null) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_ALREADY_OPENING.forEach {
-                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                    it
-                )))
+                player.sendMessage(crate.parsePlaceholders(it).asNative(player))
             }
             return false
         }
@@ -282,9 +280,7 @@ object CratesManager {
         if (!isForced && crate.permission.isNotEmpty() && !Permissions.check(player, crate.permission)) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_NO_PERMISSION.forEach {
-                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                    it
-                )))
+                player.sendMessage(crate.parsePlaceholders(it).asNative(player))
             }
             return false
         }
@@ -293,9 +289,7 @@ object CratesManager {
         if (!isForced && crate.inventorySpace > 0 && player.inventory.items.count { it.isEmpty } < crate.inventorySpace) {
             handleCrateFail(player, crate, openData)
             Lang.ERROR_INVENTORY_SPACE.forEach {
-                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                    it
-                )))
+                player.sendMessage(crate.parsePlaceholders(it).asNative(player))
             }
             return false
         }
@@ -306,18 +300,14 @@ object CratesManager {
                 handleCrateFail(player, crate, openData)
                 Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${EconomyManager.getServices().keys.joinToString(", ")}")
                 Lang.ERROR_ECONOMY_PROVIDER.forEach {
-                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                        it
-                    )))
+                    player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                 }
                 return false
             }
             if (service.balance(player, crate.cost.currency) < crate.cost.amount) {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_COST.forEach {
-                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                        it
-                    )))
+                    player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                 }
                 return false
             }
@@ -336,9 +326,9 @@ object CratesManager {
                     withContext(MinecraftDispatcher(player.server)) {
                         handleCrateFail(player, crate, openData)
                         Lang.ERROR_COOLDOWN.forEach {
-                            player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
+                            player.sendMessage(crate.parsePlaceholders(
                                 it.replace("%cooldown%", Utils.getFormattedTime((cooldownTime - System.currentTimeMillis()) / 1000))
-                            )))
+                            ).asNative(player))
                         }
                     }
                     return false
@@ -351,7 +341,7 @@ object CratesManager {
             withContext(MinecraftDispatcher(player.server)) {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_NO_REWARDS.forEach {
-                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(it)))
+                    player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                 }
             }
             return false
@@ -364,13 +354,9 @@ object CratesManager {
                     val key = ConfigManager.KEYS[keyId] ?: run {
                         Utils.printError("Key $keyId does not exist while opening crate ${crate.id} for ${player.name.string}!")
                         Lang.ERROR_KEY_NOT_FOUND.forEach {
-                            player.sendMessage(
-                                TextUtils.parseAllNative(
-                                    player, crate.parsePlaceholders(
+                            player.sendMessage(crate.parsePlaceholders(
                                         it.replace("%key_id%", keyId)
-                                    )
-                                )
-                            )
+                            ).asNative(player))
                         }
                         return@all false
                     }
@@ -379,9 +365,7 @@ object CratesManager {
                 }) {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_MISSING_KEYS.forEach {
-                        player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                            it
-                        )))
+                        player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                     }
                     return@withContext false
                 }
@@ -397,9 +381,7 @@ object CratesManager {
                     contains = false
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_NO_CRATE.forEach {
-                        player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                            it
-                        )))
+                        player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                     }
                 }
             }
@@ -415,9 +397,7 @@ object CratesManager {
                         handleCrateFail(player, crate, openData)
                         Utils.printError("Crate ${crate.id} has an invalid economy provider '${crate.cost.provider}'. Valid providers are: ${EconomyManager.getServices().keys.joinToString(", ")}")
                         Lang.ERROR_ECONOMY_PROVIDER.forEach {
-                            player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                                it
-                            )))
+                            player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                         }
                     }
                     return false
@@ -426,13 +406,7 @@ object CratesManager {
                     withContext(MinecraftDispatcher(player.server)) {
                         handleCrateFail(player, crate, openData)
                         Lang.ERROR_BALANCE_CHANGED.forEach {
-                            player.sendMessage(
-                                TextUtils.parseAllNative(
-                                    player, crate.parsePlaceholders(
-                                        it
-                                    )
-                                )
-                            )
+                            player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                         }
                     }
                     return false
@@ -453,9 +427,9 @@ object CratesManager {
                         val key = ConfigManager.KEYS[keyId] ?: run {
                             Utils.printError("Key $keyId does not exist while opening crate ${crate.id} for ${player.name.string}!")
                             Lang.ERROR_KEY_NOT_FOUND.forEach {
-                                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
+                                player.sendMessage(crate.parsePlaceholders(
                                     it.replace("%key_id%", keyId)
-                                )))
+                                ).asNative(player))
                             }
                             return@withContext false
                         }
@@ -464,9 +438,9 @@ object CratesManager {
                             if (!playerData.removeKeys(key, amount)) {
                                 Utils.printError("Failed to remove $amount keys from ${player.name.string} for crate ${crate.id}, but they were present in the check!")
                                 Lang.ERROR_KEYS_CHANGED.forEach {
-                                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
+                                    player.sendMessage(crate.parsePlaceholders(
                                         it.replace("%key_id%", keyId)
-                                    )))
+                                    ).asNative(player))
                                 }
                                 return@withContext false
                             }
@@ -495,9 +469,9 @@ object CratesManager {
                             // This should never happen, but just in case
                             Utils.printError("Somehow the ${player.name.string} had $amount keys on check, but we removed $removed instead!")
                             Lang.ERROR_KEYS_CHANGED.forEach {
-                                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
+                                player.sendMessage(crate.parsePlaceholders(
                                     it.replace("%key_id%", keyId)
-                                )))
+                                ).asNative(player))
                             }
                             return@withContext false
                         }
@@ -520,24 +494,20 @@ object CratesManager {
             if (!storage.saveUserAsync(playerData).get()) {
                 Utils.printError("Failed to save user data after opening a crate for ${player.name.string}! Check elsewhere for errors.")
                 Lang.ERROR_STORAGE.forEach {
-                    player.sendMessage(TextUtils.toNative(it))
+                    player.sendMessage(it.asNative())
                 }
                 return@withContext false
             }
 
             Lang.CRATE_OPENING.forEach {
-                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                    it
-                )))
+                player.sendMessage(crate.parsePlaceholders(it).asNative(player))
             }
 
             val rewardBag = crate.generateRewardBag(playerData)
             if (rewardBag.size() <= 0) {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_NO_REWARDS.forEach {
-                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                        it
-                    )))
+                    player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                 }
                 return@withContext false
             }
@@ -547,9 +517,7 @@ object CratesManager {
                 val reward = rewardBag.next() ?: run {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_NO_REWARDS.forEach {
-                        player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                            it
-                        )))
+                        player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                     }
                     return@withContext false
                 }
@@ -566,9 +534,7 @@ object CratesManager {
             val animation = OpeningManager.getAnimation(crate.animation) ?: run {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_INVALID_ANIMATION.forEach {
-                    player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                        it
-                    )))
+                    player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                 }
                 return@withContext false
             }
@@ -582,9 +548,7 @@ object CratesManager {
                         handleCrateFail(player, crate, openData)
                         Utils.printError("No position data found for world opening animation ${crate.animation} for crate ${crate.id} for player ${player.name.string}!")
                         Lang.ERROR_INVALID_ANIMATION.forEach {
-                            player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                                it
-                            )))
+                            player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                         }
                         return@withContext false
                     }
@@ -592,9 +556,7 @@ object CratesManager {
                         handleCrateFail(player, crate, openData)
                         Utils.printError("No crate instance found at $positionData for world opening animation ${crate.animation} for crate ${crate.id} for player ${player.name.string}!")
                         Lang.ERROR_INVALID_ANIMATION.forEach {
-                            player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                                it
-                            )))
+                            player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                         }
                         return@withContext false
                     }
@@ -603,9 +565,7 @@ object CratesManager {
                 else -> {
                     handleCrateFail(player, crate, openData)
                     Lang.ERROR_INVALID_ANIMATION.forEach {
-                        player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                            it
-                        )))
+                        player.sendMessage(crate.parsePlaceholders(it).asNative(player))
                     }
                     return@withContext false
                 }
@@ -629,9 +589,7 @@ object CratesManager {
 
         val preview = ConfigManager.PREVIEW[crate.preview] ?: run {
             Lang.ERROR_INVALID_PREVIEW.forEach {
-                player.sendMessage(TextUtils.parseAllNative(player, crate.parsePlaceholders(
-                    it
-                )))
+                player.sendMessage(crate.parsePlaceholders(it).asNative(player))
             }
             return
         }

@@ -10,7 +10,7 @@ import com.pokeskies.skiescrates.data.DimensionalBlockPos
 import com.pokeskies.skiescrates.managers.CratesManager
 import com.pokeskies.skiescrates.managers.HologramsManager
 import com.pokeskies.skiescrates.utils.SubCommand
-import com.pokeskies.skiescrates.utils.TextUtils
+import com.pokeskies.skiescrates.utils.asNative
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.fabricmc.loader.api.FabricLoader
 import net.kyori.adventure.text.Component
@@ -70,7 +70,7 @@ class SetCommand : SubCommand {
                 blockResult.blockPos.z
             )
             if (CratesManager.getCrateFromPos(dimPos) != null) {
-                ctx.source.sendMessage(TextUtils.toComponent("<red>This block is already set as a ${crate.name} crate!"))
+                ctx.source.sendMessage("<red>This block is already set as a ${crate.name} crate!".asNative())
                 return 0
             }
 

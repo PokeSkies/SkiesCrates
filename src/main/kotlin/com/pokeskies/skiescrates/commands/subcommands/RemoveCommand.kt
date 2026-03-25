@@ -7,7 +7,7 @@ import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.data.DimensionalBlockPos
 import com.pokeskies.skiescrates.managers.CratesManager
 import com.pokeskies.skiescrates.utils.SubCommand
-import com.pokeskies.skiescrates.utils.TextUtils
+import com.pokeskies.skiescrates.utils.asNative
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -54,7 +54,7 @@ class RemoveCommand : SubCommand {
                 crate.block.locations.any { it.equalsDimBlockPos(dimPos) }
             }
             if (crateInstances.isEmpty()) {
-                ctx.source.sendMessage(TextUtils.toComponent("<red>This block is not set as any active crate!"))
+                ctx.source.sendMessage("<red>This block is not set as any active crate!".asNative())
                 return 0
             }
 

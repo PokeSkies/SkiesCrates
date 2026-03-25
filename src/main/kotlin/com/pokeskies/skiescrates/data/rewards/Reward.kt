@@ -7,8 +7,8 @@ import com.pokeskies.skiescrates.config.item.GenericItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.userdata.CrateData
 import com.pokeskies.skiescrates.data.userdata.UserData
-import com.pokeskies.skiescrates.utils.TextUtils
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.asNative
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import java.lang.reflect.Type
@@ -29,20 +29,20 @@ abstract class Reward(
         Utils.printDebug("Attempting to execute a ${type.identifier} reward: $this")
 
         Lang.CRATE_REWARD.forEach {
-            player.sendMessage(TextUtils.parseAllNative(
-                player,
+            player.sendMessage(
                 crate.parsePlaceholders(it)
                     .replace("%reward_name%", name)
-            ))
+                    .asNative(player)
+            )
         }
 
         if (broadcast) {
             Lang.CRATE_REWARD_BROADCAST.forEach {
-                SkiesCrates.INSTANCE.adventure.all().sendMessage(TextUtils.parseAllNative(
-                    player,
+                SkiesCrates.INSTANCE.adventure.all().sendMessage(
                     crate.parsePlaceholders(it)
                         .replace("%reward_name%", name)
-                ))
+                        .asNative(player)
+                )
             }
         }
     }
