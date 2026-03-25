@@ -1,12 +1,14 @@
 package com.pokeskies.skiescrates.data.rewards
 
 import com.google.gson.*
+import com.google.gson.annotations.JsonAdapter
 import com.pokeskies.skiescrates.SkiesCrates
 import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.config.item.GenericItem
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.userdata.CrateData
 import com.pokeskies.skiescrates.data.userdata.UserData
+import com.pokeskies.skiescrates.utils.FlexibleListAdaptorFactory
 import com.pokeskies.skiescrates.utils.Utils
 import com.pokeskies.skiescrates.utils.asNative
 import net.minecraft.server.level.ServerPlayer
@@ -17,6 +19,8 @@ import java.util.*
 abstract class Reward(
     val type: RewardType = RewardType.COMMAND_PLAYER,
     val name: String = "",
+    @JsonAdapter(FlexibleListAdaptorFactory::class)
+    val description: List<String> = emptyList(),
     val display: GenericItem? = null,
     val weight: Int = 1,
     val limits: RewardLimits? = null,
@@ -84,6 +88,7 @@ abstract class Reward(
     fun getPlaceholders(userData: UserData, crate: Crate): Map<String, String> {
         return mapOf(
             "%reward_name%" to (preview?.name ?: name),
+            "%reward_description%" to description.joinToString("\n"),
             "%reward_display_name%" to (getGenericDisplay().name ?: ""),
             "%reward_display_lore%" to (getGenericDisplay().lore?.joinToString("\n") ?: ""),
             "%reward_id%" to id,

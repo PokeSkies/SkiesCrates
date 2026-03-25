@@ -14,13 +14,14 @@ import net.minecraft.server.level.ServerPlayer
 
 class CommandConsoleReward(
     name: String = "",
+    description: List<String> = emptyList(),
     weight: Int = 1,
     display: GenericItem? = null,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
     @JsonAdapter(FlexibleListAdaptorFactory::class)
     private val commands: List<String> = emptyList()
-) : Reward(RewardType.COMMAND_CONSOLE, name, display, weight, limits, broadcast) {
+) : Reward(RewardType.COMMAND_CONSOLE, name, description, display, weight, limits, broadcast) {
     companion object {
         val DEFAULT_DISPLAY = GenericItem("minecraft:paper", name = "Command")
     }

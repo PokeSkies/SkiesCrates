@@ -9,12 +9,13 @@ import net.minecraft.server.level.ServerPlayer
 
 class ItemReward(
     name: String = "",
+    description: List<String> = emptyList(),
     display: GenericItem? = null,
     weight: Int = 1,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
     private val item: GenericItem = GenericItem()
-) : Reward(RewardType.ITEM, name, display, weight, limits, broadcast) {
+) : Reward(RewardType.ITEM, name, description, display, weight, limits, broadcast) {
     override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
         super.giveReward(player, crate)

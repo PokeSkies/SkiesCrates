@@ -32,12 +32,13 @@ import net.minecraft.world.item.component.ItemLore
 
 class PokemonReward(
     name: String = "",
+    description: List<String> = emptyList(),
     display: GenericItem? = null,
     weight: Int = 1,
     limits: RewardLimits? = null,
     broadcast: Boolean = false,
     private val pokemon: PokemonRewardOptions = PokemonRewardOptions(),
-) : Reward(RewardType.POKEMON, name, display, weight, limits, broadcast) {
+) : Reward(RewardType.POKEMON, name, description, display, weight, limits, broadcast) {
     companion object {
         private val DEFAULT_DISPLAY = GenericItem("cobblemon:poke_ball", name = "Pokemon Reward")
     }

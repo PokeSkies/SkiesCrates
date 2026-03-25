@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer
 
 class CommandPlayerReward(
     name: String = "",
+    description: List<String> = emptyList(),
     display: GenericItem? = null,
     weight: Int = 1,
     limits: RewardLimits? = null,
@@ -23,7 +24,7 @@ class CommandPlayerReward(
     private val commands: List<String> = emptyList(),
     @SerializedName("permission_level")
     private val permissionLevel: Int? = null
-) : Reward(RewardType.COMMAND_PLAYER, name, display, weight, limits, broadcast) {
+) : Reward(RewardType.COMMAND_PLAYER, name, description, display, weight, limits, broadcast) {
     override fun giveReward(player: ServerPlayer, crate: Crate) {
         // Super to call the message
         super.giveReward(player, crate)
