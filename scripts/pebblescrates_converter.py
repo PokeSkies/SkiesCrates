@@ -99,9 +99,6 @@ def parse_rewards(rewards):
             nbt_input = nbt_input.replace("\"Name\"", "\"minecraft:item_name\"")
             nbt_input = nbt_input.replace("\"Lore\"", "\"minecraft:lore\"")
             nbt_input = nbt_input.replace("\"Unbreakable\":1", "\"minecraft:unbreakable\":{}")
-            nbt_input = nbt_input.replace("\"Name\"", "\"minecraft:item_name\"")
-            nbt_input = nbt_input.replace("\"Name\"", "\"minecraft:item_name\"")
-            nbt_input = nbt_input.replace("\"Name\"", "\"minecraft:item_name\"")
 
             try:
                 parsed = json.loads(nbt_input)
