@@ -2,6 +2,7 @@ package com.pokeskies.skiescrates.data.opening.world.types
 
 import com.google.gson.annotations.SerializedName
 import com.pokeskies.skiescrates.config.SoundOption
+import com.pokeskies.skiescrates.config.VecPosition
 import com.pokeskies.skiescrates.data.opening.world.RewardItemEntity
 import com.pokeskies.skiescrates.data.opening.world.WorldAnimationType
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
@@ -35,7 +36,7 @@ class SimpleRollWorldAnimation(
     @SerializedName("end_delay")
     val endDelay: Int = 20, // The amount of ticks to wait after the final spin
     val sound: SoundOption? = null, // The sound to play when the item spins,
-    val offset: Vec3 = Vec3.ZERO,
+    val offset: VecPosition = VecPosition(),
     @SerializedName(value = "hide_hologram")
     val hideHologram: Boolean = false,
 ): WorldOpeningAnimation(WorldAnimationType.SIMPLE_ROLL) {
@@ -69,7 +70,9 @@ class SimpleRollWorldAnimation(
         ticksPerSpin = spinInterval
         ticksUntilChange = changeInterval
 
-        pos = opening.instance.pos.bottomCenter.add(offset)
+        println("Adding offset with value $offset (${offset.x}, ${offset.y}, ${offset.z})")
+
+        pos = opening.instance.pos.bottomCenter.add(offset.toVec3())
 
         if (hideHologram && ModIntegration.HOLODISPLAYS.isModLoaded()) {
             HologramsManager.hideHologramForPlayer(opening.player, opening.instance)
@@ -138,6 +141,7 @@ class SimpleRollWorldAnimation(
                     pos,
                     newReward.getDisplayItem(opening.player)
                 )
+                println("Spawning item entity with id ${itemEntity!!.id} and item ${itemEntity!!.item}")
                 opening.player.connection.send(
                     ClientboundAddEntityPacket(
                         itemEntity!!.id,
