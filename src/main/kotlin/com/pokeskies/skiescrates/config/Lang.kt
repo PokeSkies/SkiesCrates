@@ -29,6 +29,7 @@ object Lang {
     var ERROR_COST = listOf("<red>You don't have enough money to open this crate!")
     var ERROR_COOLDOWN = listOf("<red>You are on cooldown for this crate! Please wait %cooldown% before opening it again.")
     var ERROR_MISSING_KEYS = listOf("<red>You don't have enough keys to open this crate! Keys: %crate_keys%")
+    var ERROR_HOLD_KEYS = listOf("<red>You must be holding the required key to open this crate!")
 
     // Errors that should not happen
     var ERROR_NO_CRATE = listOf("<red>You do not have this crate in your inventory! Not sure how that happened...")
@@ -49,26 +50,26 @@ object Lang {
         val defaultMessages = mutableMapOf<String, JsonElement>()
         this::class.memberProperties.forEach { prop ->
             val value = prop.getter.call(this)
-            defaultMessages[prop.name] = SkiesCrates.Companion.INSTANCE.gsonPretty.toJsonTree(value)
+            defaultMessages[prop.name] = SkiesCrates.INSTANCE.gsonPretty.toJsonTree(value)
         }
 
-        val langFile = File(SkiesCrates.Companion.INSTANCE.configDir, "lang.json")
+        val langFile = File(SkiesCrates.INSTANCE.configDir, "lang.json")
         if (!langFile.exists()) {
             langFile.parentFile.mkdirs()
-            langFile.writeText(SkiesCrates.Companion.INSTANCE.gsonPretty.toJson(defaultMessages))
+            langFile.writeText(SkiesCrates.INSTANCE.gsonPretty.toJson(defaultMessages))
         } else {
             // Ensure all default messages are present in the file and write missing ones back
-            val json = SkiesCrates.Companion.INSTANCE.gsonPretty.fromJson(FileReader(langFile), JsonElement::class.java).asJsonObject
+            val json = SkiesCrates.INSTANCE.gsonPretty.fromJson(FileReader(langFile), JsonElement::class.java).asJsonObject
             defaultMessages.forEach { (key, value) ->
                 if (!json.has(key)) {
                     json.add(key, value)
                 }
             }
-            langFile.writeText(SkiesCrates.Companion.INSTANCE.gsonPretty.toJson(json))
+            langFile.writeText(SkiesCrates.INSTANCE.gsonPretty.toJson(json))
         }
 
         try {
-            val json = SkiesCrates.Companion.INSTANCE.gsonPretty.fromJson(FileReader(langFile), JsonElement::class.java).asJsonObject
+            val json = SkiesCrates.INSTANCE.gsonPretty.fromJson(FileReader(langFile), JsonElement::class.java).asJsonObject
 
             // Iterate the variables in the Lang class and set their values
             this::class.memberProperties.forEach { prop ->
@@ -78,7 +79,7 @@ object Lang {
                 try {
                     // Get the property from the JsonObject and set it in the Lang class
                     json.get(prop.name)?.let {
-                        property.set(this, SkiesCrates.Companion.INSTANCE.gsonPretty.fromJson(it, prop.returnType.javaType))
+                        property.set(this, SkiesCrates.INSTANCE.gsonPretty.fromJson(it, prop.returnType.javaType))
                     }
                 } catch (e: Exception) {
                     Utils.printError("Failed to load Language setting for ${prop.name}: ${e.message}")

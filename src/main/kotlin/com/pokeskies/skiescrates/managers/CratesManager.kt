@@ -9,6 +9,7 @@ import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.CrateInstance
 import com.pokeskies.skiescrates.data.CrateOpenData
 import com.pokeskies.skiescrates.data.DimensionalBlockPos
+import com.pokeskies.skiescrates.data.key.KeyCheckResult
 import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningAnimation
 import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
@@ -38,6 +39,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
 import net.minecraft.world.level.chunk.LevelChunk
@@ -102,7 +104,6 @@ object CratesManager {
         // Called when right clicking a block, whether you use an item or not
         UseBlockCallback.EVENT.register(UseBlockCallback { player, level, hand, blockHitResult ->
             if (player !is ServerPlayer) return@UseBlockCallback InteractionResult.PASS
-            if (hand != InteractionHand.MAIN_HAND) return@UseBlockCallback InteractionResult.PASS
 
             // Detect for a crate block
             val blockPos = DimensionalBlockPos(
@@ -112,8 +113,11 @@ object CratesManager {
                 blockHitResult.blockPos.z
             )
             getCrateFromPos(blockPos)?.let { instance ->
-                asyncScope.launch {
-                    openCrate(player, instance.crate, CrateOpenData(blockPos, null), false)
+                // Only execute opens on main hand to prevent duplicate execution
+                if (hand == InteractionHand.MAIN_HAND) {
+                    asyncScope.launch {
+                        openCrate(player, instance.crate, CrateOpenData(blockPos, null), false)
+                    }
                 }
                 return@UseBlockCallback InteractionResult.FAIL
             }
@@ -123,8 +127,11 @@ object CratesManager {
             if (!item.isEmpty) {
                 val crate = getCrateOrNull(item)
                 if (crate != null) {
-                    asyncScope.launch {
-                        openCrate(player, crate, CrateOpenData(null, item), false)
+                    // Only execute opens on main hand to prevent duplicate execution
+                    if (hand == InteractionHand.MAIN_HAND) {
+                        asyncScope.launch {
+                            openCrate(player, crate, CrateOpenData(null, item), false)
+                        }
                     }
                     return@UseBlockCallback InteractionResult.FAIL
                 }
@@ -144,11 +151,13 @@ object CratesManager {
             if (player !is ServerPlayer) return@UseItemCallback InteractionResultHolder.pass(player.getItemInHand(hand))
 
             val item = player.getItemInHand(hand)
-            if (hand != InteractionHand.MAIN_HAND) return@UseItemCallback InteractionResultHolder.pass(item)
 
             getCrateOrNull(item)?.let { crate ->
-                asyncScope.launch {
-                    openCrate(player, crate, CrateOpenData(null, item), false)
+                // Only execute opens on main hand to prevent duplicate execution
+                if (hand == InteractionHand.MAIN_HAND) {
+                    asyncScope.launch {
+                        openCrate(player, crate, CrateOpenData(null, item), false)
+                    }
                 }
                 return@UseItemCallback InteractionResultHolder.fail(item)
             }
@@ -350,26 +359,45 @@ object CratesManager {
         // Check for any keys needed
         if (!isForced && crate.keys.isNotEmpty()) {
             if(!withContext(MinecraftDispatcher(player.server)) {
-                if (!crate.keys.all { (keyId, amount) ->
-                    val key = ConfigManager.KEYS[keyId] ?: run {
-                        Utils.printError("Key $keyId does not exist while opening crate ${crate.id} for ${player.name.string}!")
-                        Lang.ERROR_KEY_NOT_FOUND.forEach {
-                            player.sendMessage(crate.parsePlaceholders(
-                                        it.replace("%key_id%", keyId)
-                            ).asNative(player))
+                    val results = crate.keys.entries.associate { (keyId, amount) ->
+                        val key = ConfigManager.KEYS[keyId] ?: run {
+                            return@associate keyId to KeyCheckResult.NOT_FOUND
                         }
-                        return@all false
-                    }
 
-                    KeyManager.checkPlayerForKeys(player, playerData, key, amount)
-                }) {
-                    handleCrateFail(player, crate, openData)
-                    Lang.ERROR_MISSING_KEYS.forEach {
-                        player.sendMessage(crate.parsePlaceholders(it).asNative(player))
+                        keyId to KeyManager.checkPlayerForKeys(player, playerData, key, amount, crate.holdKey)
                     }
-                    return@withContext false
-                }
-                true
+                    // Sort out the highest error return from the key checks to display to the user
+                    val highest = results.maxBy { (_, result) -> result.priority }
+                    when (highest.value) {
+                        KeyCheckResult.NOT_FOUND -> {
+                            Utils.printError("Key ${highest.key} does not exist while opening crate ${crate.id} for ${player.name.string}!")
+                            handleCrateFail(player, crate, openData)
+                            Lang.ERROR_KEY_NOT_FOUND.forEach {
+                                player.sendMessage(crate.parsePlaceholders(
+                                    it.replace("%key_id%", highest.key)
+                                ).asNative(player))
+                            }
+                            return@withContext false
+                        }
+                        KeyCheckResult.NOT_HOLDING -> {
+                            handleCrateFail(player, crate, openData)
+                            Lang.ERROR_HOLD_KEYS.forEach {
+                                player.sendMessage(crate.parsePlaceholders(
+                                    it.replace("%key_id%", highest.key)
+                                ).asNative(player))
+                            }
+                            return@withContext false
+                        }
+                        KeyCheckResult.NOT_ENOUGH -> {
+                            handleCrateFail(player, crate, openData)
+                            Lang.ERROR_MISSING_KEYS.forEach {
+                                player.sendMessage(crate.parsePlaceholders(it).asNative(player))
+                            }
+                            return@withContext false
+                        }
+                        KeyCheckResult.SUCCESS -> {}
+                    }
+                    true
             }) return false
         }
 
@@ -446,21 +474,37 @@ object CratesManager {
                             }
                             removed += amount
                         } else {
-                            for ((i, stack) in player.inventory.items.withIndex()) {
-                                if (!stack.isEmpty) {
-                                    if (KeyManager.getKeyOrNull(stack)?.id == keyId) {
-                                        val stackSize = stack.count
-                                        if (removed + stackSize >= amount) {
-                                            KeyManager.markStackUsed(stack, key, keyId, player)
-                                            player.inventory.items[i].shrink(amount - removed)
-                                            removed += (amount - removed)
-                                            break
-                                        } else {
-                                            KeyManager.markStackUsed(stack, key, keyId, player)
-                                            player.inventory.items[i].shrink(stackSize)
-                                            removed += stackSize
-                                        }
-                                    }
+                            val keySlots = player.inventory.items.withIndex().filter { (_, stack) ->
+                                if (stack.isEmpty) return@filter false
+                                KeyManager.getKeyOrNull(stack)?.id == keyId
+                            }.associate { (slot, stack) -> slot to stack }.toMutableMap()
+
+                            player.offhandItem.let { offhand ->
+                                if (!offhand.isEmpty && KeyManager.getKeyOrNull(offhand)?.id == keyId) {
+                                    keySlots[Inventory.SLOT_OFFHAND] = offhand
+                                }
+                            }
+
+                            // convert keySlots into a keys list that is sorted by slot number, with player.inventory.selected and Inventory.SLOT_OFFHAND first
+                           val sortedKeys = keySlots.entries.sortedBy { (slot, _) ->
+                               when (slot) {
+                                   player.inventory.selected -> -2
+                                   Inventory.SLOT_OFFHAND -> -1
+                                   else -> slot
+                               }
+                           }.map { (_, stack) -> stack }
+
+                            for (stack in sortedKeys) {
+                                val stackSize = stack.count
+                                if (removed + stackSize >= amount) {
+                                    KeyManager.markStackUsed(stack, key, keyId, player)
+                                    stack.shrink(amount - removed)
+                                    removed += (amount - removed)
+                                    break
+                                } else {
+                                    KeyManager.markStackUsed(stack, key, keyId, player)
+                                    stack.shrink(stackSize)
+                                    removed += stackSize
                                 }
                             }
                         }

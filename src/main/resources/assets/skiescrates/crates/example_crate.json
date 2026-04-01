@@ -22,6 +22,7 @@
   "keys": {
     "example_key": 1
   },
+  "hold_key": false,
   "failure": {
     "pushback": 0.5,
     "sound": {

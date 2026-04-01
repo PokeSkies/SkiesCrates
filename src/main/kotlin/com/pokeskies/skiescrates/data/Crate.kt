@@ -25,6 +25,8 @@ class Crate(
     val cooldown: Long = -1,
     val failure: FailureOptions? = null,
     val keys: Map<String, Int> = emptyMap(),
+    @SerializedName("hold_key")
+    val holdKey: Boolean = false,
     val block: BlockOptions = BlockOptions(),
     @JsonAdapter(Reward.RewardMapAdapter::class)
     val rewards: MutableMap<String, Reward> = mutableMapOf(),

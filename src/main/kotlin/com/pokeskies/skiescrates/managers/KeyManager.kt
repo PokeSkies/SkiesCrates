@@ -8,6 +8,7 @@ import com.pokeskies.skiescrates.config.ConfigManager
 import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.data.key.Key
 import com.pokeskies.skiescrates.data.key.KeyCacheKey
+import com.pokeskies.skiescrates.data.key.KeyCheckResult
 import com.pokeskies.skiescrates.data.key.KeyDuplicateAlert
 import com.pokeskies.skiescrates.data.userdata.UsedKeyData
 import com.pokeskies.skiescrates.data.userdata.UserData
@@ -17,6 +18,7 @@ import com.pokeskies.skiescrates.utils.asNative
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
 import java.util.*
@@ -35,7 +37,7 @@ object KeyManager {
         .expireAfterWrite(30, TimeUnit.SECONDS)
         .refreshAfterWrite(10, TimeUnit.SECONDS)
         .executor(SkiesCrates.INSTANCE.asyncExecutor)
-        .buildAsync { key, executor ->
+        .buildAsync { key, _ ->
             if (SkiesCrates.INSTANCE.server.playerList.getPlayer(key.playerUuid) == null) {
                 return@buildAsync CompletableFuture.completedFuture(0)
             }
@@ -178,7 +180,7 @@ object KeyManager {
                         }
                     }
                     result
-                }.exceptionally { e ->
+                }.exceptionally { _ ->
                     Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while taking keys from them! Check elsewhere for errors.")
                     Lang.ERROR_STORAGE.forEach {
                         player.sendMessage(it.asNative())
@@ -213,7 +215,7 @@ object KeyManager {
                         }
                     }
                     result
-                }.exceptionally { e ->
+                }.exceptionally { _ ->
                     Utils.printError("Storage was null while attempting save ${player.name.string}'s userdata while setting their keys! Check elsewhere for errors.")
                     Lang.ERROR_STORAGE.forEach {
                         player.sendMessage(it.asNative())
@@ -293,27 +295,39 @@ object KeyManager {
         return used
     }
 
-    fun checkPlayerForKeys(player: ServerPlayer, playerData: UserData, key: Key, amount: Int): Boolean {
+    fun checkPlayerForKeys(player: ServerPlayer, playerData: UserData, key: Key, amount: Int, requiresHolding: Boolean): KeyCheckResult {
        return if (key.virtual) {
-            playerData.keys[key.id]?.let {
-                it >= amount
-            } ?: false
+           KeyCheckResult.getStandardResult(playerData.keys[key.id]?.let {
+               it >= amount
+           } ?: false)
         } else {
             var count = 0
-            player.inventory.items.filter {
-                validateStack(player, key, it)
-            }.forEach { keyItem ->
-                count += keyItem.count
-            }
+            val keys = player.inventory.items.withIndex().filter { (_, stack) ->
+                if (getKeyOrNull(stack)?.id != key.id) return@filter false
+                validateStack(player, key, stack)
+            }.associate { (slot, stack) -> slot to stack }.toMutableMap()
 
-           count >= amount
+           player.offhandItem.let { offhand ->
+               if (!offhand.isEmpty && getKeyOrNull(offhand)?.id == key.id && validateStack(player, key, offhand)) {
+                   keys[Inventory.SLOT_OFFHAND] = offhand
+               }
+           }
+
+           if (requiresHolding && !keys.containsKey(player.inventory.selected) && !keys.containsKey(Inventory.SLOT_OFFHAND)) {
+               return KeyCheckResult.NOT_HOLDING
+           }
+
+           keys.forEach { (_, stack) ->
+               count += stack.count
+           }
+
+           KeyCheckResult.getStandardResult(count >= amount)
         }
     }
 
-    // Validates that the given item stack is a valid key for the given key, adjusting it if necessary (e.g., removing invalid unique IDs)
+    // Runs a validation check on key items if the key type is marked as unique.
+    // Returns whether the key was valid or not. If false, it was a duplicate!
     private fun validateStack(player: ServerPlayer, key: Key, itemStack: ItemStack): Boolean {
-        if (getKeyOrNull(itemStack)?.id != key.id) return false
-
         if (key.unique) {
             val tag = itemStack.get(DataComponents.CUSTOM_DATA) ?: run {
                 alertDuplicateKey(player, key, KeyDuplicateAlert.MISSING_UUID)
