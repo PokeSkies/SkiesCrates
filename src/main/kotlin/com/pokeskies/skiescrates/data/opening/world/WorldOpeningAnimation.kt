@@ -11,6 +11,9 @@ abstract class WorldOpeningAnimation(
     abstract fun tick(opening: WorldOpeningInstance)
     abstract fun stop(opening: WorldOpeningInstance)
 
+    abstract override fun instantiate(): WorldOpeningAnimation
+
+
     internal class Adapter : JsonSerializer<WorldOpeningAnimation>, JsonDeserializer<WorldOpeningAnimation> {
         override fun serialize(src: WorldOpeningAnimation, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
             return context.serialize(src, src::class.java)

@@ -20,6 +20,21 @@ class InventoryOpeningAnimation(
     val items: Items,
     val presets: Presets
 ): OpeningAnimation {
+    override fun instantiate(): OpeningAnimation {
+        val copiedItems = Items(
+            items.rewards.toMutableMap(),
+            items.animated.toMutableMap(),
+            items.static.toMutableMap()
+        )
+
+        val copiedPresets = Presets(
+            presets.rewards.toMutableMap(),
+            presets.animations.mapValues { entry -> entry.value.toMutableList() }.toMutableMap()
+        )
+
+        return InventoryOpeningAnimation(title, type, closeDelay, winSlots.toList(), skippable, copiedItems, copiedPresets)
+    }
+
     // These are the items that are used in the inventory animation
     class Items(
         // These are items that display the rewards

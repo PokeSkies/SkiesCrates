@@ -55,6 +55,20 @@ class SimpleRollWorldAnimation(
 
     @Transient private var pos = Vec3.ZERO
 
+    override fun instantiate(): WorldOpeningAnimation {
+        return SimpleRollWorldAnimation(
+            spinCount,
+            spinInterval,
+            startDelay,
+            changeInterval,
+            changeAmount,
+            endDelay,
+            sound,
+            offset,
+            hideHologram
+        )
+    }
+
     override fun setup(opening: WorldOpeningInstance) {
         pregeneratedSlots = List(spinCount) { generateItem(opening) }.filterNotNull().toMutableList()
 
@@ -69,8 +83,6 @@ class SimpleRollWorldAnimation(
         spinsRemaining = spinCount
         ticksPerSpin = spinInterval
         ticksUntilChange = changeInterval
-
-        println("Adding offset with value $offset (${offset.x}, ${offset.y}, ${offset.z})")
 
         pos = opening.instance.pos.bottomCenter.add(offset.toVec3())
 
@@ -141,7 +153,6 @@ class SimpleRollWorldAnimation(
                     pos,
                     newReward.getDisplayItem(opening.player)
                 )
-                println("Spawning item entity with id ${itemEntity!!.id} and item ${itemEntity!!.item}")
                 opening.player.connection.send(
                     ClientboundAddEntityPacket(
                         itemEntity!!.id,

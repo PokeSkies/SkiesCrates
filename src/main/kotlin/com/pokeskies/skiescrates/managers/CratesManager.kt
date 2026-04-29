@@ -575,7 +575,7 @@ object CratesManager {
                 return@withContext true
             }
 
-            val animation = OpeningManager.getAnimation(crate.animation) ?: run {
+            val animation = OpeningManager.getAnimation(crate.animation)?.instantiate() ?: run {
                 handleCrateFail(player, crate, openData)
                 Lang.ERROR_INVALID_ANIMATION.forEach {
                     player.sendMessage(crate.parsePlaceholders(it).asNative(player))

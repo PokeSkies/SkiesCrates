@@ -19,4 +19,8 @@ abstract class OpeningInstance(
     open fun destroy() {
         OpeningManager.removeInstance(player.uuid)
     }
+
+    override fun toString(): String {
+        return "OpeningInstance(player=$player, crate=$crate)"
+    }
 }
