@@ -82,9 +82,18 @@ class GiveCommand : SubCommand {
                 0 -> ctx.source.sendMessage(
                     Component.text("Failed to give ${amount}x $crateId crates to any players!", NamedTextColor.RED)
                 )
-                targets.size -> ctx.source.sendMessage(
-                    Component.text("Successfully gave ${amount}x $crateId crates to $successful players!").color(NamedTextColor.GREEN)
-                )
+                targets.size -> {
+                    if (targets.size == 1) {
+                        ctx.source.sendMessage(
+                            Component.text("Successfully gave ${amount}x $crateId crates to ").color(NamedTextColor.GREEN)
+                                .append(targets.firstOrNull()?.name ?: Component.text("UNKNOWN", NamedTextColor.RED))
+                        )
+                    } else {
+                        ctx.source.sendMessage(
+                            Component.text("Successfully gave ${amount}x $crateId crates to $successful players!").color(NamedTextColor.GREEN)
+                        )
+                    }
+                }
                 else -> ctx.source.sendMessage(
                     Component.text("Successfully gave ${amount}x $crateId crates to $successful player(s), " +
                             "but failed to give it to ${targets.size - successful} player(s)!").color(NamedTextColor.YELLOW)

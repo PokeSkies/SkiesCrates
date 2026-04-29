@@ -177,12 +177,19 @@ class KeyCommand : SubCommand {
                         Component.text("Failed to give ${amount}x $keyId keys to any players!")
                             .color(NamedTextColor.RED)
                     )
+                    targets.size -> {
+                        if (targets.size == 1) {
+                            ctx.source.sendMessage(
+                                Component.text("Successfully gave ${amount}x $keyId keys to ").color(NamedTextColor.GREEN)
+                                    .append(targets.firstOrNull()?.name ?: Component.text("UNKNOWN", NamedTextColor.RED))
+                            )
+                        } else {
+                            ctx.source.sendMessage(
+                                Component.text("Successfully gave ${amount}x $keyId keys to $successful players!").color(NamedTextColor.GREEN)
+                            )
+                        }
 
-                    targets.size -> ctx.source.sendMessage(
-                        Component.text("Successfully gave ${amount}x $keyId keys to $successful players!")
-                            .color(NamedTextColor.GREEN),
-                    )
-
+                    }
                     else -> ctx.source.sendMessage(
                         Component.text(
                             "Successfully gave ${amount}x $keyId keys to $successful player(s), " +
