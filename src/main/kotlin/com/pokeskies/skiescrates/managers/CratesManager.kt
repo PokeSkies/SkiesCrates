@@ -73,7 +73,6 @@ object CratesManager {
             OpeningManager.getInstance(handler.player.uuid)?.stop()
         })
         CrateInteractionEvent.EVENT.register { player, crate, data ->
-            println("Player ${player.name.string} interacted with crate ${crate.id} with data: location=${data.location}, item=${data.itemStack}, data=${data}")
             if (ConfigManager.CONFIG.interactions.open.interactionTypes.contains(data.interaction)) {
                 asyncScope.launch {
                     openCrate(player, crate, data, false)
