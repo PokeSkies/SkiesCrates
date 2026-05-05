@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder
 import com.pokeskies.skiescrates.commands.BaseCommand
 import com.pokeskies.skiescrates.commands.KeysCommand
 import com.pokeskies.skiescrates.config.ConfigManager
+import com.pokeskies.skiescrates.config.GenericClickType
 import com.pokeskies.skiescrates.config.Lang
 import com.pokeskies.skiescrates.config.SoundOption
 import com.pokeskies.skiescrates.data.actions.Action
@@ -96,6 +97,7 @@ class SkiesCrates : ModInitializer {
         .registerTypeAdapter(Reward::class.java, Reward.Adapter())
         .registerTypeAdapter(Action::class.java, Action.Adapter())
         .registerTypeAdapter(StorageType::class.java, StorageType.Adapter())
+        .registerTypeAdapter(GenericClickType::class.java, GenericClickType.Adapter())
         .registerTypeAdapter(ParticleEffect::class.java, ParticleEffect.Adapter())
         .registerTypeAdapter(WorldOpeningAnimation::class.java, WorldOpeningAnimation.Adapter())
         .registerTypeAdapter(IntOption::class.java, IntOption.Adapter())

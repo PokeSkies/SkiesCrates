@@ -7,6 +7,7 @@ class SkiesCratesConfig(
     var debug: Boolean = false,
     @SerializedName("interaction_limiter")
     var interactionLimiter: Long = 1000,
+    var interactions: InteractionOptions = InteractionOptions(),
     var storage: Storage = Storage(),
     var keys: KeyOptions = KeyOptions(),
     var migration: MigrationOptions = MigrationOptions(),
@@ -56,6 +57,6 @@ class SkiesCratesConfig(
     }
 
     override fun toString(): String {
-        return "SkiesCratesConfig(debug=$debug, interactionLimiter=$interactionLimiter, storage=$storage, keys=$keys, migration=$migration, webhooks=$webhooks)"
+        return "SkiesCratesConfig(debug=$debug, interactionLimiter=$interactionLimiter, interactions=$interactions, storage=$storage, keys=$keys, migration=$migration, webhooks=$webhooks)"
     }
 }

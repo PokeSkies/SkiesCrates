@@ -1,6 +1,10 @@
 {
   "debug": true,
   "interaction_limiter": 1000,
+  "interactions": {
+    "open": "ANY_RIGHT_CLICK",
+    "preview": "ANY_LEFT_CLICK"
+  },
   "keys": {
     "aliases": [
       "keys"

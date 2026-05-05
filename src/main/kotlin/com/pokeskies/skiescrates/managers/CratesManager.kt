@@ -15,6 +15,7 @@ import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningInstance
 import com.pokeskies.skiescrates.economy.EconomyManager
+import com.pokeskies.skiescrates.events.CrateInteractionEvent
 import com.pokeskies.skiescrates.events.ItemSwingEvent
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.integrations.bil.BILCrateData
@@ -71,6 +72,18 @@ object CratesManager {
         ServerPlayConnectionEvents.JOIN.register(ServerPlayConnectionEvents.Join { handler, _, _ ->
             OpeningManager.getInstance(handler.player.uuid)?.stop()
         })
+        CrateInteractionEvent.EVENT.register { player, crate, data ->
+            println("Player ${player.name.string} interacted with crate ${crate.id} with data: location=${data.location}, item=${data.itemStack}, data=${data}")
+            if (ConfigManager.CONFIG.interactions.open.interactionTypes.contains(data.interaction)) {
+                asyncScope.launch {
+                    openCrate(player, crate, data, false)
+                }
+            } else if (ConfigManager.CONFIG.interactions.preview.interactionTypes.contains(data.interaction)) {
+                previewCrate(player, crate)
+            }
+
+            return@register InteractionResult.PASS
+        }
 
         // Preventing block breaking
         PlayerBlockBreakEvents.BEFORE.register(PlayerBlockBreakEvents.Before { level, _, blockPos, _, _ ->
@@ -96,7 +109,11 @@ object CratesManager {
                 blockPos.z
             )
             getCrateFromPos(dimensionalPos)?.let { instance ->
-                previewCrate(player, instance.crate)
+                CrateInteractionEvent.EVENT.invoker().interact(player, instance.crate, CrateOpenData(
+                    dimensionalPos,
+                    null,
+                    if (player.isShiftKeyDown) CrateInteractionEvent.InteractionType.SHIFT_LEFT_CLICK else CrateInteractionEvent.InteractionType.LEFT_CLICK,
+                ))
                 return@AttackBlockCallback InteractionResult.FAIL
             }
             return@AttackBlockCallback InteractionResult.PASS
@@ -115,9 +132,11 @@ object CratesManager {
             getCrateFromPos(blockPos)?.let { instance ->
                 // Only execute opens on main hand to prevent duplicate execution
                 if (hand == InteractionHand.MAIN_HAND) {
-                    asyncScope.launch {
-                        openCrate(player, instance.crate, CrateOpenData(blockPos, null), false)
-                    }
+                    CrateInteractionEvent.EVENT.invoker().interact(player, instance.crate, CrateOpenData(
+                        blockPos,
+                        null,
+                        if (player.isShiftKeyDown) CrateInteractionEvent.InteractionType.SHIFT_RIGHT_CLICK else CrateInteractionEvent.InteractionType.RIGHT_CLICK
+                    ))
                 }
                 return@UseBlockCallback InteractionResult.FAIL
             }
@@ -129,9 +148,11 @@ object CratesManager {
                 if (crate != null) {
                     // Only execute opens on main hand to prevent duplicate execution
                     if (hand == InteractionHand.MAIN_HAND) {
-                        asyncScope.launch {
-                            openCrate(player, crate, CrateOpenData(null, item), false)
-                        }
+                        CrateInteractionEvent.EVENT.invoker().interact(player, crate, CrateOpenData(
+                            null,
+                            item,
+                            if (player.isShiftKeyDown) CrateInteractionEvent.InteractionType.SHIFT_RIGHT_CLICK else CrateInteractionEvent.InteractionType.RIGHT_CLICK
+                        ))
                     }
                     return@UseBlockCallback InteractionResult.FAIL
                 }
@@ -155,9 +176,11 @@ object CratesManager {
             getCrateOrNull(item)?.let { crate ->
                 // Only execute opens on main hand to prevent duplicate execution
                 if (hand == InteractionHand.MAIN_HAND) {
-                    asyncScope.launch {
-                        openCrate(player, crate, CrateOpenData(null, item), false)
-                    }
+                    CrateInteractionEvent.EVENT.invoker().interact(player, crate, CrateOpenData(
+                        null,
+                        item,
+                        if (player.isShiftKeyDown) CrateInteractionEvent.InteractionType.SHIFT_RIGHT_CLICK else CrateInteractionEvent.InteractionType.RIGHT_CLICK
+                    ))
                 }
                 return@UseItemCallback InteractionResultHolder.fail(item)
             }
@@ -171,7 +194,11 @@ object CratesManager {
         ItemSwingEvent.EVENT.register { player, itemStack, _ ->
             SkiesCrates.INSTANCE.server.execute { // Ensure we are on the main thread
                 val crate = getCrateOrNull(itemStack) ?: return@execute
-                previewCrate(player, crate)
+                CrateInteractionEvent.EVENT.invoker().interact(player, crate, CrateOpenData(
+                    null,
+                    itemStack,
+                    if (player.isShiftKeyDown) CrateInteractionEvent.InteractionType.SHIFT_LEFT_CLICK else CrateInteractionEvent.InteractionType.LEFT_CLICK,
+                ))
             }
 
             return@register InteractionResult.PASS
