@@ -54,7 +54,11 @@ object CratesManager {
     private val instancesByChunk: MutableMap<ChunkKey, MutableMap<DimensionalBlockPos, CrateInstance>> = mutableMapOf()
     private val interactionLimiter = mutableMapOf<UUID, Long>()
 
-    fun init() {
+    init {
+        registerEvents()
+    }
+
+    fun load() {
         // destroy existing instances and load from config
         instancesByChunk.values.forEach { chunkInstances ->
             chunkInstances.values.forEach { it.destroy() }
@@ -64,8 +68,6 @@ object CratesManager {
         ConfigManager.CRATES.forEach { (_, crate) ->
             loadCrate(crate)
         }
-
-        registerEvents()
     }
 
     fun registerEvents() {
@@ -73,6 +75,7 @@ object CratesManager {
             OpeningManager.getInstance(handler.player.uuid)?.stop()
         })
         CrateInteractionEvent.EVENT.register { player, crate, data ->
+            Utils.printDebug("Crate interaction event triggered for player ${player.name} with crate ${crate.name} and interaction ${data.interaction}")
             if (ConfigManager.CONFIG.interactions.open.interactionTypes.contains(data.interaction)) {
                 asyncScope.launch {
                     openCrate(player, crate, data, false)

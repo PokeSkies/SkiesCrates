@@ -136,7 +136,7 @@ class SkiesCrates : ModInitializer {
         })
         ServerLifecycleEvents.SERVER_STARTED.register(ServerLifecycleEvents.ServerStarted { _: MinecraftServer ->
             OpeningManager.load()
-            CratesManager.init()
+            CratesManager.load()
             PlaceholderManager.init()
             ModIntegration.onServerStarted()
         })
@@ -166,7 +166,7 @@ class SkiesCrates : ModInitializer {
         Lang.init()
 
         OpeningManager.load()
-        CratesManager.init()
+        CratesManager.load()
 
         if (FabricLoader.getInstance().isModLoaded("holodisplays")) HologramsManager.load()
     }
