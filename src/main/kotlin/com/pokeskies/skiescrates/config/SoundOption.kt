@@ -19,12 +19,14 @@ class SoundOption(
             category = SoundSource.MASTER
         }
 
-        player.playNotifySound(
-            SoundEvent.createVariableRangeEvent(ResourceLocation.parse(sound)),
-            category,
-            volume,
-            pitch,
-        )
+        player.server.executeIfPossible {
+            player.playNotifySound(
+                SoundEvent.createVariableRangeEvent(ResourceLocation.parse(sound)),
+                category,
+                volume,
+                pitch,
+            )
+        }
     }
 
     class Adaptor : JsonDeserializer<SoundOption>, JsonSerializer<SoundOption> {
