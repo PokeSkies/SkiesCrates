@@ -1,6 +1,7 @@
 package com.pokeskies.skiescrates.data.opening.inventory
 
 import com.pokeskies.skiescrates.data.Crate
+import com.pokeskies.skiescrates.data.CrateOpenData
 import com.pokeskies.skiescrates.data.opening.OpeningInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.gui.CrateInventory
@@ -12,6 +13,7 @@ class InventoryOpeningInstance(
     crate: Crate,
     val animation: InventoryOpeningAnimation,
     val randomBag: RandomCollection<Reward>,
+    val openData: CrateOpenData,
 ): OpeningInstance(player, crate) {
     private val gui = CrateInventory(player, this)
 

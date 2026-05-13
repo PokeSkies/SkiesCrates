@@ -16,6 +16,7 @@ import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningInstance
 import com.pokeskies.skiescrates.economy.EconomyManager
 import com.pokeskies.skiescrates.events.CrateInteractionEvent
+import com.pokeskies.skiescrates.events.CrateOpenedEvent
 import com.pokeskies.skiescrates.events.ItemSwingEvent
 import com.pokeskies.skiescrates.gui.PreviewInventory
 import com.pokeskies.skiescrates.integrations.bil.BILCrateData
@@ -387,7 +388,7 @@ object CratesManager {
 
         // Check for any keys needed
         if (!isForced && crate.keys.isNotEmpty()) {
-            if(!withContext(MinecraftDispatcher(player.server)) {
+            if (!withContext(MinecraftDispatcher(player.server)) {
                     val results = crate.keys.entries.associate { (keyId, amount) ->
                         val key = ConfigManager.KEYS[keyId] ?: run {
                             return@associate keyId to KeyCheckResult.NOT_FOUND
@@ -398,6 +399,13 @@ object CratesManager {
                     // Sort out the highest error return from the key checks to display to the user
                     val highest = results.maxBy { (_, result) -> result.priority }
                     when (highest.value) {
+                        KeyCheckResult.INVALID -> {
+                            handleCrateFail(player, crate, openData)
+                            Lang.KEY_DUPLICATE_ALERT.forEach {
+                                player.sendMessage(it.asNative(player))
+                            }
+                            return@withContext false
+                        }
                         KeyCheckResult.NOT_FOUND -> {
                             Utils.printError("Key ${highest.key} does not exist while opening crate ${crate.id} for ${player.name.string}!")
                             handleCrateFail(player, crate, openData)
@@ -601,6 +609,8 @@ object CratesManager {
                     storage.saveUserAsync(playerData)
                 }
 
+                CrateOpenedEvent.EVENT.invoker().onCrateOpened(player, crate, openData, listOf(reward))
+
                 return@withContext true
             }
 
@@ -614,7 +624,7 @@ object CratesManager {
 
             val opening = when (animation) {
                 is InventoryOpeningAnimation -> {
-                    InventoryOpeningInstance(player, crate, animation, rewardBag)
+                    InventoryOpeningInstance(player, crate, animation, rewardBag, openData)
                 }
                 is WorldOpeningAnimation -> {
                     val positionData = openData.location ?: run {
@@ -633,7 +643,7 @@ object CratesManager {
                         }
                         return@withContext false
                     }
-                    WorldOpeningInstance(player, crate, crateInstance, animation, rewardBag)
+                    WorldOpeningInstance(player, crate, crateInstance, animation, rewardBag, openData)
                 }
                 else -> {
                     handleCrateFail(player, crate, openData)

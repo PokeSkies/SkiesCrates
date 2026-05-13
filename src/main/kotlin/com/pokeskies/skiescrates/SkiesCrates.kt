@@ -28,6 +28,7 @@ import com.pokeskies.skiescrates.storage.IStorage
 import com.pokeskies.skiescrates.storage.StorageType
 import com.pokeskies.skiescrates.utils.CompoundTagAdaptor
 import com.pokeskies.skiescrates.utils.Utils
+import com.pokeskies.skiescrates.utils.WebhookUtils
 import kotlinx.coroutines.*
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
@@ -148,6 +149,7 @@ class SkiesCrates : ModInitializer {
             this.storage.close()
             ModIntegration.onServerShutdown()
         })
+        WebhookUtils.registerEvents()
         ServerTickEvents.END_SERVER_TICK.register(ServerTickEvents.EndTick { server ->
             tick()
             OpeningManager.tick()

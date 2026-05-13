@@ -36,9 +36,28 @@
   "migration": {
     "keys": []
   },
-  "webhook": {
+  "webhooks": {
     "duplicate_key": {
-      "url": ""
+      "webhook_url": "",
+      "embed": {
+        "title": "Duplicate Key Alert",
+        "color": 16711680,
+        "description": "%alert_message%",
+        "thumbnail": {
+          "url": "https://mc-heads.net/body/%uuid%"
+        }
+      }
+    },
+    "crate_opened": {
+      "webhook_url": "",
+      "embed": {
+        "title": "%player% opened %crate_name%",
+        "color": 3066993,
+        "description": "Rewards:\n%rewards%",
+        "thumbnail": {
+          "url": "https://mc-heads.net/body/%player_uuid%"
+        }
+      }
     }
   }
 }

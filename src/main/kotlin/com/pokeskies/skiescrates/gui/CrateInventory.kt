@@ -7,6 +7,7 @@ import com.pokeskies.skiescrates.data.opening.inventory.InventoryOpeningInstance
 import com.pokeskies.skiescrates.data.opening.inventory.spinners.AnimatedSpinnerInstance
 import com.pokeskies.skiescrates.data.opening.inventory.spinners.RewardSpinnerInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
+import com.pokeskies.skiescrates.events.CrateOpenedEvent
 import com.pokeskies.skiescrates.utils.RandomCollection
 import com.pokeskies.skiescrates.utils.Utils
 import com.pokeskies.skiescrates.utils.asNative
@@ -106,10 +107,9 @@ class CrateInventory(
 
             if (allCompleted) {
                 isFinished = true
-                rewardSpinners.forEach { (_, data) ->
-                    data.giveRewards(player, crate)
-                }
+                val rewards = giveRewards()
                 SkiesCrates.INSTANCE.storage.saveUser(userData)
+                CrateOpenedEvent.EVENT.invoker().onCrateOpened(player, crate, opening.openData, rewards)
             }
         }
 
@@ -127,10 +127,9 @@ class CrateInventory(
         if (!isFinished) {
             if (animation.skippable) {
                 isFinished = true
-                rewardSpinners.forEach { (_, data) ->
-                    data.giveRewards(player, crate)
-                }
+                val rewards = giveRewards()
                 SkiesCrates.INSTANCE.storage.saveUser(userData)
+                CrateOpenedEvent.EVENT.invoker().onCrateOpened(player, crate, opening.openData, rewards)
             } else {
                 this.open()
                 return
@@ -138,5 +137,11 @@ class CrateInventory(
         }
 
         opening.stop()
+    }
+
+    private fun giveRewards(): List<Reward> {
+        return rewardSpinners.flatMap { (_, data) ->
+            data.giveRewards(player, crate)
+        }
     }
 }

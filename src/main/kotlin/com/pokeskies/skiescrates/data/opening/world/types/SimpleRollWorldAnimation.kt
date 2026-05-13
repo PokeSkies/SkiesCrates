@@ -8,6 +8,7 @@ import com.pokeskies.skiescrates.data.opening.world.WorldAnimationType
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningAnimation
 import com.pokeskies.skiescrates.data.opening.world.WorldOpeningInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
+import com.pokeskies.skiescrates.events.CrateOpenedEvent
 import com.pokeskies.skiescrates.integrations.ModIntegration
 import com.pokeskies.skiescrates.managers.HologramsManager
 import com.pokeskies.skiescrates.mixins.EntityAccessor
@@ -109,7 +110,7 @@ class SimpleRollWorldAnimation(
                 if (spinsRemaining <= 0) {
                     isCompleted = true
                     ticks = endDelay
-                    currentReward?.giveReward(opening.player, opening.crate)
+                    giveCurrentReward(opening)
                 }
             }
         } else if (isCompleted) {
@@ -128,7 +129,7 @@ class SimpleRollWorldAnimation(
                 if (--spinsRemaining <= 0) {
                     isCompleted = true
                     ticks = endDelay
-                    currentReward?.giveReward(opening.player, opening.crate)
+                    giveCurrentReward(opening)
                 }
             }
         }
@@ -190,5 +191,11 @@ class SimpleRollWorldAnimation(
     private fun generateItem(opening: WorldOpeningInstance): Reward? {
         if (opening.randomBag.size() <= 0) return null
         return opening.randomBag.next()
+    }
+
+    private fun giveCurrentReward(opening: WorldOpeningInstance) {
+        val reward = currentReward ?: return
+        reward.giveReward(opening.player, opening.crate)
+        CrateOpenedEvent.EVENT.invoker().onCrateOpened(opening.player, opening.crate, opening.openData, listOf(reward))
     }
 }

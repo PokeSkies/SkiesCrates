@@ -1,6 +1,7 @@
 package com.pokeskies.skiescrates.data.key
 
 enum class KeyCheckResult(val priority: Int) {
+    INVALID(5),
     NOT_FOUND(4),
     NOT_HOLDING(3),
     NOT_ENOUGH(2),

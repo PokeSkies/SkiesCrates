@@ -2,6 +2,7 @@ package com.pokeskies.skiescrates.data.opening.world
 
 import com.pokeskies.skiescrates.data.Crate
 import com.pokeskies.skiescrates.data.CrateInstance
+import com.pokeskies.skiescrates.data.CrateOpenData
 import com.pokeskies.skiescrates.data.opening.OpeningInstance
 import com.pokeskies.skiescrates.data.rewards.Reward
 import com.pokeskies.skiescrates.utils.RandomCollection
@@ -13,6 +14,7 @@ class WorldOpeningInstance(
     val instance: CrateInstance,
     val animation: WorldOpeningAnimation,
     val randomBag: RandomCollection<Reward>,
+    val openData: CrateOpenData,
 ): OpeningInstance(player, crate) {
     override fun tick() {
         animation.tick(this)

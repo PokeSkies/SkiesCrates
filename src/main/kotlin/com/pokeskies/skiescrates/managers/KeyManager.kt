@@ -304,7 +304,8 @@ object KeyManager {
             var count = 0
             val keys = player.inventory.items.withIndex().filter { (_, stack) ->
                 if (getKeyOrNull(stack)?.id != key.id) return@filter false
-                validateStack(player, key, stack)
+                if (!validateStack(player, key, stack)) return KeyCheckResult.INVALID
+                true
             }.associate { (slot, stack) -> slot to stack }.toMutableMap()
 
            player.offhandItem.let { offhand ->
@@ -342,7 +343,7 @@ object KeyManager {
             }
 
             if (itemStack.count > 1) {
-                alertDuplicateKey(player, key, KeyDuplicateAlert.STACKED, mapOf("%count%" to itemStack.count.toString(), "%uuid%" to uniqueId))
+                alertDuplicateKey(player, key, KeyDuplicateAlert.STACKED, mapOf("%amount%" to itemStack.count.toString(), "%key_uuid%" to uniqueId))
                 itemStack.count = 0
                 return false
             }
@@ -350,13 +351,13 @@ object KeyManager {
             val uuid = try {
                 UUID.fromString(uniqueId)
             } catch (_: IllegalArgumentException) {
-                alertDuplicateKey(player, key, KeyDuplicateAlert.INVALID_UUID, mapOf("%uuid%" to uniqueId))
+                alertDuplicateKey(player, key, KeyDuplicateAlert.INVALID_UUID, mapOf("%key_uuid%" to uniqueId))
                 itemStack.count = 0
                 return false
             }
 
             if (isUniqueUUIDUsed(uuid)) {
-                alertDuplicateKey(player, key, KeyDuplicateAlert.ALREADY_USED, mapOf("%uuid%" to uniqueId))
+                alertDuplicateKey(player, key, KeyDuplicateAlert.ALREADY_USED, mapOf("%key_uuid%" to uniqueId))
                 itemStack.count = 0
                 return false
             }
@@ -397,12 +398,7 @@ object KeyManager {
         }
 
         Utils.printError("Duplicate Key Alert: $message")
-        Lang.KEY_DUPLICATE_ALERT.forEach {
-            player.sendMessage(it.asNative(player))
-        }
 
-        if (ConfigManager.CONFIG.webhooks.duplicateKey.url.isNotEmpty()) {
-            WebhookUtils.sendKeyAlert(ConfigManager.CONFIG.webhooks.duplicateKey.url, player, message)
-        }
+        WebhookUtils.sendKeyAlert(player, message)
     }
 }

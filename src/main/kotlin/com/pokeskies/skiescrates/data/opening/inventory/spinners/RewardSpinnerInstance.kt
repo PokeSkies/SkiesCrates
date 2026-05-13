@@ -64,10 +64,12 @@ class RewardSpinnerInstance(
         }
     }
 
-    fun giveRewards(player: ServerPlayer, crate: Crate) {
-        getFinalRewards().forEach { reward ->
+    fun giveRewards(player: ServerPlayer, crate: Crate): List<Reward> {
+        val finalRewards = getFinalRewards()
+        finalRewards.forEach { reward ->
             reward.giveReward(player, crate)
         }
+        return finalRewards
     }
 
     // Check if any rewards cause limit exceptions, remove and regenerate them if so
